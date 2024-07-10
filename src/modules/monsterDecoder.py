@@ -276,7 +276,9 @@ class monsterDecoder(dataEntryDecoder):
 
             # 各攻撃回数ごとのダメージダイスを辞書に登録, 辞書のキーは攻撃回数
             damage_dices[ i + 1 ] = dice_type(int(decode_dict[f"RECS_{i+1}_0"][0]),int(decode_dict[f"RECS_{i+1}_1"][0]),int(decode_dict[f"RECS_{i+1}_2"][0]))
-        res.damage_dices=damage_dices # ダメージダイスを設定
+
+        # ダメージダイスを設定
+        res.damage_dices=damage_dices
         # 攻撃抵抗値を設定
         res.resist_dic=word_to_resist_dic(resist_value=res.wepvsty3_value)
         # 攻撃付与属性を設定
