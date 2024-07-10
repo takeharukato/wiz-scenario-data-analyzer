@@ -43,11 +43,10 @@ class scnDecoder(ABC):
         return
 
     @abstractmethod
-    def calcDataEntryOffset(self, toc: WizardrySCNTOC, category: str, item_len:int, index: int)->int:
+    def calcDataEntryOffset(self, category: str, item_len:int, index: int)->int:
         """シナリオ情報先頭からのオフセット位置(単位:バイト)を算出する
 
         Args:
-            toc (WizardrySCNTOC): 目次情報
             category (str): 目次の項目
                 - ZZERO    シナリオ情報
                 - ZMAZE    迷宮フロア情報

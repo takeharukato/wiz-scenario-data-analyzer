@@ -302,14 +302,13 @@ class monsterDecoder(dataEntryDecoder):
         Returns:
             Optional[Any]: 解析結果のオブジェクト, インデクスがレンジ外の場合, None
         """
-        toc = scn.toc
-        nr_monsters=toc.RECPERDK[modules.consts.ZENEMY] # モンスターの数
+        nr_monsters=scn.toc.RECPERDK[modules.consts.ZENEMY] # モンスターの数
 
         if 0 > index or index >= nr_monsters:
             return None # 不正インデクス
 
         # 対象のモンスター情報開始オフセット位置(単位:バイト)を得る
-        data_offset = scn.calcDataEntryOffset(toc=scn.toc, category=modules.consts.ZENEMY,item_len=MONSTER_ENTRY_SIZE,index=index)
+        data_offset = scn.calcDataEntryOffset(category=modules.consts.ZENEMY, item_len=MONSTER_ENTRY_SIZE, index=index)
 
         # 解析対象データをunpackする
         decode_dict = getDecodeDict(data=data,layout=WizardryMonsterDataEntryDef,offset=data_offset)

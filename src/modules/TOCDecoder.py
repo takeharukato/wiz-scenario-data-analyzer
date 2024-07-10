@@ -323,11 +323,10 @@ class TOCDecoder(scnDecoder):
         self._toc=self.convertTableOfContents(data_dic=decode_dict)
         return
 
-    def calcDataEntryOffset(self, toc: WizardrySCNTOC, category: str, item_len:int, index: int)->int:
+    def calcDataEntryOffset(self, category: str, item_len:int, index: int)->int:
         """シナリオ情報先頭からのオフセット位置(単位:バイト)を算出する
 
         Args:
-            toc (WizardrySCNTOC): 目次情報
             category (str): 目次の項目
                 - ZZERO    シナリオ情報
                 - ZMAZE    迷宮フロア情報
@@ -343,16 +342,17 @@ class TOCDecoder(scnDecoder):
         Returns:
             int: シナリオ情報先頭からのオフセット位置(単位:バイト)
         """
+
         # 項目の開始オフセットブロック(単位:ブロック)を算出
-        start_block = toc.BLOFF[category]
+        start_block = self.toc.BLOFF[category]
         # 項目の開始オフセット位置(単位:バイト)を算出
         start_offset = modules.consts.BLK_SIZ * start_block
 
         # キャッシュに読み込むディスクデータのシナリオ情報ファイルの先頭からのオフセット位置(単位:ブロック)を算出
-        data_block = 2 * ( index // toc.RECPER2B[category] )
+        data_block = 2 * ( index // self.toc.RECPER2B[category] )
         data_block_offset = modules.consts.BLK_SIZ * data_block # オフセット位置をバイト単位に変換
         # 対象データのキャッシュ内でのオフセット位置(単位:バイト)を算出
-        entry_offset = (index % toc.RECPER2B[category]) * item_len
+        entry_offset = (index % self.toc.RECPER2B[category]) * item_len
 
         # 解析対象データのシナリオ情報先頭からのオフセット位置(単位:バイト)を算出
         data_offset = start_offset + data_block_offset + entry_offset
