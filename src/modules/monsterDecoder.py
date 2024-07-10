@@ -12,7 +12,7 @@
 
 from __future__ import annotations # 型定義のみを参照する
 from typing import TYPE_CHECKING   # 型チェック実施判定
-from typing import Any #,Optional
+from typing import Any,Optional
 
 if TYPE_CHECKING:
     pass
@@ -25,8 +25,9 @@ import os
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
+from modules.scnDecoder import scnDecoder
 from modules.dataEntryDecoder import dataEntryDecoder
-from modules.datadef import WizardryMonsterDataEntry, WizardrySCNTOC,dice_type
+from modules.datadef import WizardryMonsterDataEntry, dice_type
 from modules.utils import getDecodeDict,word_to_resist_dic,word_to_dic
 import modules.consts
 
@@ -290,37 +291,28 @@ class monsterDecoder(dataEntryDecoder):
 
         return res
 
-    def decodeOneData(self, toc: WizardrySCNTOC, data: Any, index: int) -> Any | None:
+    def decodeOneData(self, scn:scnDecoder, data: Any, index: int)->Optional[Any]:
         """シナリオデータファイル中のモンスターデータを解析する
 
         Args:
-            toc (WizardrySCNTOC)
+            scn (scnDecoder): シナリオ解析機
             data (Any): シナリオデータファイル情報
             index (int): 調査対象アイテムのインデクス
 
         Returns:
             Optional[Any]: 解析結果のオブジェクト, インデクスがレンジ外の場合, None
         """
-
+        toc = scn.toc
         nr_monsters=toc.RECPERDK[modules.consts.ZENEMY] # モンスターの数
 
         if 0 > index or index >= nr_monsters:
             return None # 不正インデクス
 
-        # モンスター情報開始オフセットアドレス
-        start_block = toc.BLOFF[modules.consts.ZENEMY]
-        start_offset = modules.consts.BLK_SIZ * start_block
-
-        # キャッシュに読み込むディスクデータのシナリオ情報ファイルの先頭からのオフセット位置(単位:ブロック)
-        data_block = 2 * ( index // toc.RECPER2B[modules.consts.ZENEMY] )
-        data_block_offset = modules.consts.BLK_SIZ * data_block # オフセット位置をバイト単位に変換
-        # 対象データのキャッシュ内でのオフセット位置を算出
-        entry_offset = (index % toc.RECPER2B[modules.consts.ZENEMY]) * MONSTER_ENTRY_SIZE
-
-        # 解析対象データのシナリオ情報先頭からのオフセット位置(単位:バイト)を算出
-        data_offset = start_offset + data_block_offset + entry_offset
+        # 対象のモンスター情報開始オフセット位置(単位:バイト)を得る
+        data_offset = scn.calcDataEntryOffset(toc=scn.toc, category=modules.consts.ZENEMY,item_len=MONSTER_ENTRY_SIZE,index=index)
 
         # 解析対象データをunpackする
         decode_dict = getDecodeDict(data=data,layout=WizardryMonsterDataEntryDef,offset=data_offset)
+
         # unpackしたデータをpythonのオブジェクトに変換
         return self._dict2MonsterDataEntry(decode_dict=decode_dict)

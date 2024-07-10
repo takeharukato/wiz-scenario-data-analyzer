@@ -44,6 +44,7 @@ if TYPE_CHECKING:
     pass
 
 from modules.datadef import WizardrySCNTOC,WizardryMonsterDataEntry
+from modules.scnDecoder import scnDecoder
 from modules.TOCDecoder import TOCDecoder
 from modules.monsterDecoder import monsterDecoder
 import modules.consts
@@ -83,7 +84,7 @@ class ReadScenario:
     _scenario:Any
     """シナリオ情報ファイルのメモリイメージ"""
 
-    _toc:WizardrySCNTOC
+    _toc_decoder:scnDecoder
     """目次情報"""
     _monsters:dict[int,WizardryMonsterDataEntry]
     """モンスター情報"""
@@ -172,15 +173,17 @@ class ReadScenario:
         Args:
             data (Any): シナリオデータ
         """
-        toc_decoder=TOCDecoder()
-        self._toc=toc_decoder.decodeData(data=data, offset=0)
+
+        self._toc_decoder=TOCDecoder(data=data)
+        self._toc_decoder.decodeData(data=data, offset=0)
+
         return
 
     def readMonsterTable(self, data:Any)->None:
         decoder=monsterDecoder()
-        nr_monsters=self._toc.RECPERDK[modules.consts.ZENEMY]
+        nr_monsters=self.toc.RECPERDK[modules.consts.ZENEMY]
         for idx in range(nr_monsters):
-            monster=decoder.decodeOneData(toc=self._toc,data=data,index=idx)
+            monster=decoder.decodeOneData(scn=self._toc_decoder, data=data, index=idx)
             if isinstance(monster, WizardryMonsterDataEntry):
                 self._monsters[idx]=monster
 
@@ -209,7 +212,7 @@ class ReadScenario:
     def toc(self)->WizardrySCNTOC:
         """目次情報
         """
-        return self._toc
+        return self._toc_decoder.toc
 
 ## メイン処理
 #

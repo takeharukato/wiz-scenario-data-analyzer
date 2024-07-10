@@ -25,6 +25,7 @@ import os
 from abc import ABC, abstractmethod
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from modules.datadef import WizardrySCNTOC
 
 class scnDecoder(ABC):
 
@@ -38,5 +39,35 @@ class scnDecoder(ABC):
 
         Returns:
             Any: 解析結果のオブジェクト
+        """
+        return
+
+    @abstractmethod
+    def calcDataEntryOffset(self, toc: WizardrySCNTOC, category: str, item_len:int, index: int)->int:
+        """シナリオ情報先頭からのオフセット位置(単位:バイト)を算出する
+
+        Args:
+            toc (WizardrySCNTOC): 目次情報
+            category (str): 目次の項目
+                - ZZERO    シナリオ情報
+                - ZMAZE    迷宮フロア情報
+                - ZENEMY   モンスター情報
+                - ZREWARD  報酬情報
+                - ZOBJECT  アイテム情報
+                - ZCHAR    キャラクター名簿
+                - ZSPCCHRS モンスター/宝箱画像
+                - ZEXP     経験値表
+            item_len (int): アイテム一つ当たりのサイズ(単位:バイト)
+            index (int): アイテムの配列中のインデクス
+
+        Returns:
+            int: シナリオ情報先頭からのオフセット位置(単位:バイト)
+        """
+        return
+
+    @property
+    @abstractmethod
+    def toc(self)->WizardrySCNTOC:
+        """目次情報
         """
         return

@@ -51,6 +51,7 @@ import modules.consts
 #
 # Table of contents定数定義
 #
+TOC_OFFSET=0 # TOCのシナリオ情報中のオフセット位置
 TOC_NR_SPELLS=50 # 呪文の数
 SPELL_GROUP_BITS_PER_LEVEL=3 # 呪文レベルを表現するビット数
 SPELL_TYPE_BITS_PER_LEVEL=2  # 呪文用途を表現するビット数
@@ -197,8 +198,18 @@ WizardrySCNTOCDef:dict[str,Any]={
 }
 
 class TOCDecoder(scnDecoder):
-    def __init__(self) -> None:
+
+    _toc:WizardrySCNTOC
+    """目次"""
+
+    def __init__(self, data:Any) -> None:
+        """シナリオデータ目次初期化
+
+        Args:
+            data (Any): シナリオデータファイルのメモリイメージ
+        """
         super().__init__()
+        self.decodeData(data=data, offset=TOC_OFFSET)
         return
 
     def decodeSpellGroup(self,spell_group_dic:dict[int,int])->dict[int,int]:
@@ -309,5 +320,47 @@ class TOCDecoder(scnDecoder):
         """
         # TOC情報をpythonのデータ(バイト列)にデコードする
         decode_dict=getDecodeDict(data=data, layout=WizardrySCNTOCDef, offset=offset)
+        self._toc=self.convertTableOfContents(data_dic=decode_dict)
+        return
 
-        return self.convertTableOfContents(data_dic=decode_dict)
+    def calcDataEntryOffset(self, toc: WizardrySCNTOC, category: str, item_len:int, index: int)->int:
+        """シナリオ情報先頭からのオフセット位置(単位:バイト)を算出する
+
+        Args:
+            toc (WizardrySCNTOC): 目次情報
+            category (str): 目次の項目
+                - ZZERO    シナリオ情報
+                - ZMAZE    迷宮フロア情報
+                - ZENEMY   モンスター情報
+                - ZREWARD  報酬情報
+                - ZOBJECT  アイテム情報
+                - ZCHAR    キャラクター名簿
+                - ZSPCCHRS モンスター/宝箱画像
+                - ZEXP     経験値表
+            item_len (int): アイテム一つ当たりのサイズ(単位:バイト)
+            index (int): アイテムの配列中のインデクス
+
+        Returns:
+            int: シナリオ情報先頭からのオフセット位置(単位:バイト)
+        """
+        # 項目の開始オフセットブロック(単位:ブロック)を算出
+        start_block = toc.BLOFF[category]
+        # 項目の開始オフセット位置(単位:バイト)を算出
+        start_offset = modules.consts.BLK_SIZ * start_block
+
+        # キャッシュに読み込むディスクデータのシナリオ情報ファイルの先頭からのオフセット位置(単位:ブロック)を算出
+        data_block = 2 * ( index // toc.RECPER2B[category] )
+        data_block_offset = modules.consts.BLK_SIZ * data_block # オフセット位置をバイト単位に変換
+        # 対象データのキャッシュ内でのオフセット位置(単位:バイト)を算出
+        entry_offset = (index % toc.RECPER2B[category]) * item_len
+
+        # 解析対象データのシナリオ情報先頭からのオフセット位置(単位:バイト)を算出
+        data_offset = start_offset + data_block_offset + entry_offset
+
+        return data_offset
+
+    @property
+    def toc(self)->WizardrySCNTOC:
+        """目次情報
+        """
+        return self._toc
