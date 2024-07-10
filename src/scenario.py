@@ -43,10 +43,11 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
 if TYPE_CHECKING:
     pass
 
-from modules.datadef import WizardrySCNTOC,WizardryMonsterDataEntry
+from modules.datadef import WizardrySCNTOC,WizardryMonsterDataEntry,WizardryItemDataEntry
 from modules.scnDecoder import scnDecoder
 from modules.TOCDecoder import TOCDecoder
 from modules.monsterDecoder import monsterDecoder
+from modules.itemDecoder import itemDecoder
 import modules.consts
 
 #
@@ -88,6 +89,8 @@ class ReadScenario:
     """目次情報"""
     _monsters:dict[int,WizardryMonsterDataEntry]
     """モンスター情報"""
+    _items:dict[int,WizardryItemDataEntry]
+    """アイテム情報"""
 
     ## 初期化
     #
@@ -117,7 +120,7 @@ class ReadScenario:
             self.unset_debug()    # デバッグモードを無効
 
         self._monsters={}
-
+        self._items={}
         return
 
     def __parse_cmdline(self):
@@ -189,6 +192,16 @@ class ReadScenario:
 
         return
 
+    def readItemTable(self, data:Any)->None:
+        decoder=itemDecoder()
+        nr_items=self.toc.RECPERDK[modules.consts.ZOBJECT]
+        for idx in range(nr_items):
+            item=decoder.decodeOneData(scn=self._toc_decoder, data=data, index=idx)
+            if isinstance(item, WizardryItemDataEntry):
+                self._items[idx]=item
+
+        return
+
     def doConvert(self, infile:Optional[str]=None, outfile:Optional[str]=None)->None:
         """シナリオ情報を変換する
 
@@ -206,6 +219,7 @@ class ReadScenario:
 
         self.readTOC(data=self._scenario) # 目次情報を読み込む
         self.readMonsterTable(data=self._scenario) # モンスター情報を読み込む
+        self.readItemTable(data=self._scenario) # アイテム情報を読み込む
         return
 
     @property

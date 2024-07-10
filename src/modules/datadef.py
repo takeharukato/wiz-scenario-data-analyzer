@@ -60,6 +60,15 @@ class dice_type:
     """ダイスの補正値(nDt+aのa)"""
 
 @dataclass
+class wiz_long_type:
+    low:int
+    """下位4桁(0-9999)"""
+    mid:int
+    """中位4桁(10,000-19,999)"""
+    high:int
+    """上位4桁(100,000,000-999,900,000,000)"""
+
+@dataclass
 class WizardryMonsterDataEntry:
     """モンスター情報"""
 
@@ -125,3 +134,63 @@ class WizardryMonsterDataEntry:
     """弱点"""
     capability_dic:dict[int,str]
     """能力"""
+
+@dataclass
+class WizardryItemDataEntry:
+    """アイテム情報"""
+    name:str
+    """名称"""
+    name_unknown:str
+    """不確定名称"""
+    obj_type_value:int
+    """アイテム種別値"""
+    obj_type_string:str
+    """アイテム種別文字列"""
+    alignment_value:int
+    """属性(アラインメント)値"""
+    alignment_string:str
+    """属性(アラインメント)文字列"""
+    cursed:bool
+    """呪いの有無"""
+    special_value:int
+    """スペシャルパワー分類番号"""
+    change_to_value:int
+    """使用後のアイテム番号"""
+    change_percentage:int
+    """使用後に変化する確率"""
+    price_value:int
+    """鑑定/売却価格値"""
+    stock_value:int
+    """商店の在庫"""
+    spell_power_value:int
+    """使用時に発動する呪文番号"""
+    class_use_value:int
+    """装備可能な職業を表すビットマップ"""
+    class_use_string:str
+    """装備可能な職業を表す文字列"""
+    class_use_dic:dict[int,str]
+    """装備可能な職業を表す辞書"""
+    heal_pts:int
+    """リジェネレレーション値"""
+    wepvsty2_value:int
+    """防御特性を表すビットマップ値"""
+    prot_dic:dict[int,str]
+    """防御特性を表す辞書"""
+    wepvsty3_value:int
+    """抵抗特性を表すビットマップ値"""
+    resist_dic:dict[int,str]
+    """抵抗特性を表す辞書"""
+    ac_mod_value:int
+    """アーマクラス補正値"""
+    wephitmd_value:int
+    """戦闘スキル(命中)補正値"""
+    wephpdam:dice_type
+    """攻撃ダイス"""
+    swing_count_value:int
+    """攻撃回数値"""
+    critical_hit:bool
+    """クリティカルヒット付与の有無"""
+    wepvstyp_value:int
+    """倍打特性を表すビットマップ値"""
+    purpose_dic:dict[int,str]
+    """倍打特性を表す辞書"""

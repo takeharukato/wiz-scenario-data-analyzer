@@ -56,17 +56,41 @@ def decodePackedArrayUint16(data_dic:dict[int,int], bit_len:int, max_index:int)-
 
     return res
 
-def word_to_dic(resist_value:int, dic:dict[int,str])->dict[int,str]:
-    """符号なし整数16bitであらわされた抵抗属性を文字列の辞書に変換する
+def word_to_use_string(class_value:int)->str:
+    """符号なし整数16bitであらわされた装備可能職業文字列に変換する
 
     Args:
-        resist_value (int): 符号なし整数16bitであらわされた抵抗属性
+        class_value (int): 符号なし整数16bitであらわされた装備可能職業
         dic (dict[int,str]): ビットから意味を表す文字列への辞書
     Returns:
-        dict[int,str]: ビット->抵抗属性
+        str: 装備可能職業文字列
+    """
+
+    res:str=""
+    v = class_value # 装備職業を表す整数を取得
+    for bit in range(16): # 16ビットの各ビットについて
+
+        if bit >= len(modules.consts.CHAR_CLASS_EQUIP_STRING):
+            break
+
+        if v & (1 << bit): # ビットが立っていて有効なら
+            res += modules.consts.CHAR_CLASS_EQUIP_STRING[bit]
+        else:
+            res += '-'
+
+    return res
+
+def word_to_dic(word_value:int, dic:dict[int,str])->dict[int,str]:
+    """符号なし整数16bitであらわされた倍打/防御/抵抗属性を文字列の辞書に変換する
+
+    Args:
+        word_value (int): 符号なし整数16bitであらわされた倍打/防御/抵抗属性
+        dic (dict[int,str]): ビットから意味を表す文字列への辞書
+    Returns:
+        dict[int,str]: ビット->倍打/防御/抵抗属性
     """
     res:dict[int,str]={}
-    v = resist_value # 抵抗/攻撃付与属性を表す整数を取得
+    v = word_value # 倍打/防御/抵抗属性を表す整数を取得
     for bit in range(16): # 16ビットの各ビットについて
         if v & (1 << bit) and bit in dic: # ビットが立っていて有効な属性なら
             res[bit]=dic[bit]
@@ -82,7 +106,7 @@ def word_to_resist_dic(resist_value:int)->dict[int,str]:
     Returns:
         dict[int,str]: ビット->抵抗属性
     """
-    return word_to_dic(resist_value=resist_value,dic=modules.consts.RESIST_BREATH_DIC)
+    return word_to_dic(word_value=resist_value,dic=modules.consts.RESIST_BREATH_DIC)
 
 def getDecodeDict(data:Any, layout:dict[str,dict[str,Any]],offset:int)->dict[str,Any]:
     """データレイアウトを元に各データをpythonのbytesデータにアンパックする

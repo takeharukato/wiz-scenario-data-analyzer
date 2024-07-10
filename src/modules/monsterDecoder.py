@@ -166,15 +166,15 @@ class monsterDecoder(dataEntryDecoder):
         Returns:
             WizardryMonsterDataEntry: pythonのオブジェクトであらわしたモンスター情報
         """
-        res=WizardryMonsterDataEntry(name_unknown="",
-                                     plural_name_unknown="",
-                                     name="",
-                                     plural_name="",
+        res=WizardryMonsterDataEntry(name_unknown=modules.consts.UNKNOWN_STRING,
+                                     plural_name_unknown=modules.consts.UNKNOWN_STRING,
+                                     name=modules.consts.UNKNOWN_STRING,
+                                     plural_name=modules.consts.UNKNOWN_STRING,
                                      pic=0,
                                      calc1=dice_type(0,0,0),
                                      hprec=dice_type(0,0,0),
                                      enemy_class_value=0,
-                                     enemy_class_str="",
+                                     enemy_class_str=modules.consts.UNKNOWN_STRING,
                                      ac=0,
                                      max_swing_count=0,
                                      damage_dices={},
@@ -189,7 +189,7 @@ class monsterDecoder(dataEntryDecoder):
                                      priest_spells=0,
                                      unique=0,
                                      breathe_value=0,
-                                     breathe="",
+                                     breathe=modules.consts.UNKNOWN_STRING,
                                      unaffect_ratio=0,
                                      wepvsty3_value=0,
                                      resist_dic={},
@@ -283,11 +283,11 @@ class monsterDecoder(dataEntryDecoder):
         # 攻撃抵抗値を設定
         res.resist_dic=word_to_resist_dic(resist_value=res.wepvsty3_value)
         # 攻撃付与属性を設定
-        res.special_attack_dic=word_to_dic(resist_value=res.sppc_value,dic=modules.consts.SPPC_SPECIAL_ATTACK_DIC)
+        res.special_attack_dic=word_to_dic(word_value=res.sppc_value,dic=modules.consts.SPPC_SPECIAL_ATTACK_DIC)
         # 弱点を設定
-        res.weak_point_dic=word_to_dic(resist_value=res.sppc_value,dic=modules.consts.SPPC_WEAK_POINT_DIC)
+        res.weak_point_dic=word_to_dic(word_value=res.sppc_value,dic=modules.consts.SPPC_WEAK_POINT_DIC)
         # 能力を設定
-        res.capability_dic=word_to_dic(resist_value=res.sppc_value,dic=modules.consts.SPPC_CAPABILITY_DIC)
+        res.capability_dic=word_to_dic(word_value=res.sppc_value,dic=modules.consts.SPPC_CAPABILITY_DIC)
 
         return res
 
