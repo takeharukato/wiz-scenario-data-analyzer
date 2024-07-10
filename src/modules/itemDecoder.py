@@ -61,8 +61,8 @@ import modules.consts
 ITEM_ENTRY_SIZE=78
 # アイテム情報のデータレイアウト
 WizardryItemDataEntryDef:dict[str,Any]={
-    'NAME': {'offset':0, 'type': '255p'},      # パスカル文字列での名称
-    'NAMEUNK': {'offset':16, 'type': '255p'},  # パスカル文字列での不確定名称
+    'NAME': {'offset':0, 'type': '16p'},      # パスカル文字列での名称
+    'NAMEUNK': {'offset':16, 'type': '16p'},  # パスカル文字列での不確定名称
     'OBJTYPE': {'offset':32, 'type': '<H'},   # アイテム種別
     'ALIGN':  {'offset':34, 'type': '<H'},    # 属性
     'CURSED': {'offset':36, 'type': '<h'},    # 呪いの有無

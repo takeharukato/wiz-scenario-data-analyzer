@@ -84,11 +84,11 @@ import modules.consts
 MONSTER_ENTRY_SIZE=158
 # モンスター情報のデータレイアウト
 WizardryMonsterDataEntryDef:dict[str,Any]={
-    'NAMEUNK': {'offset':0, 'type': '15p'},    # パスカル文字列での不確定名称
-    'NAMEUNKS': {'offset':16, 'type': '15p'},  # パスカル文字列での不確定名称複数形
+    'NAMEUNK': {'offset':0, 'type': '16p'},    # パスカル文字列での不確定名称
+    'NAMEUNKS': {'offset':16, 'type': '16p'},  # パスカル文字列での不確定名称複数形
 
-    'NAME': {'offset':32, 'type': '15p'},      # パスカル文字列での名称
-    'NAMES': {'offset':48, 'type': '15p'},     # パスカル文字列での名称複数形
+    'NAME': {'offset':32, 'type': '16p'},      # パスカル文字列での名称
+    'NAMES': {'offset':48, 'type': '16p'},     # パスカル文字列での名称複数形
 
     'PIC': {'offset':64, 'type': '<H'},        # グラフィック番号
 
