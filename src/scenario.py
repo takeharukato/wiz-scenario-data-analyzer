@@ -238,9 +238,108 @@ class ReadScenario:
         self.readRewardTable(data=self._scenario) # 報酬情報を読み込む
         return
 
+    def plainOneDumpMonster(self, index:int, data:Any, fp: Optional[TextIO]=None)->None:
+        """格納しているモンスター情報をテキストとして出力する
+
+        Args:
+            index (int): インデクス
+            data (Any): 表示対象データ
+            fp (Optional[TextIO], optional): 出力先. Defaults to None.
+        """
+
+        if not isinstance(data, WizardryMonsterDataEntry):
+            return
+
+        if not fp:
+            fp = sys.stdout
+        """
+        name_unknown:str
+        plural_name_unknown:str
+        name:str
+        plural_name:str
+        pic:int
+        calc1:dice_type
+        hprec:dice_type
+        enemy_class_value:int
+        enemy_class_str:str
+        ac:int
+        max_swing_count:int
+        damage_dices:dict[int,dice_type]
+        exp_amount:int
+        drain_amount:int
+        heal_pts:int
+        reward1:int
+        reward2:int
+        enemy_team:int
+        team_percentage:int
+        mage_spells:int
+        priest_spells:int
+        unique:int
+        breathe_value:int
+        breathe:str
+        unaffect_ratio:int
+        wepvsty3_value:int
+        resist_dic:dict[int,str]
+        sppc_value:int
+        special_attack_dic:dict[int,str]
+        weak_point_dic:dict[int,str]
+        capability_dic:dict[int,str]
+        """
+        name=data.name
+        names=data.plural_name
+        unknown_name=data.name_unknown
+        unknown_names=data.plural_name_unknown
+        pic=data.pic
+        nr_member=f"{data.calc1.name} ({data.calc1.min}--{data.calc1.max})"
+        hp_dice=f"{data.hprec.name} ({data.hprec.min}--{data.hprec.max})"
+        enemy_class=f"{modules.consts.ENEMY_CLASS_DIC[data.enemy_class_value]}{data.enemy_class_value}" if data.enemy_class_value in modules.consts.ENEMY_CLASS_DIC else f"{modules.consts.UNKNOWN_STRING} ({data.enemy_class_value})"
+        ac=f"{data.ac}"
+        swing_count=f"{data.max_swing_count}"
+        dmg_dice_table=",".join([data.damage_dices[key].name for key in sorted(data.damage_dices.keys()) if data.damage_dices[key].trial != 0 or data.damage_dices[key].add_val != 0 ])
+        exp=f"{data.exp_amount}"
+        drain=f"{data.drain_amount}"
+        heal_pts=f"{data.heal_pts}"
+        reward1=f"{data.reward1}"
+        reward2=f"{data.reward2}"
+        follows=f"{data.enemy_team}"
+        follow_percentage=f"{data.team_percentage}"
+        mage_spell=f"{data.mage_spells}"
+        pri_spell=f"{data.priest_spells}"
+        uniq=f"{data.unique}" if data.unique > 0 else f"-"
+        breathe=f"{data.breathe} ({data.breathe_value} {bin(data.breathe_value)})"
+        unaffect_ratio=f"{data.unaffect_ratio} %"
+        resist_set=','.join([data.resist_dic[key] for key in sorted(data.resist_dic.keys())])
+        resist_string=f"{resist_set}({data.wepvsty3_value} {bin(data.wepvsty3_value)})"
+        sppc_string=f"{data.sppc_value}"
+        special_attack_string=','.join([data.special_attack_dic[key] for key in sorted(data.special_attack_dic.keys())])
+        weak_points_string = ','.join([data.weak_point_dic[key] for key in sorted(data.weak_point_dic.keys())])
+        capability_string =  ','.join([data.capability_dic[key] for key in sorted(data.capability_dic.keys())])
+        print(f"|{index}|{name}|{names}|{unknown_name}|{unknown_names}|{pic}|{nr_member}|{hp_dice}|"
+              f"{enemy_class}|{ac}|{swing_count}|{dmg_dice_table}|{exp}|{drain}|{heal_pts}|{reward1}|{reward2}|"
+              f"{follows}|{follow_percentage} %|{mage_spell}|{pri_spell}|{uniq}|{breathe}|"
+              f"{unaffect_ratio} %|{resist_string}|{special_attack_string}|{weak_points_string}|"
+              f"{capability_string}|{sppc_string}|",file=fp)
+        return
+
     def plainDump(self, fp:Optional[TextIO]=None)->None:
         self._toc_decoder.plainDump(fp=fp)
 
+        print("# モンスター一覧表",file=fp)
+        print("",file=fp)
+        print(f"|連番|名前|名前複数形|不確定名称|不確定名称複数形|画像ファイルインデクス|出現数|HP|"
+              f"種別|アーマクラス|最大攻撃回数|各回の攻撃ダイス|経験値|ドレインレベル|リジェネレーション値|ワンダリングモンスター時報酬|玄室モンスター時報酬|"
+              f"後続モンスター|後続モンスター出現率|魔術師呪文レベル|僧侶呪文レベル|出現回数制限|ブレス種別|"
+              f"呪文無効化率|抵抗|攻撃付与|弱点|"
+              f"能力|能力値|",file=fp)
+        print(f"|---|---|---|---|---|---|---|---|"
+              f"---|---|---|---|---|---|---|---|---|"
+              f"---|---|---|---|---|---|"
+              f"---|---|---|---|"
+              f"---|---|",file=fp)
+
+        for idx in sorted(self._monsters.keys()):
+            self.plainOneDumpMonster(index=idx,data=self._monsters[idx],fp=fp)
+        print("",file=fp)
         return
 
     @property

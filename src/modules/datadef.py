@@ -60,6 +60,24 @@ class dice_type:
     """ダイスの面数(nDt+aのt)"""
     add_val:int
     """ダイスの補正値(nDt+aのa)"""
+    @property
+    def name(self)->str:
+        """ダイス文字列を返す"""
+        return f"{self.trial}D{self.factor}+{self.add_val}"
+
+    @property
+    def min(self)->int:
+        """ダイスの最小値を返す"""
+        return self.trial + self.add_val
+    @property
+    def max(self)->int:
+        """ダイスの最大値を返す"""
+        return self.trial * self.factor + self.add_val
+
+    @property
+    def range(self)->str:
+        """ダイスの値範囲文字列を返す"""
+        return f"{self.min}--{self.max}"
 
 @dataclass
 class wiz_long_type:
