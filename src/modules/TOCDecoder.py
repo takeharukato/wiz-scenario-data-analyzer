@@ -23,13 +23,12 @@ if TYPE_CHECKING:
 import sys
 import os
 import re
-import struct
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from modules.scnDecoder import scnDecoder
 from modules.datadef import WizardrySCNTOC
-from modules.utils import decodePackedArrayUint16
+from modules.utils import decodePackedArrayUint16,getDecodeDict
 import modules.consts
 
 """Table of contentsのPascal定義
@@ -231,7 +230,6 @@ class TOCDecoder(scnDecoder):
         res.game_name=data_dic['GAMENAME'][0].decode()
         spell_group_dic:dict[int,int]={}
         spell_type_dic:dict[int,int]={}
-        spell_bin_dic:dict[int,str]={} # TODO: 削除
 
         for key_name in ['RECPER2B','RECPERDK','BLOFF','RACE','CLS',
                          'STATUS','ALIGN','SPELLHSH','SPELLGRP','SPELL012']:
@@ -265,7 +263,6 @@ class TOCDecoder(scnDecoder):
                 elif key_name == 'SPELL012':
                     assert idx not in spell_type_dic, f"duplicate index {idx} in {key_name}"
                     spell_type_dic[idx]=int(data_dic[key][0])
-                    spell_bin_dic[idx]=f"{bin(spell_type_dic[idx])}"
 
         # 呪文グループ情報を解析する
         res.SPELLGRP=self.decodeSpellGroup(spell_group_dic=spell_group_dic)
@@ -284,14 +281,7 @@ class TOCDecoder(scnDecoder):
         Returns:
             WizardrySCNTOC: シナリオ情報目次
         """
-
-        decode_dict:dict[str,Any]={}
-
-        for k, v in WizardrySCNTOCDef.items(): # データレイアウトのキーと値を得る
-            # データ構造メンバのオフセット位置を得る
-            member_offset = offset + v['offset']
-            data_type = v['type']
-            # pythonのデータ型に変換する
-            decode_dict[k] = struct.unpack_from(data_type, data, member_offset)
+        # TOC情報をpythonのデータ(バイト列)にデコードする
+        decode_dict=getDecodeDict(data=data, layout=WizardrySCNTOCDef, offset=offset)
 
         return self.convertTableOfContents(data_dic=decode_dict)

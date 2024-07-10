@@ -12,7 +12,7 @@
 
 from __future__ import annotations # 型定義のみを参照する
 from typing import TYPE_CHECKING   # 型チェック実施判定
-#from typing import Any,Optional
+from typing import Any #,Optional
 
 if TYPE_CHECKING:
     pass
@@ -22,8 +22,11 @@ if TYPE_CHECKING:
 #
 import sys
 import os
+import struct
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+
+import modules.consts
 
 def decodePackedArrayUint16(data_dic:dict[int,int], bit_len:int, max_index:int)->dict[int,int]:
     """16ビット単位で格納されているpacked array中の整数値を解析し, 各値を格納した辞書を生成する
@@ -52,3 +55,53 @@ def decodePackedArrayUint16(data_dic:dict[int,int], bit_len:int, max_index:int)-
             bits_remain -= bit_len # 残りビット数を更新する
 
     return res
+
+def word_to_dic(resist_value:int, dic:dict[int,str])->dict[int,str]:
+    """符号なし整数16bitであらわされた抵抗属性を文字列の辞書に変換する
+
+    Args:
+        resist_value (int): 符号なし整数16bitであらわされた抵抗属性
+        dic (dict[int,str]): ビットから意味を表す文字列への辞書
+    Returns:
+        dict[int,str]: ビット->抵抗属性
+    """
+    res:dict[int,str]={}
+    v = resist_value # 抵抗/攻撃付与属性を表す整数を取得
+    for bit in range(16): # 16ビットの各ビットについて
+        if v & (1 << bit) and bit in dic: # ビットが立っていて有効な属性なら
+            res[bit]=dic[bit]
+
+    return res
+
+def word_to_resist_dic(resist_value:int)->dict[int,str]:
+    """符号なし整数16bitであらわされた抵抗属性を文字列の辞書に変換する
+
+    Args:
+        resist_value (int): 符号なし整数16bitであらわされた抵抗属性
+
+    Returns:
+        dict[int,str]: ビット->抵抗属性
+    """
+    return word_to_dic(resist_value=resist_value,dic=modules.consts.RESIST_BREATH_DIC)
+
+def getDecodeDict(data:Any, layout:dict[str,dict[str,Any]],offset:int)->dict[str,Any]:
+    """データレイアウトを元に各データをpythonのbytesデータにアンパックする
+
+    Args:
+        data (Any): シナリオデータ
+        layout (dict[str,dict[str,Any]]): データレイアウト
+        offset (int): 解析対象データのシナリオデータ開始位置からのオフセットアドレス(単位:バイト)
+
+    Returns:
+        dict[str,Any]: キーからアンパック後のデータへの辞書
+    """
+    decode_dict:dict[str,Any]={}
+
+    for k, v in layout.items(): # データレイアウトのキーと値を得る
+        # データ構造メンバのオフセット位置を得る
+        member_offset = offset + v['offset']
+        data_type = v['type']
+        # pythonのデータ型に変換する
+        decode_dict[k] = struct.unpack_from(data_type, data, member_offset)
+
+    return decode_dict

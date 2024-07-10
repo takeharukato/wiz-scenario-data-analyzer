@@ -43,8 +43,9 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
 if TYPE_CHECKING:
     pass
 
-from modules.datadef import WizardrySCNTOC
+from modules.datadef import WizardrySCNTOC,WizardryMonsterDataEntry
 from modules.TOCDecoder import TOCDecoder
+from modules.monsterDecoder import monsterDecoder
 import modules.consts
 
 #
@@ -81,8 +82,11 @@ class ReadScenario:
 
     _scenario:Any
     """シナリオ情報ファイルのメモリイメージ"""
+
     _toc:WizardrySCNTOC
     """目次情報"""
+    _monsters:dict[int,WizardryMonsterDataEntry]
+    """モンスター情報"""
 
     ## 初期化
     #
@@ -111,6 +115,9 @@ class ReadScenario:
         else:
             self.unset_debug()    # デバッグモードを無効
 
+        self._monsters={}
+
+        return
 
     def __parse_cmdline(self):
         """コマンドライン解析
@@ -158,6 +165,7 @@ class ReadScenario:
 
         self.is_debug = False # デバッグモードを無効にする
         return
+
     def readTOC(self, data:Any)->None:
         """目次情報を読込む
 
@@ -166,6 +174,16 @@ class ReadScenario:
         """
         toc_decoder=TOCDecoder()
         self._toc=toc_decoder.decodeData(data=data, offset=0)
+        return
+
+    def readMonsterTable(self, data:Any)->None:
+        decoder=monsterDecoder()
+        nr_monsters=self._toc.RECPERDK[modules.consts.ZENEMY]
+        for idx in range(nr_monsters):
+            monster=decoder.decodeOneData(toc=self._toc,data=data,index=idx)
+            if isinstance(monster, WizardryMonsterDataEntry):
+                self._monsters[idx]=monster
+
         return
 
     def doConvert(self, infile:Optional[str]=None, outfile:Optional[str]=None)->None:
@@ -184,6 +202,7 @@ class ReadScenario:
             self._scenario=fr.read()
 
         self.readTOC(data=self._scenario) # 目次情報を読み込む
+        self.readMonsterTable(data=self._scenario) # モンスター情報を読み込む
         return
 
     @property
