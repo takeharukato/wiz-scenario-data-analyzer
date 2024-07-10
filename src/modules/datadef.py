@@ -194,3 +194,166 @@ class WizardryItemDataEntry:
     """倍打特性を表すビットマップ値"""
     purpose_dic:dict[int,str]
     """倍打特性を表す辞書"""
+
+@dataclass
+class WizardryRewardInfo:
+    percentage:int
+    """報酬獲得確率"""
+    has_item:bool
+    """アイテムを含む場合は真"""
+    reward_param:dict[int,int]
+    """報酬情報0-6の内容(インデクス->値への辞書)"""
+
+    @property
+    def gold_tries(self)->int:
+        """ダイスを振る回数(お金の場合)"""
+
+        if self.has_item:
+            return 0 # お金による報酬でない
+
+        if 0 not in self.reward_param:
+            return 0
+        return self.reward_param[0]
+
+    @property
+    def gold_aveamt(self)->int:
+        """ダイスの面数(お金の場合)"""
+
+        if self.has_item:
+            return 0 # お金による報酬でない
+
+        if 1 not in self.reward_param:
+            return 0
+
+        return self.reward_param[1]
+
+    @property
+    def gold_minadd(self)->int:
+        """ダイスの加算値(お金の場合)"""
+
+        if self.has_item:
+            return 0 # お金による報酬でない
+
+        if 2 not in self.reward_param:
+            return 0
+
+        return self.reward_param[2]
+
+    @property
+    def gold_multx(self)->int:
+        """報酬補正乗数(お金の場合)"""
+
+        if self.has_item:
+            return 0 # お金による報酬でない
+
+        if 3 not in self.reward_param:
+            return 0
+
+        return self.reward_param[3]
+
+    @property
+    def gold_tries2(self)->int:
+        """ダイスを振る回数2(お金の場合)"""
+
+        if self.has_item:
+            return 0 # お金による報酬でない
+
+        if 4 not in self.reward_param:
+            return 0
+
+        return self.reward_param[4]
+
+    @property
+    def gold_aveamt2(self)->int:
+        """ダイスの面数2(お金の場合)"""
+
+        if self.has_item:
+            return 0 # お金による報酬でない
+
+        if 5 not in self.reward_param:
+            return 0
+
+        return self.reward_param[5]
+
+    @property
+    def gold_minadd2(self)->int:
+        """ダイスの加算値(お金の場合)"""
+
+        if self.has_item:
+            return 0 # お金による報酬でない
+
+        if 6 not in self.reward_param:
+            return 0
+
+        return self.reward_param[6]
+
+    @property
+    def item_minindx(self)->int:
+        """最小アイテム番号(アイテムの場合)"""
+
+        if not self.has_item:
+            return 0 # アイテム報酬でない
+
+        if 0 not in self.reward_param:
+            return 0
+
+        return self.reward_param[0]
+
+    @property
+    def item_mfactor(self)->int:
+        """n番目に見つけたアイテムの場合, 報酬で設定されている最小アイテム番号にかける乗数(アイテムの場合)"""
+
+        if not self.has_item:
+            return 0 # アイテム報酬でない
+
+        if 1 not in self.reward_param:
+            return 0
+
+        return self.reward_param[1]
+
+    @property
+    def item_maxtimes(self)->int:
+        """宝箱から取得できる最大アイテム獲得数(アイテムの場合)"""
+
+        if not self.has_item:
+            return 0 # アイテム報酬でない
+
+        if 2 not in self.reward_param:
+            return 0
+
+        return self.reward_param[2]
+
+    @property
+    def item_range(self)->int:
+        """アイテム番号算出時に使用するダイスの面数(アイテムの場合)"""
+
+        if not self.has_item:
+            return 0 # アイテム報酬でない
+
+        if 3 not in self.reward_param:
+            return 0
+
+        return self.reward_param[3]
+
+    @property
+    def item_percbigr(self)->int:
+        """アイテム取得確率(アイテムの場合)"""
+
+        if not self.has_item:
+            return 0 # アイテム報酬でない
+
+        if 4 not in self.reward_param:
+            return 0
+
+        return self.reward_param[4]
+
+@dataclass
+class WizardryRewardDataEntry:
+    in_chest:bool
+    """宝箱を出すか"""
+    trap_type_value:int
+    """罠の種別を表すビットマップ"""
+    reward_count_value:int
+    """報酬の数"""
+    rewards:dict[int,WizardryRewardInfo]
+    """報酬詳細情報"""

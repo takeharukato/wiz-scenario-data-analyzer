@@ -43,11 +43,12 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
 if TYPE_CHECKING:
     pass
 
-from modules.datadef import WizardrySCNTOC,WizardryMonsterDataEntry,WizardryItemDataEntry
+from modules.datadef import WizardrySCNTOC,WizardryMonsterDataEntry,WizardryItemDataEntry,WizardryRewardDataEntry
 from modules.scnDecoder import scnDecoder
 from modules.TOCDecoder import TOCDecoder
 from modules.monsterDecoder import monsterDecoder
 from modules.itemDecoder import itemDecoder
+from modules.rewardDecoder import rewardDecoder
 import modules.consts
 
 #
@@ -91,6 +92,8 @@ class ReadScenario:
     """モンスター情報"""
     _items:dict[int,WizardryItemDataEntry]
     """アイテム情報"""
+    _rewards:dict[int,WizardryRewardDataEntry]
+    """報酬情報"""
 
     ## 初期化
     #
@@ -121,6 +124,7 @@ class ReadScenario:
 
         self._monsters={}
         self._items={}
+        self._rewards={}
         return
 
     def __parse_cmdline(self):
@@ -202,6 +206,16 @@ class ReadScenario:
 
         return
 
+    def readRewardTable(self, data:Any)->None:
+        decoder=rewardDecoder()
+        nr_rewards=self.toc.RECPERDK[modules.consts.ZREWARD]
+        for idx in range(nr_rewards):
+            reward=decoder.decodeOneData(scn=self._toc_decoder, data=data, index=idx)
+            if isinstance(reward, WizardryRewardDataEntry):
+                self._rewards[idx]=reward
+
+        return
+
     def doConvert(self, infile:Optional[str]=None, outfile:Optional[str]=None)->None:
         """シナリオ情報を変換する
 
@@ -220,6 +234,7 @@ class ReadScenario:
         self.readTOC(data=self._scenario) # 目次情報を読み込む
         self.readMonsterTable(data=self._scenario) # モンスター情報を読み込む
         self.readItemTable(data=self._scenario) # アイテム情報を読み込む
+        self.readRewardTable(data=self._scenario) # 報酬情報を読み込む
         return
 
     @property
