@@ -225,43 +225,69 @@ class TOCDecoder(scnDecoder):
         return decodePackedArrayUint16(data_dic=spell_type_dic,bit_len=2,max_index=TOC_NR_SPELLS)
 
     def convertTableOfContents(self, data_dic:dict[str,Any])->WizardrySCNTOC:
+        """目次をpythonのオブジェクトに格納
 
+        Args:
+            data_dic (dict[str,Any]): unpackした目次情報の辞書
+
+        Returns:
+            WizardrySCNTOC: 目次オブジェクト
+        """
+
+        # 目次オブジェクト生成
         res = WizardrySCNTOC(game_name="",RECPER2B={},RECPERDK={},BLOFF={},RACE={},STATUS={},ALIGN={},SPELLHSH={},SPELLGRP={},SPELL012={})
-        res.game_name=data_dic['GAMENAME'][0].decode()
-        spell_group_dic:dict[int,int]={}
-        spell_type_dic:dict[int,int]={}
 
-        for key_name in ['RECPER2B','RECPERDK','BLOFF','RACE','CLS',
-                         'STATUS','ALIGN','SPELLHSH','SPELLGRP','SPELL012']:
-            for key in ( key for key in data_dic.keys() if re.match(key_name+'_', key) ):
-                idx = int(re.sub(key_name + '_','', key))
-                assert key_name not in ['RECPER2B','RECPERDK','BLOFF'] or idx in modules.consts.TOC_INDEX_TO_KEY, f"No key string found for {idx}"
-                if key_name == 'RECPER2B':
-                    assert idx not in res.RECPER2B, f"duplicate index {idx} in {key_name}"
+        spell_group_dic:dict[int,int]={} # 呪文グループ
+        spell_type_dic:dict[int,int]={}  # 呪文種別
+
+        # シナリオ名取得
+        res.game_name=data_dic['GAMENAME'][0].decode()
+
+        # 目次の各項目をpythonのオブジェクトに変換
+        for unpack_key in ['RECPER2B','RECPERDK','BLOFF','RACE','CLS',
+                         'STATUS','ALIGN','SPELLHSH','SPELLGRP','SPELL012']: # 各配列について
+            for key in ( key for key in data_dic.keys() if re.match(unpack_key+'_', key) ):
+
+                idx = int(re.sub(unpack_key + '_','', key)) # 配列のインデクスを取得
+
+                # シナリオ情報の構成に関する情報は, シナリオ構成情報の構成要素である
+                assert unpack_key not in ['RECPER2B','RECPERDK','BLOFF'] or idx in modules.consts.TOC_INDEX_TO_KEY, f"No key string found for {idx}"
+
+                # 各要素を解析して, pythonのデータ構造に変換
+                if unpack_key == 'RECPER2B': # キャッシュ内のデータ格納数
+                    assert idx not in res.RECPER2B, f"duplicate index {idx} in {unpack_key}"
                     res.RECPER2B[modules.consts.TOC_INDEX_TO_KEY[idx]]=int(data_dic[key][0])
-                elif key_name == 'RECPERDK':
-                    assert idx not in res.RECPERDK, f"duplicate index {idx} in {key_name}"
+
+                elif unpack_key == 'RECPERDK': # シナリオ中の最大データ数
+                    assert idx not in res.RECPERDK, f"duplicate index {idx} in {unpack_key}"
                     res.RECPERDK[modules.consts.TOC_INDEX_TO_KEY[idx]]=int(data_dic[key][0])
-                elif key_name == 'BLOFF':
-                    assert idx not in res.BLOFF, f"duplicate index {idx} in {key_name}"
+
+                elif unpack_key == 'BLOFF': # 各シナリオ情報の構成要素のオフセット位置(単位:ブロック)
+                    assert idx not in res.BLOFF, f"duplicate index {idx} in {unpack_key}"
                     res.BLOFF[modules.consts.TOC_INDEX_TO_KEY[idx]]=int(data_dic[key][0])
-                elif key_name == 'RACE':
-                    assert idx not in res.RACE, f"duplicate index {idx} in {key_name}"
+
+                elif unpack_key == 'RACE': # 種族名
+                    assert idx not in res.RACE, f"duplicate index {idx} in {unpack_key}"
                     res.RACE[idx]=data_dic[key][0].decode()
-                elif key_name == 'STATUS':
-                    assert idx not in res.STATUS, f"duplicate index {idx} in {key_name}"
+
+                elif unpack_key == 'STATUS': # 状態名
+                    assert idx not in res.STATUS, f"duplicate index {idx} in {unpack_key}"
                     res.STATUS[idx]=data_dic[key][0].decode()
-                elif key_name == 'ALIGN':
-                    assert idx not in res.ALIGN, f"duplicate index {idx} in {key_name}"
+
+                elif unpack_key == 'ALIGN': # 属性名
+                    assert idx not in res.ALIGN, f"duplicate index {idx} in {unpack_key}"
                     res.ALIGN[idx]=data_dic[key][0].decode()
-                elif key_name == 'SPELLHSH':
-                    assert idx not in res.SPELLHSH, f"duplicate index {idx} in {key_name}"
+
+                elif unpack_key == 'SPELLHSH': # 呪文ハッシュ番号
+                    assert idx not in res.SPELLHSH, f"duplicate index {idx} in {unpack_key}"
                     res.SPELLHSH[idx]=int(data_dic[key][0])
-                elif key_name == 'SPELLGRP':
-                    assert idx not in spell_group_dic, f"duplicate index {idx} in {key_name}"
+
+                elif unpack_key == 'SPELLGRP': # 呪文のレベル
+                    assert idx not in spell_group_dic, f"duplicate index {idx} in {unpack_key}"
                     spell_group_dic[idx]=int(data_dic[key][0])
-                elif key_name == 'SPELL012':
-                    assert idx not in spell_type_dic, f"duplicate index {idx} in {key_name}"
+
+                elif unpack_key == 'SPELL012': # 呪文種別
+                    assert idx not in spell_type_dic, f"duplicate index {idx} in {unpack_key}"
                     spell_type_dic[idx]=int(data_dic[key][0])
 
         # 呪文グループ情報を解析する

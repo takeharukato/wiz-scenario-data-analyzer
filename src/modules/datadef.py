@@ -77,8 +77,10 @@ class WizardryMonsterDataEntry:
     """出現数算出ダイス"""
     hprec:dice_type
     """HP算出ダイス"""
-    cls:int
-    """モンスター種別"""
+    enemy_class_value:int
+    """モンスター種別値"""
+    enemy_class_str:str
+    """モンスター種別名"""
     ac:int
     """アーマクラス"""
     max_swing_count:int

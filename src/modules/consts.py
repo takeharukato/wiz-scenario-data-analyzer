@@ -35,7 +35,10 @@ BLK_SIZ=512
 WIZ_CACHE_SIZE=BLK_SIZ * 2
 # シナリオデータファイル名
 DEFAULT_SCENARIO_DATA_FILE="SCENARIO.DATA"
-
+# データ解析結果不明
+UNKNOWN_STRING="不明"
+# ダイス情報の種類( nDt + a 形式)
+DICE_DATA_ELEMENT_NR=3
 #
 # シナリオ情報の目次
 #
@@ -61,6 +64,28 @@ TOC_INDEX_TO_KEY:dict[int,str]={
     6:ZSPCCHRS,
     7:ZEXP
 }
+
+#
+# アイテム/モンスター情報共通
+#
+# モンスター種別
+ENEMY_CLASS_DIC:dict[int,str]={
+    0:"戦士系",
+    1:"魔術師系",
+    2:"僧侶系",
+    3:"盗賊系",
+    4:"未使用",
+    5:"巨人系",
+    6:"神話系",
+    7:"竜系",
+    8:"動物系",
+    9:"リカント系",
+    10:"不死系",
+    11:"悪魔系",
+    12:"昆虫系",
+    13:"魔法生物系",
+}
+
 # 抵抗属性,ブレス/呪文属性(WEPVSTYP3)のビット位置と意味
 RESIST_BREATH_DIC:dict[int,str]={
     0:"無", # 抵抗なし, 無属性ブレス/呪文
@@ -81,15 +106,27 @@ SPPC_DIC:dict[int,str]={
     5:"逃", # 逃走可能
     6:"呼", # 仲間を呼ぶ
 }
+# 攻撃付与属性
 SPPC_SPECIAL_ATTACK_DIC:dict[int,str]={
     0:"石", # 石化
     1:"毒", # 毒
     2:"麻", # 麻痺
     3:"首", # クリティカル
 }
+
+#
+# モンスター情報
+#
+
+# 攻撃回数最大値
+ENEMY_MAX_SWING_COUNT=7
+
+# 弱点
 SPPC_WEAK_POINT_DIC:dict[int,str]={
     4:"眠", # 休眠可能(弱点)
 }
+
+# 能力
 SPPC_CAPABILITY_DIC:dict[int,str]={
     5:"逃", # 逃走可能
     6:"呼", # 仲間を呼ぶ

@@ -22,7 +22,6 @@ if TYPE_CHECKING:
 #
 import sys
 import os
-import re
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
@@ -158,7 +157,14 @@ class monsterDecoder(dataEntryDecoder):
 
 
     def _dict2MonsterDataEntry(self, decode_dict:dict[str,Any])->WizardryMonsterDataEntry:
+        """unpackしたモンスター情報をpythonのオブジェクトに変換
 
+        Args:
+            decode_dict (dict[str,Any]): unpackしたモンスター情報の辞書(unpackしたデータの要素名->bytes列のタプル)
+
+        Returns:
+            WizardryMonsterDataEntry: pythonのオブジェクトであらわしたモンスター情報
+        """
         res=WizardryMonsterDataEntry(name_unknown="",
                                      plural_name_unknown="",
                                      name="",
@@ -166,7 +172,8 @@ class monsterDecoder(dataEntryDecoder):
                                      pic=0,
                                      calc1=dice_type(0,0,0),
                                      hprec=dice_type(0,0,0),
-                                     cls=0,
+                                     enemy_class_value=0,
+                                     enemy_class_str="",
                                      ac=0,
                                      max_swing_count=0,
                                      damage_dices={},
@@ -192,57 +199,68 @@ class monsterDecoder(dataEntryDecoder):
 
         for key in decode_dict.keys():
             match key:
-                case 'NAMEUNK':
+                case 'NAMEUNK': # 不確定名称
                     res.name_unknown=decode_dict[key][0].decode()
-                case 'NAMEUNKS':
+                case 'NAMEUNKS': # 不確定名称複数形
                     res.plural_name_unknown=decode_dict[key][0].decode()
-                case 'NAME':
+                case 'NAME': # 名称
                     res.name=decode_dict[key][0].decode()
-                case 'NAMES':
+                case 'NAMES': # 名称複数形
                     res.plural_name=decode_dict[key][0].decode()
-                case 'PIC':
+                case 'PIC': # グラフィック番号
                     res.pic=int(decode_dict[key][0])
-                case 'CLASS':
-                    res.cls=int(decode_dict[key][0])
-                case 'AC':
+                case 'CLASS': # モンスター種別
+                    v = int(decode_dict[key][0])
+                    res.enemy_class_value=v
+                    if v in modules.consts.ENEMY_CLASS_DIC: # 有効なモンスター種別番号なら
+                        res.enemy_class_str=modules.consts.ENEMY_CLASS_DIC[v] # モンスター種別名を格納
+                    else:
+                        res.enemy_class_str=modules.consts.UNKNOWN_STRING # 不明な場合は"不明"とする
+                case 'AC': # アーマクラス
                     res.ac=int(decode_dict[key][0])
-                case 'RECSN':
+                case 'RECSN': # 最大攻撃回数
                     res.max_swing_count=int(decode_dict[key][0])
-                case 'EXPAMT':
+                case 'EXPAMT': # 取得経験値
                     res.exp_amount=int(decode_dict[key][0])
-                case 'DRAINAMT':
+                case 'DRAINAMT': # ドレインレベル数
                     res.drain_amount=int(decode_dict[key][0])
-                case 'HEALPTS':
+                case 'HEALPTS': # リジェネレーション値
                     res.heal_pts=int(decode_dict[key][0])
-                case 'REWARD1':
+                case 'REWARD1': # 報酬1 (ワンダリングモンスターとして出現時)
                     res.reward1=int(decode_dict[key][0])
-                case 'REWARD2':
+                case 'REWARD2': # 報酬2 (玄室)
                     res.reward2=int(decode_dict[key][0])
-                case 'ENMYTEAM':
+                case 'ENMYTEAM': # 後続モンスターのモンスター番号
                     res.enemy_team=int(decode_dict[key][0])
-                case 'TEAMPERC':
+                case 'TEAMPERC': # 後続モンスターの出現確率
                     res.team_percentage=int(decode_dict[key][0])
-                case 'MAGSPELS':
+                case 'MAGSPELS': # 魔術師呪文レベル
                     res.mage_spells=int(decode_dict[key][0])
-                case 'PRISPELS':
+                case 'PRISPELS': # 僧侶呪文レベル
                     res.priest_spells=int(decode_dict[key][0])
-                case 'UNIQUE':
+                case 'UNIQUE': # 出現回数制限
                     res.unique=int(decode_dict[key][0])
-                case 'BREATHE':
+                case 'BREATHE': # ブレス種別
                     num=int(decode_dict[key][0])
                     res.breathe_value=num
-                    if num > 0 and num in modules.consts.RESIST_BREATH_DIC:
-                        res.breathe=modules.consts.RESIST_BREATH_DIC[num]
+                    if num > 0:
+                        if num in modules.consts.RESIST_BREATH_DIC: # 有効なブレス種別の場合
+                            res.breathe=modules.consts.RESIST_BREATH_DIC[num] # ブレス種別を格納
+                        else:
+                            res.breathe=modules.consts.UNKNOWN_STRING # 不明
                     else:
-                        res.breathe=""
-                case 'UNAFFCT':
+                        res.breathe="" # ブレスなし
+                case 'UNAFFCT': # 呪文無効化率
                     res.unaffect_ratio=int(decode_dict[key][0])
-                case 'WEPVSTY3':
+                case 'WEPVSTY3': # 抵抗属性
                     res.wepvsty3_value=int(decode_dict[key][0])
-                case 'SPPC':
+                case 'SPPC': # 攻撃付与/弱点/能力
                     res.sppc_value=int(decode_dict[key][0])
                 case _:
                     pass
+        #
+        # 出現数ダイス
+        #
         res.calc1=dice_type(int(decode_dict['CALC1_0'][0]),
                             int(decode_dict['CALC1_1'][0]),
                             int(decode_dict['CALC1_2'][0]))
@@ -250,16 +268,22 @@ class monsterDecoder(dataEntryDecoder):
         # 攻撃ダイス
         #
         damage_dices={}
-        for i in range(7):
-            for j in range(3):
-                dice_key=f"RECS_{i+1}_{j}"
-                if dice_key not in decode_dict:
-                    continue
+        for i in range(modules.consts.ENEMY_MAX_SWING_COUNT): # 攻撃回数分
+            for j in range(modules.consts.DICE_DATA_ELEMENT_NR): # 各ダイス情報の値を取り出す
+                dice_key=f"RECS_{i+1}_{j}" # 攻撃ダイスのキー
+                if dice_key not in decode_dict: # 対象キーが見つからなければ,
+                    continue # 次の要素へ
+
+            # 各攻撃回数ごとのダメージダイスを辞書に登録, 辞書のキーは攻撃回数
             damage_dices[ i + 1 ] = dice_type(int(decode_dict[f"RECS_{i+1}_0"][0]),int(decode_dict[f"RECS_{i+1}_1"][0]),int(decode_dict[f"RECS_{i+1}_2"][0]))
-        res.damage_dices=damage_dices
+        res.damage_dices=damage_dices # ダメージダイスを設定
+        # 攻撃抵抗値を設定
         res.resist_dic=word_to_resist_dic(resist_value=res.wepvsty3_value)
+        # 攻撃付与属性を設定
         res.special_attack_dic=word_to_dic(resist_value=res.sppc_value,dic=modules.consts.SPPC_SPECIAL_ATTACK_DIC)
+        # 弱点を設定
         res.weak_point_dic=word_to_dic(resist_value=res.sppc_value,dic=modules.consts.SPPC_WEAK_POINT_DIC)
+        # 能力を設定
         res.capability_dic=word_to_dic(resist_value=res.sppc_value,dic=modules.consts.SPPC_CAPABILITY_DIC)
 
         return res
@@ -285,12 +309,16 @@ class monsterDecoder(dataEntryDecoder):
         start_block = toc.BLOFF[modules.consts.ZENEMY]
         start_offset = modules.consts.BLK_SIZ * start_block
 
-        # 対象データの位置
+        # キャッシュに読み込むディスクデータのシナリオ情報ファイルの先頭からのオフセット位置(単位:ブロック)
         data_block = 2 * ( index // toc.RECPER2B[modules.consts.ZENEMY] )
-        data_block_offset = modules.consts.BLK_SIZ * data_block
+        data_block_offset = modules.consts.BLK_SIZ * data_block # オフセット位置をバイト単位に変換
+        # 対象データのキャッシュ内でのオフセット位置を算出
         entry_offset = (index % toc.RECPER2B[modules.consts.ZENEMY]) * MONSTER_ENTRY_SIZE
+
+        # 解析対象データのシナリオ情報先頭からのオフセット位置(単位:バイト)を算出
         data_offset = start_offset + data_block_offset + entry_offset
-        if index == 32:
-            pass
+
+        # 解析対象データをunpackする
         decode_dict = getDecodeDict(data=data,layout=WizardryMonsterDataEntryDef,offset=data_offset)
+        # unpackしたデータをpythonのオブジェクトに変換
         return self._dict2MonsterDataEntry(decode_dict=decode_dict)
