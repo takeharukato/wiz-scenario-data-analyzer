@@ -292,7 +292,7 @@ class ReadScenario:
         pic=data.pic
         nr_member=f"{data.calc1.name} ({data.calc1.min}--{data.calc1.max})"
         hp_dice=f"{data.hprec.name} ({data.hprec.min}--{data.hprec.max})"
-        enemy_class=f"{modules.consts.ENEMY_CLASS_DIC[data.enemy_class_value]}{data.enemy_class_value}" if data.enemy_class_value in modules.consts.ENEMY_CLASS_DIC else f"{modules.consts.UNKNOWN_STRING} ({data.enemy_class_value})"
+        enemy_class=f"{modules.consts.ENEMY_CLASS_DIC[data.enemy_class_value]} ({data.enemy_class_value})" if data.enemy_class_value in modules.consts.ENEMY_CLASS_DIC else f"{modules.consts.UNKNOWN_STRING} ({data.enemy_class_value})"
         ac=f"{data.ac}"
         swing_count=f"{data.max_swing_count}"
         dmg_dice_table=",".join([data.damage_dices[key].name for key in sorted(data.damage_dices.keys()) if data.damage_dices[key].trial != 0 or data.damage_dices[key].add_val != 0 ])
@@ -301,16 +301,18 @@ class ReadScenario:
         heal_pts=f"{data.heal_pts}"
         reward1=f"{data.reward1}"
         reward2=f"{data.reward2}"
-        follows=f"{data.enemy_team}"
+        follower=self._monsters[data.enemy_team].name if data.enemy_team in self._monsters else modules.consts.UNKNOWN_STRING
+        follows=f"{follower} ({data.enemy_team})" if data.team_percentage != 0 else f""
         follow_percentage=f"{data.team_percentage}"
+
         mage_spell=f"{data.mage_spells}"
         pri_spell=f"{data.priest_spells}"
-        uniq=f"{data.unique}" if data.unique > 0 else f"-"
-        breathe=f"{data.breathe} ({data.breathe_value} {bin(data.breathe_value)})"
-        unaffect_ratio=f"{data.unaffect_ratio} %"
+        uniq=f"無制限 ({data.unique})" if data.unique == -1 else f"{data.unique - -1} 回 ({data.unique})"
+        breathe=f"{data.breathe} ({hex(data.breathe_value)} = {bin(data.breathe_value)})" if data.breathe_value != 0 else f""
+        unaffect_ratio=f"{data.unaffect_ratio}"
         resist_set=','.join([data.resist_dic[key] for key in sorted(data.resist_dic.keys())])
-        resist_string=f"{resist_set}({data.wepvsty3_value} {bin(data.wepvsty3_value)})"
-        sppc_string=f"{data.sppc_value}"
+        resist_string=f"{resist_set} ({hex(data.wepvsty3_value)} = {bin(data.wepvsty3_value)})" if data.wepvsty3_value != 0 else f""
+        sppc_string=f"{data.sppc_value} ({hex(data.sppc_value)} = {bin(data.sppc_value)})"
         special_attack_string=','.join([data.special_attack_dic[key] for key in sorted(data.special_attack_dic.keys())])
         weak_points_string = ','.join([data.weak_point_dic[key] for key in sorted(data.weak_point_dic.keys())])
         capability_string =  ','.join([data.capability_dic[key] for key in sorted(data.capability_dic.keys())])
@@ -324,7 +326,7 @@ class ReadScenario:
     def plainDump(self, fp:Optional[TextIO]=None)->None:
         self._toc_decoder.plainDump(fp=fp)
 
-        print("# モンスター一覧表",file=fp)
+        print("## モンスター一覧表",file=fp)
         print("",file=fp)
         print(f"|連番|名前|名前複数形|不確定名称|不確定名称複数形|画像ファイルインデクス|出現数|HP|"
               f"種別|アーマクラス|最大攻撃回数|各回の攻撃ダイス|経験値|ドレインレベル|リジェネレーション値|ワンダリングモンスター時報酬|玄室モンスター時報酬|"

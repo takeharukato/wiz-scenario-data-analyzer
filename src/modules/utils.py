@@ -25,7 +25,6 @@ import os
 import struct
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from modules.datadef import dice_type
 import modules.consts
 
 def decodePackedArrayUint16(data_dic:dict[int,int], bit_len:int, max_index:int)->dict[int,int]:

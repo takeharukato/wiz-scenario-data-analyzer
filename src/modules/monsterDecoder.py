@@ -12,7 +12,6 @@
 
 from __future__ import annotations # 型定義のみを参照する
 from typing import TYPE_CHECKING   # 型チェック実施判定
-from typing import TextIO
 from typing import Any,Optional
 
 if TYPE_CHECKING:
@@ -267,6 +266,12 @@ class monsterDecoder(dataEntryDecoder):
                             int(decode_dict['CALC1_1'][0]),
                             int(decode_dict['CALC1_2'][0]))
         #
+        # HPダイス
+        #
+        res.hprec=dice_type(int(decode_dict['HPREC_0'][0]),
+                            int(decode_dict['HPREC_1'][0]),
+                            int(decode_dict['HPREC_2'][0]))
+        #
         # 攻撃ダイス
         #
         damage_dices={}
@@ -307,7 +312,8 @@ class monsterDecoder(dataEntryDecoder):
 
         if 0 > index or index >= nr_monsters:
             return None # 不正インデクス
-
+        if index == 99:
+            pass
         # 対象のモンスター情報開始オフセット位置(単位:バイト)を得る
         data_offset = scn.calcDataEntryOffset(category=modules.consts.ZENEMY, item_len=MONSTER_ENTRY_SIZE, index=index)
 

@@ -12,7 +12,6 @@
 
 from __future__ import annotations # 型定義のみを参照する
 from typing import TYPE_CHECKING   # 型チェック実施判定
-from typing import TextIO
 from typing import Any,Optional
 
 if TYPE_CHECKING:
