@@ -68,7 +68,10 @@ class dice_type:
     @property
     def min(self)->int:
         """ダイスの最小値を返す"""
+        if self.trial == 0 or self.factor == 0:
+            return self.add_val
         return self.trial + self.add_val
+
     @property
     def max(self)->int:
         """ダイスの最大値を返す"""

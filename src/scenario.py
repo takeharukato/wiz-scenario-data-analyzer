@@ -252,39 +252,8 @@ class ReadScenario:
 
         if not fp:
             fp = sys.stdout
-        """
-        name_unknown:str
-        plural_name_unknown:str
-        name:str
-        plural_name:str
-        pic:int
-        calc1:dice_type
-        hprec:dice_type
-        enemy_class_value:int
-        enemy_class_str:str
-        ac:int
-        max_swing_count:int
-        damage_dices:dict[int,dice_type]
-        exp_amount:int
-        drain_amount:int
-        heal_pts:int
-        reward1:int
-        reward2:int
-        enemy_team:int
-        team_percentage:int
-        mage_spells:int
-        priest_spells:int
-        unique:int
-        breathe_value:int
-        breathe:str
-        unaffect_ratio:int
-        wepvsty3_value:int
-        resist_dic:dict[int,str]
-        sppc_value:int
-        special_attack_dic:dict[int,str]
-        weak_point_dic:dict[int,str]
-        capability_dic:dict[int,str]
-        """
+        # TODO: ZREWARDの報酬情報と統合して, どのアイテムを何%の確率で出すのかを表示すること
+        #       ZMAZEの出現テーブルに基づいて, 出現階層, 出現率, 後続のみ出現を表示すること
         name=data.name
         names=data.plural_name
         unknown_name=data.name_unknown

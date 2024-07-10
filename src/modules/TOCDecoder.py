@@ -376,11 +376,11 @@ class TOCDecoder(scnDecoder):
         print(f"", file=fp)
         print(f"## ディスクレイアウト", file=fp)
         print(f"", file=fp)
-        print(f"|項目|キャッシュ領域に格納可能なアイテム数(RECPER2B)|総要素数(RECPERDK)|シナリオ情報中のオフセット(BLOFF 単位:ブロック)|シナリオ情報中のオフセット(単位:バイト)|")
+        print(f"|項目|キャッシュ領域に格納可能なアイテム数(RECPER2B 単位:個)|総要素数(RECPERDK 単位:個)|シナリオ情報中のオフセット(BLOFF 単位:ブロック)|シナリオ情報ファイル中のオフセットアドレス(単位:バイト)|")
         print(f"|---|---|---|---|---|", file=fp)
         for section in (modules.consts.TOC_INDEX_TO_KEY[sub_key] for sub_key in modules.consts.TOC_INDEX_TO_KEY):
             hex_offset=hex(self.toc.BLOFF[section]*modules.consts.BLK_SIZ)
-            print(f"|{section}|{self.toc.RECPER2B[section]}|{self.toc.RECPERDK[section]}|{self.toc.BLOFF[section]}|{self.toc.BLOFF[section]*modules.consts.BLK_SIZ}({hex_offset})|",file=fp)
+            print(f"|{section}|{self.toc.RECPER2B[section]}|{self.toc.RECPERDK[section]}|{self.toc.BLOFF[section]}|{self.toc.BLOFF[section]*modules.consts.BLK_SIZ} ({hex_offset})|",file=fp)
         print(f"", file=fp)
 
         print(f"## 種族名", file=fp)
