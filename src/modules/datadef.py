@@ -39,6 +39,8 @@ class WizardrySCNTOC:
     """オフセットブロック数(単位:ブロック)"""
     RACE:dict[int,str]
     """種族名"""
+    CLASS_NAME:dict[int,str]
+    """職業名"""
     STATUS:dict[int,str]
     """状態名"""
     ALIGN:dict[int,str]

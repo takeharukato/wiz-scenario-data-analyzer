@@ -12,6 +12,7 @@
 
 from __future__ import annotations # 型定義のみを参照する
 from typing import TYPE_CHECKING   # 型チェック実施判定
+from typing import TextIO
 from typing import Optional,Any
 
 """
@@ -237,6 +238,11 @@ class ReadScenario:
         self.readRewardTable(data=self._scenario) # 報酬情報を読み込む
         return
 
+    def plainDump(self, fp:Optional[TextIO]=None)->None:
+        self._toc_decoder.plainDump(fp=fp)
+
+        return
+
     @property
     def toc(self)->WizardrySCNTOC:
         """目次情報
@@ -249,4 +255,5 @@ if __name__ == '__main__':
 
     cmd = ReadScenario() # オブジェクトを生成
     cmd.doConvert()
+    cmd.plainDump()
     pass

@@ -12,7 +12,8 @@
 
 from __future__ import annotations # 型定義のみを参照する
 from typing import TYPE_CHECKING   # 型チェック実施判定
-from typing import Any #,Optional
+from typing import TextIO
+from typing import Any,Optional
 
 if TYPE_CHECKING:
     pass
@@ -61,6 +62,15 @@ class scnDecoder(ABC):
 
         Returns:
             int: シナリオ情報先頭からのオフセット位置(単位:バイト)
+        """
+        return
+
+    @abstractmethod
+    def plainDump(self, fp: Optional[TextIO]=None)->None:
+        """格納している情報をテキストとして出力する
+
+        Args:
+            fp (Optional[TextIO], optional): 出力先. Defaults to None.
         """
         return
 

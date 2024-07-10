@@ -12,7 +12,8 @@
 
 from __future__ import annotations # 型定義のみを参照する
 from typing import TYPE_CHECKING   # 型チェック実施判定
-from typing import Any #,Optional
+from typing import TextIO
+from typing import Any, Optional
 
 if TYPE_CHECKING:
     pass
@@ -246,7 +247,7 @@ class TOCDecoder(scnDecoder):
         """
 
         # 目次オブジェクト生成
-        res = WizardrySCNTOC(game_name="",RECPER2B={},RECPERDK={},BLOFF={},RACE={},STATUS={},ALIGN={},SPELLHSH={},SPELLGRP={},SPELL012={})
+        res = WizardrySCNTOC(game_name="",RECPER2B={},RECPERDK={},BLOFF={},RACE={},CLASS_NAME={},STATUS={},ALIGN={},SPELLHSH={},SPELLGRP={},SPELL012={})
 
         spell_group_dic:dict[int,int]={} # 呪文グループ
         spell_type_dic:dict[int,int]={}  # 呪文種別
@@ -280,6 +281,10 @@ class TOCDecoder(scnDecoder):
                 elif unpack_key == 'RACE': # 種族名
                     assert idx not in res.RACE, f"duplicate index {idx} in {unpack_key}"
                     res.RACE[idx]=data_dic[key][0].decode()
+
+                elif unpack_key == 'CLS': # 職業名
+                    assert idx not in res.CLASS_NAME, f"duplicate index {idx} in {unpack_key}"
+                    res.CLASS_NAME[idx]=data_dic[key][0].decode()
 
                 elif unpack_key == 'STATUS': # 状態名
                     assert idx not in res.STATUS, f"duplicate index {idx} in {unpack_key}"
@@ -359,6 +364,66 @@ class TOCDecoder(scnDecoder):
 
         return data_offset
 
+    def plainDump(self, fp: Optional[TextIO]=None)->None:
+        """格納している情報をテキストとして出力する
+
+        Args:
+            fp (Optional[TextIO], optional): 出力先. Defaults to None.
+        """
+        if not fp:
+            fp = sys.stdout
+        print(f"# シナリオ情報", file=fp)
+        print(f"", file=fp)
+        print(f"## ディスクレイアウト", file=fp)
+        print(f"", file=fp)
+        print(f"|項目|キャッシュ領域に格納可能なアイテム数(RECPER2B)|総要素数(RECPERDK)|シナリオ情報中のオフセット(BLOFF 単位:ブロック)|シナリオ情報中のオフセット(単位:バイト)|")
+        print(f"|---|---|---|---|---|", file=fp)
+        for section in (modules.consts.TOC_INDEX_TO_KEY[sub_key] for sub_key in modules.consts.TOC_INDEX_TO_KEY):
+            hex_offset=hex(self.toc.BLOFF[section]*modules.consts.BLK_SIZ)
+            print(f"|{section}|{self.toc.RECPER2B[section]}|{self.toc.RECPERDK[section]}|{self.toc.BLOFF[section]}|{self.toc.BLOFF[section]*modules.consts.BLK_SIZ}({hex_offset})|",file=fp)
+        print(f"", file=fp)
+
+        print(f"## 種族名", file=fp)
+        print(f"", file=fp)
+        print(f"|連番|種族名文字列|", file=fp)
+        print(f"|---|---|", file=fp)
+        for idx,name in self.toc.RACE.items():
+            print(f"|{idx}|{name}|", file=fp)
+        print(f"", file=fp)
+
+        print(f"## 職業名", file=fp)
+        print(f"", file=fp)
+        print(f"|連番|職業名文字列|", file=fp)
+        print(f"|---|---|", file=fp)
+        for idx,name in self.toc.CLASS_NAME.items():
+            print(f"|{idx}|{name}|", file=fp)
+        print(f"", file=fp)
+
+        print(f"## 状態名", file=fp)
+        print(f"", file=fp)
+        print(f"|連番|状態名文字列|", file=fp)
+        print(f"|---|---|", file=fp)
+        for idx,name in self.toc.STATUS.items():
+            print(f"|{idx}|{name}|", file=fp)
+        print(f"", file=fp)
+
+        print(f"## 属性名", file=fp)
+        print(f"", file=fp)
+        print(f"|連番|属性名文字列|", file=fp)
+        print(f"|---|---|", file=fp)
+        for idx,name in self.toc.ALIGN.items():
+            print(f"|{idx}|{name}|", file=fp)
+        print(f"", file=fp)
+
+        print(f"## 呪文情報", file=fp)
+        print(f"", file=fp)
+        print(f"|連番|呪文名文字列|ハッシュ値(SPELLHSH)|呪文レベル(SPELLGRP)|呪文種別(SPELL012)|", file=fp)
+        print(f"|---|---|---|---|---|---|", file=fp)
+        for idx,name in enumerate(modules.consts.DBG_WIZ_SPELL_NAMES):
+            print(f"|{idx}|{name}|{self.toc.SPELLHSH[idx]}({hex(self.toc.SPELLHSH[idx])})|{self.toc.SPELLGRP[idx]}|{modules.consts.DBG_WIZ_SPELL_TYPES[self.toc.SPELL012[idx]]}({self.toc.SPELL012[idx]})|", file=fp)
+        print(f"", file=fp)
+
+        return
     @property
     def toc(self)->WizardrySCNTOC:
         """目次情報
