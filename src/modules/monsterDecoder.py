@@ -28,7 +28,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from modules.scnDecoder import scnDecoder
 from modules.dataEntryDecoder import dataEntryDecoder
 from modules.datadef import WizardryMonsterDataEntry, dice_type
-from modules.utils import getDecodeDict,word_to_resist_dic,word_to_dic
+from modules.utils import getDecodeDict, word_to_dic
 import modules.consts
 
 """モンスター情報のPascal定義
@@ -281,11 +281,11 @@ class monsterDecoder(dataEntryDecoder):
         # ダメージダイスを設定
         res.damage_dices=damage_dices
         # 攻撃抵抗値を設定
-        res.resist_dic=word_to_resist_dic(resist_value=res.wepvsty3_value)
+        res.resist_dic=word_to_dic(word_value=res.wepvsty3_value, dic=modules.consts.RESIST_BREATH_DIC)
         # 攻撃付与属性を設定
-        res.special_attack_dic=word_to_dic(word_value=res.sppc_value,dic=modules.consts.SPPC_SPECIAL_ATTACK_DIC)
+        res.special_attack_dic=word_to_dic(word_value=res.sppc_value, dic=modules.consts.SPPC_SPECIAL_ATTACK_DIC)
         # 弱点を設定
-        res.weak_point_dic=word_to_dic(word_value=res.sppc_value,dic=modules.consts.SPPC_WEAK_POINT_DIC)
+        res.weak_point_dic=word_to_dic(word_value=res.sppc_value, dic=modules.consts.SPPC_WEAK_POINT_DIC)
         # 能力を設定
         res.capability_dic=word_to_dic(word_value=res.sppc_value,dic=modules.consts.SPPC_CAPABILITY_DIC)
 

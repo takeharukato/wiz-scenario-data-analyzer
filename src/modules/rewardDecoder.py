@@ -29,7 +29,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from modules.scnDecoder import scnDecoder
 from modules.dataEntryDecoder import dataEntryDecoder
 from modules.datadef import WizardryRewardDataEntry, WizardryRewardInfo
-from modules.utils import getDecodeDict,word_to_use_string,word_to_dic,word_to_resist_dic
+from modules.utils import getDecodeDict
 import modules.consts
 
 """報酬情報のPascal定義

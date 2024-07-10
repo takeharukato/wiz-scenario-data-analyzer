@@ -97,17 +97,6 @@ def word_to_dic(word_value:int, dic:dict[int,str])->dict[int,str]:
 
     return res
 
-def word_to_resist_dic(resist_value:int)->dict[int,str]:
-    """符号なし整数16bitであらわされた抵抗属性を文字列の辞書に変換する
-
-    Args:
-        resist_value (int): 符号なし整数16bitであらわされた抵抗属性
-
-    Returns:
-        dict[int,str]: ビット->抵抗属性
-    """
-    return word_to_dic(word_value=resist_value,dic=modules.consts.RESIST_BREATH_DIC)
-
 def getDecodeDict(data:Any, layout:dict[str,dict[str,Any]],offset:int)->dict[str,Any]:
     """データレイアウトを元に各データをpythonのbytesデータにアンパックする
 
