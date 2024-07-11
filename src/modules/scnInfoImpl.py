@@ -216,13 +216,13 @@ class scnInfoImpl(scnInfo):
         print(f"##### {depth}階 モンスター出現レンジ一覧", file=fp)
         print(f"", file=fp)
 
-        print(f"|出現系列番号|出現モンスター最小値|出現モンスター最大値|", file=fp)
-        print(f"|---|---|---|", file=fp)
-        for idx, monsters in enumerate( (min,max) for min,max in floor.monster_series ):
-            min_num, max_num = monsters
+        print(f"|出現系列番号|モンスター出現テーブル連番|出現モンスター最小値|出現モンスター最大値|", file=fp)
+        print(f"|---|---|---|---|", file=fp)
+        for idx, monsters in enumerate( (series, min,max) for series,min,max in floor.monster_series ):
+            series, min_num, max_num = monsters
             min_mon_string=f"{self._monsters[min_num].name} ({min_num})" if min_num in self._monsters else f"{modules.consts.UNKNOWN_STRING} ({min_num})"
             max_mon_string=f"{self._monsters[max_num].name} ({max_num})" if max_num in self._monsters else f"{modules.consts.UNKNOWN_STRING} ({max_num})"
-            print(f"|{idx}|{min_mon_string}|{max_mon_string}|",file=fp)
+            print(f"|{idx}|{series}|{min_mon_string}|{max_mon_string}|",file=fp)
 
         print(f"", file=fp)
 
