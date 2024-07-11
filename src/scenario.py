@@ -47,6 +47,7 @@ if TYPE_CHECKING:
 from modules.datadef import WizardrySCNTOC,WizardryMonsterDataEntry,WizardryItemDataEntry,WizardryRewardDataEntry
 from modules.scnDecoder import scnDecoder
 from modules.TOCDecoder import TOCDecoder
+from modules.mazeFloorDecoder import mazeFloorDecoder
 from modules.monsterDecoder import monsterDecoder
 from modules.itemDecoder import itemDecoder
 from modules.rewardDecoder import rewardDecoder
@@ -90,6 +91,8 @@ class ReadScenario:
 
     _toc_decoder:scnDecoder
     """目次情報"""
+    _floors:dict[int,Any] # TODO: データ構造を定義する
+    """迷宮フロア情報"""
     _monsters:dict[int,WizardryMonsterDataEntry]
     """モンスター情報"""
     _items:dict[int,WizardryItemDataEntry]
@@ -125,6 +128,7 @@ class ReadScenario:
             self.unset_debug()    # デバッグモードを無効
 
         self._monsters={}
+        self._floors={}
         self._items={}
         self._rewards={}
         return
@@ -188,6 +192,16 @@ class ReadScenario:
 
         return
 
+    def readFloorTable(self, data:Any)->None:
+        decoder=mazeFloorDecoder()
+        nr_floors=self.toc.RECPERDK[modules.consts.ZMAZE]
+        for idx in range(nr_floors):
+            floor=decoder.decodeOneData(scn=self._toc_decoder, data=data, index=idx)
+            # TODO インスタンスを確認する
+            self._floors[idx]=floor
+
+        return
+
     def readMonsterTable(self, data:Any)->None:
         decoder=monsterDecoder()
         nr_monsters=self.toc.RECPERDK[modules.consts.ZENEMY]
@@ -234,6 +248,7 @@ class ReadScenario:
             self._scenario=fr.read()
 
         self.readTOC(data=self._scenario) # 目次情報を読み込む
+        self.readFloorTable(data=self._scenario) # 迷宮フロア情報を読み込む
         self.readMonsterTable(data=self._scenario) # モンスター情報を読み込む
         self.readItemTable(data=self._scenario) # アイテム情報を読み込む
         self.readRewardTable(data=self._scenario) # 報酬情報を読み込む

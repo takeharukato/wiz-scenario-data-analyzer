@@ -175,3 +175,5 @@ packages_*.png
 
 SCENARIO.DATA
 output.md
+tools/mazeinfo-layout.py
+docs/memo.md

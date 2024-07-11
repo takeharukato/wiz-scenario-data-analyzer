@@ -13,6 +13,7 @@
 from __future__ import annotations # 型定義のみを参照する
 from typing import TYPE_CHECKING   # 型チェック実施判定
 #from typing import Any,Optional
+from typing import Iterator
 
 if TYPE_CHECKING:
     pass
@@ -25,6 +26,7 @@ import os
 from dataclasses import dataclass
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+import modules.consts
 
 @dataclass
 class WizardrySCNTOC:
@@ -86,13 +88,89 @@ class dice_type:
         return f"{self.min}--{self.max}"
 
 @dataclass
-class wiz_long_type:
-    low:int
-    """下位4桁(0-9999)"""
-    mid:int
-    """中位4桁(10,000-19,999)"""
-    high:int
-    """上位4桁(100,000,000-999,900,000,000)"""
+class WizardryMazeFloorEventInfo:
+    """迷宮フロアイベント情報"""
+
+    event_type:int
+    """イベント種別"""
+    params:dict[int,int]
+    """イベントパラメタ番号(0-2)からパラメタ値への辞書"""
+
+@dataclass
+class WizardryMazeMonsterTableEntry:
+    """モンスター出現テーブルエントリ"""
+    number:int          # エントリの系統番号
+    min_enemy:int       # MINENEMY 出現モンスター番号の最小値
+    multiplier:int      # MULTWORS モンスター出現範囲の系統(0からWORSE01 - 1) * MULTWORS 分最小モンスター番号に加算する
+    max_table_index:int # WORSE01 使用するモンスター出現範囲の系統の最大値
+    monster_range:int   # RANGE0N 出現モンスターの範囲(0 から RANGE0N - 1 までの範囲の乱数でモンスター番号を決定する)
+    inc_series_percentage:int # PERCWORS モンスター出現範囲の系統を加算する確率 系統番号がWORSE01以上の場合は加算しない
+
+    @property
+    def min(self)->int:
+        """最小モンスター番号を得る"""
+        return self.min_enemy + (self.number) * self.multiplier
+
+    @property
+    def max(self)->int:
+        """最大モンスター番号を得る"""
+        return self.min + self.monster_range - 1
+
+@dataclass
+class WizardryMazeFloorDataEntry:
+    """迷宮フロア情報"""
+    wall_info_west:dict[tuple[int,int],int]
+    """座標(x,y)を表すタプルから西側の壁の種類への辞書"""
+    wall_info_south:dict[tuple[int,int],int]
+    """座標(x,y)を表すタプルから南側の壁の種類への辞書"""
+    wall_info_east:dict[tuple[int,int],int]
+    """座標(x,y)を表すタプルから東側の壁の種類への辞書"""
+    wall_info_north:dict[tuple[int,int],int]
+    """座標(x,y)を表すタプルから北側の壁の種類への辞書"""
+    in_room:dict[tuple[int,int],bool]
+    """座標(x,y)を表すタプルから当該座標が玄室内にあること確認する辞書(FIGHTS)"""
+    event_map:dict[tuple[int,int], int]
+    """座標(x,y)を表すタプルから当該座標から当該座標で発生するイベントのイベント番号への辞書(SQREXTRA)"""
+    event_info_dic:dict[int, WizardryMazeFloorEventInfo]
+    """イベント番号からイベント情報への辞書"""
+    monster_tables:dict[int,WizardryMazeMonsterTableEntry]
+    """モンスター出現テーブルの辞書 モンスター出現系統番号からテーブルへの辞書"""
+
+    @property
+    def monster_series(self)->Iterator[tuple[int,int]]:
+        """モンスター出現範囲を返すイテレータ
+            ENCOUNTR手続きを元に実装
+        Yields:
+            Iterator[tuple[int,int]]: モンスター出現範囲
+        """
+        def series_generator():
+            """モンスター出現テーブルの範囲を返す"""
+            for idx in range(modules.consts.FLOOR_NR_MONSTER_TABLE_SERIES): # 各系統について
+                assert idx in self.monster_tables, f"{idx} not found"
+                entry = self.monster_tables[idx] # 出現テーブルエントリを参照
+                yield (entry.min_enemy, entry.min_enemy + entry.monster_range - 1) # 最小レンジ
+                if entry.inc_series_percentage > 0 and entry.max_table_index > 0: # 乗数値を掛ける場合
+                    for table_idx in range(0,entry.max_table_index): # 乗数値の最大係数を取得
+                        enc_calc = table_idx + 1
+                        yield (entry.min_enemy + entry.multiplier * enc_calc,entry.min_enemy + entry.multiplier * enc_calc + entry.monster_range - 1)
+            return
+        return series_generator()
+
+    @property
+    def min_monster(self)-> int:
+        """最小モンスター値"""
+        return min([self.monster_tables[idx].min_enemy for idx in self.monster_tables.keys()])
+
+    @property
+    def max_monster(self)-> int:
+        """最大モンスター値
+
+        """
+        # モンスター出現テーブル中の最大モンスター番号を返す
+        return max([ max for _min, max in self.monster_series])
+
+
+
 
 @dataclass
 class WizardryMonsterDataEntry:
