@@ -339,9 +339,12 @@ class ReadScenario:
         """
         # TODO: ZREWARDの報酬情報と統合して, どのモンスターが何%の確率で出すのかを表示すること
         item_type_string=f"{data.obj_type_string} ({value_to_string(data.obj_type_value)})"
-        alignment_string=f"{data.alignment_string} ({value_to_string(data.alignment_value)})"
+        if data.alignment_value == modules.consts.CHAR_ALIGNMENT_NO_ALIGN:
+            alignment_string=f"無属性 ( {data.alignment_string} ({value_to_string(data.alignment_value)}) )"
+        else:
+            alignment_string=f"{data.alignment_string} ({value_to_string(data.alignment_value)})"
         cursed_string=f"呪" if data.cursed else ""
-        special_pwr_string=f"{modules.consts.ITEM_SPECIAL_DIC[data.special_value]}" if data.special_value in modules.consts.ITEM_SPECIAL_DIC else f"{modules.consts.UNKNOWN_STRING}" if data.special_value > 0 else f""
+        special_pwr_string=f"{modules.consts.ITEM_SPECIAL_DIC[data.special_value]} ({data.special_value})" if data.special_value in modules.consts.ITEM_SPECIAL_DIC else f"{modules.consts.UNKNOWN_STRING} ({data.special_value})" if data.special_value > 0 else f""
         change_to_string=f"{self._items[data.change_to_value].name} ({data.change_to_value})" if data.change_percentage > 0 and data.change_to_value in self._items else f""
         change_percentage_string=f"{data.change_percentage}"
         price_string=f"{data.price_value}"

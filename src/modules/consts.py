@@ -96,6 +96,16 @@ CHAR_CLASS_DIC:dict[int,str]={
     6:"君主",
     7:"忍者",
 }
+# キャラクタの属性
+CHAR_ALIGNMENT_DIC:dict[int,str]={
+    0:"無属性",
+    1:"善",
+    2:"中立",
+    3:"悪"
+}
+# 無属性
+CHAR_ALIGNMENT_NO_ALIGN=0
+
 # 装備可能職業文字列
 CHAR_CLASS_EQUIP_STRING="FMPTBSLN"
 # アイテム種別からアイテム種別名への変換テーブル
