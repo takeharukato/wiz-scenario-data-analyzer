@@ -83,6 +83,13 @@ FLOOR_WALL_WALL=1    # 壁がある
 FLOOR_WALL_DOOR=2    # ドアがある
 FLOOR_WALL_HIDDEN=3  # シークレットドアがある
 
+FLOOR_WALL_DIC:dict[int,str]={
+    FLOOR_WALL_OPEN:"無",
+    FLOOR_WALL_WALL:"壁",
+    FLOOR_WALL_DOOR:"扉",
+    FLOOR_WALL_HIDDEN:"秘",
+}
+
 # フロア当たりの設定可能イベント数
 FLOOR_EVENTS_PER_FLOOR=16
 # イベントパラメタ数

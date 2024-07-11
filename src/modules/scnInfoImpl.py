@@ -26,7 +26,7 @@ import os
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from modules.datadef import WizardrySCNTOC, WizardryMazeFloorDataEntry, WizardryMazeFloorEventInfo, WizardryMonsterDataEntry, WizardryItemDataEntry, WizardryRewardDataEntry, WizardryRewardInfo
+from modules.datadef import WizardrySCNTOC, WizardryMazeFloorDataEntry, WizardryMonsterDataEntry, WizardryItemDataEntry, WizardryRewardDataEntry, WizardryRewardInfo
 from modules.scnInfo import scnInfo
 from modules.TOCDecoder import TOCDecoder
 from modules.mazeFloorDecoder import mazeFloorDecoder
@@ -208,6 +208,178 @@ class scnInfoImpl(scnInfo):
               ,file=fp)
         return
 
+    def _plainOneDumpFloorMonsterTable(self, depth:int, floor:WizardryMazeFloorDataEntry, fp: TextIO)->None:
+
+        print(f"#### {depth}階 モンスター出現表", file=fp)
+        print(f"", file=fp)
+
+        print(f"##### {depth}階 モンスター出現レンジ一覧", file=fp)
+        print(f"", file=fp)
+
+        print(f"|出現系列番号|出現モンスター最小値|出現モンスター最大値|", file=fp)
+        print(f"|---|---|---|", file=fp)
+        for idx, monsters in enumerate( (min,max) for min,max in floor.monster_series ):
+            min_num, max_num = monsters
+            min_mon_string=f"{self._monsters[min_num].name} ({min_num})" if min_num in self._monsters else f"{modules.consts.UNKNOWN_STRING} ({min_num})"
+            max_mon_string=f"{self._monsters[max_num].name} ({max_num})" if max_num in self._monsters else f"{modules.consts.UNKNOWN_STRING} ({max_num})"
+            print(f"|{idx}|{min_mon_string}|{max_mon_string}|",file=fp)
+
+        print(f"", file=fp)
+
+        print(f"##### {depth}階 モンスター出現テーブル", file=fp)
+        print(f"", file=fp)
+
+        """
+        min_enemy:int       # MINENEMY 出現モンスター番号の最小値
+        multiplier:int      # MULTWORS モンスター出現範囲の系統(0からWORSE01 - 1) * MULTWORS 分最小モンスター番号に加算する
+        max_table_index:int # WORSE01 使用するモンスター出現範囲の系統の最大値
+        monster_range:int   # RANGE0N 出現モンスターの範囲(0 から RANGE0N - 1 までの範囲の乱数でモンスター番号を決定する)
+        inc_series_percentage:int # PERCWORS モンスター出現範囲の系統を加算する確率 系統番号がWORSE01以上の場合は加算しない
+        """
+        print(f"|連番|出現モンスター番号最小値(MINENEMY)|モンスター出現範囲系統乗数(MULTWORS)|モンスター出現範囲系統最大値(WORSE01)|出現モンスターの範囲(RANGE0N)|モンスター出現範囲系統加算確率(PERCWORS)|", file=fp)
+        print(f"|---|---|---|---|---|---|", file=fp)
+        for idx in floor.monster_tables.keys():
+            entry=floor.monster_tables[idx]
+            print(f"|{idx}|{entry.min_enemy}|{entry.multiplier}|{entry.max_table_index}|{entry.monster_range}|{entry.inc_series_percentage}|", file=fp)
+
+        print(f"", file=fp)
+
+        return
+
+    def _plainOneDumpFloorEventInfo(self, depth:int, floor:WizardryMazeFloorDataEntry, fp: TextIO)->None:
+
+        print(f"##### {depth}階 イベント一覧", file=fp)
+        print(f"", file=fp)
+
+        print(f"|イベント番号|イベント種別|イベント引数1|イベント引数2|イベント引数3|", file=fp)
+        print(f"|---|---|---|---|---|", file=fp)
+
+        for number in floor.event_info_dic.keys():
+            entry=floor.event_info_dic[number]
+
+            event_type_string=f"{modules.consts.FLOOR_EVENT_TO_STRING[entry.event_type]} ({entry.event_type})" if entry.event_type in modules.consts.FLOOR_EVENT_TO_STRING else f"{modules.consts.UNKNOWN_STRING} ({entry.event_type})"
+            assert 0 in entry.params and 1 in entry.params and 2 in entry.params, f"invalid entry params [{entry.params}]"
+            print(f"|{number}|{event_type_string}|{entry.params[0]}|{entry.params[1]}|{entry.params[2]}|", file=fp)
+
+        print(f"", file=fp)
+
+        return
+
+    def _plainOneDumpFloorEventMap(self, depth:int, floor:WizardryMazeFloorDataEntry, fp: TextIO)->None:
+
+        print(f"#### {depth}階 イベントマップ", file=fp)
+        print(f"", file=fp)
+        print(f"##### イベントマップ情報", file=fp)
+        print(f"", file=fp)
+
+        print(f"```:text", file=fp)
+        y_lst=sorted(list(range(modules.consts.FLOOR_HEIGHT)), reverse=True)
+        for y in y_lst:
+            print(f"{y:2} ",end='', file=fp)
+            for x in range(modules.consts.FLOOR_WIDTH):
+                pos=(x,y)
+                assert pos in floor.in_room, f"No room definition for {pos} on floor {depth}"
+                event_number=floor.event_map[pos]
+                if event_number in floor.event_info_dic:
+                    event_type=floor.event_info_dic[event_number]
+                else:
+                    event_type = modules.consts.FLOOR_EVENT_NORMAL
+                if event_type == modules.consts.FLOOR_EVENT_NORMAL:
+                    print(f"{'':4}",end='', file=fp)
+                else:
+                    print(f" {event_number:2} ",end='', file=fp)
+            print("",file=fp)
+        print(f"{' ':3}",end='', file=fp)
+        for x in range(modules.consts.FLOOR_WIDTH):
+            print(f" {x:2} ",end='', file=fp)
+        print("", file=fp)
+        print(f"```", file=fp)
+        print(f"", file=fp)
+
+        return
+
+    def _plainOneDumpFloorRooms(self, depth:int, floor:WizardryMazeFloorDataEntry, fp: TextIO)->None:
+
+        print(f"#### {depth}階 玄室情報", file=fp)
+        print(f"", file=fp)
+
+        print(f"```:text", file=fp)
+
+        y_lst=sorted(list(range(modules.consts.FLOOR_HEIGHT)), reverse=True)
+        for y in y_lst:
+            print(f"{y:2} ",end='', file=fp)
+            for x in range(modules.consts.FLOOR_WIDTH):
+                pos=(x,y)
+                assert pos in floor.in_room, f"No room definition for {pos} on floor {depth}"
+                if floor.in_room[pos]:
+                    print(f" 玄 ",end='', file=fp)
+                else:
+                    print(f"{'':4}",end='', file=fp)
+            print("",file=fp)
+        print(f"{' ':3}",end='', file=fp)
+        for x in range(modules.consts.FLOOR_WIDTH):
+            print(f" {x:2} ",end='', file=fp)
+        print("", file=fp)
+
+        print(f"```", file=fp)
+
+        print(f"", file=fp)
+
+        return
+
+    def _plainOneDumpFloorLayout(self, depth:int, floor:WizardryMazeFloorDataEntry, fp: TextIO)->None:
+
+        order=['西側の壁','南の壁', '東側の壁', '北側の壁']
+        wall_dic_lst=[floor.wall_info_west,floor.wall_info_south,floor.wall_info_east,floor.wall_info_north]
+        info_dic=zip(order, wall_dic_lst)
+
+        print(f"", file=fp)
+        print(f"#### {depth}階 フロアレイアウト情報", file=fp)
+
+        for title, dic in info_dic:
+            print(f"", file=fp)
+            print(f"##### {title}", file=fp)
+            print(f"", file=fp)
+
+            print(f"```:text", file=fp)
+
+            y_lst=sorted(list(range(modules.consts.FLOOR_HEIGHT)), reverse=True)
+            for y in y_lst:
+                print(f"{y:2} ",end='', file=fp)
+                for x in range(modules.consts.FLOOR_WIDTH):
+                    pos=(x,y)
+                    assert pos in dic, f"No definition for {pos} on floor {depth}"
+                    v=dic[pos]
+                    assert v in modules.consts.FLOOR_WALL_DIC, f"No definition for {v} in WALL_DIC"
+                    print(f" {modules.consts.FLOOR_WALL_DIC[v]} ",end='', file=fp)
+                print("",file=fp)
+            print(f"{' ':3}",end='', file=fp)
+            for x in range(modules.consts.FLOOR_WIDTH):
+                print(f" {x:2} ",end='', file=fp)
+            print("", file=fp)
+
+            print("```", file=fp, flush=True)
+
+        print(f"", file=fp)
+
+        return
+
+    def _plainOneDumpFloor(self, depth:int, floor:WizardryMazeFloorDataEntry, fp: TextIO)->None:
+
+        print(f"### {depth}階 フロア情報", file=fp)
+        self._plainOneDumpFloorLayout(depth=depth, floor=floor, fp=fp)
+        self._plainOneDumpFloorRooms(depth=depth, floor=floor, fp=fp)
+        self._plainOneDumpFloorEventMap(depth=depth, floor=floor, fp=fp)
+        self._plainOneDumpFloorEventInfo(depth=depth, floor=floor, fp=fp)
+        self._plainOneDumpFloorMonsterTable(depth=depth, floor=floor, fp=fp)
+
+        return
+
+    def _dumpFloors(self, fp:TextIO)->None:
+        for idx in sorted(self._floors.keys()):
+            self._plainOneDumpFloor(depth=idx+1, floor=self._floors[idx], fp=fp)
+        return
+
     def _dumpMonsters(self, fp:TextIO)->None:
 
         print("## モンスター一覧表",file=fp)
@@ -328,6 +500,7 @@ class scnInfoImpl(scnInfo):
         """
 
         self._dumpTOC(fp=fp)
+        self._dumpFloors(fp=fp)
         self._dumpMonsters(fp=fp)
         self._dumpItems(fp=fp)
         return

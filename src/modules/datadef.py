@@ -169,9 +169,6 @@ class WizardryMazeFloorDataEntry:
         # モンスター出現テーブル中の最大モンスター番号を返す
         return max([ max for _min, max in self.monster_series])
 
-
-
-
 @dataclass
 class WizardryMonsterDataEntry:
     """モンスター情報"""
