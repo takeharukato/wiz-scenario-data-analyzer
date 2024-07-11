@@ -311,8 +311,7 @@ class monsterDecoder(dataEntryDecoder):
 
         if 0 > index or index >= nr_monsters:
             return None # 不正インデクス
-        if index == 99:
-            pass
+
         # 対象のモンスター情報開始オフセット位置(単位:バイト)を得る
         data_offset = calcDataEntryOffset(toc=toc, category=modules.consts.ZENEMY, item_len=MONSTER_ENTRY_SIZE, index=index)
 
