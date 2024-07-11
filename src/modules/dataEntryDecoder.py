@@ -26,16 +26,16 @@ from abc import ABC, abstractmethod
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from modules.scnDecoder import scnDecoder
+from modules.datadef import WizardrySCNTOC
 
 class dataEntryDecoder(ABC):
 
     @abstractmethod
-    def decodeOneData(self, scn:scnDecoder, data:Any, index:int)->Optional[Any]:
+    def decodeOneData(self, toc:WizardrySCNTOC, data:Any, index:int)->Optional[Any]:
         """シナリオデータファイル中のデータを解析する
 
         Args:
-            scn (scnDecoder): シナリオ解析機
+            toc (WizardrySCNTOC): 目次情報
             data (Any): シナリオデータファイル情報
             index (int): 調査対象アイテムのインデクス
 

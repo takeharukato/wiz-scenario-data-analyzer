@@ -26,10 +26,9 @@ import os
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from modules.scnDecoder import scnDecoder
 from modules.dataEntryDecoder import dataEntryDecoder
-from modules.datadef import WizardryMazeFloorDataEntry, WizardryMazeFloorEventInfo, WizardryMazeMonsterTableEntry
-from modules.utils import getDecodeDict
+from modules.datadef import WizardrySCNTOC, WizardryMazeFloorDataEntry, WizardryMazeFloorEventInfo, WizardryMazeMonsterTableEntry
+from modules.utils import getDecodeDict,calcDataEntryOffset
 import modules.consts
 
 """迷宮フロア情報のPascal定義
@@ -603,11 +602,11 @@ class mazeFloorDecoder(dataEntryDecoder):
         out_dic[key]=value
         return
 
-    def _decodeMapData(self, scn:scnDecoder, decode_dict:dict[str,Any], element_prefix:str, out_dic:dict[tuple[int,int], Any], data_bit_len:int, data_per_word:int, set_func:Callable[[dict[tuple[int,int],int],tuple[int,int],Any],None])->None:
+    def _decodeMapData(self, toc:WizardrySCNTOC, decode_dict:dict[str,Any], element_prefix:str, out_dic:dict[tuple[int,int], Any], data_bit_len:int, data_per_word:int, set_func:Callable[[dict[tuple[int,int],int],tuple[int,int],Any],None])->None:
         """マップ情報をデコードする
 
         Args:
-            scn (scnDecoder): シナリオ解析機
+            toc (WizardrySCNTOC): 目次情報
             decode_dict (dict[str,Any]): unpackしたフロア情報の辞書(unpackしたデータの要素名->bytes列のタプル)
             element_prefix (str): データレイアウト中の配列変数のプレフィクス(W,S,E,N,FIGHTS,SQREXTRA)
             out_dic (dict[tuple[int,int], Any]): 出力先辞書
@@ -633,11 +632,11 @@ class mazeFloorDecoder(dataEntryDecoder):
 
         return
 
-    def _decodeFloorLayout(self, scn:scnDecoder, decode_dict:dict[str,Any], res:WizardryMazeFloorDataEntry)->None:
+    def _decodeFloorLayout(self, toc:WizardrySCNTOC, decode_dict:dict[str,Any], res:WizardryMazeFloorDataEntry)->None:
         """フロアレイアウト情報を格納する
 
         Args:
-            scn (scnDecoder): シナリオ解析機
+            toc (WizardrySCNTOC): 目次情報
             decode_dict (dict[str,Any]): unpackしたフロア情報の辞書(unpackしたデータの要素名->bytes列のタプル)
             res (WizardryMazeFloorDataEntry): 格納先データ
         """
@@ -653,15 +652,15 @@ class mazeFloorDecoder(dataEntryDecoder):
         for dir in ['W','S','E','N']: # 各向き(西,南,東,北)について, 壁の情報を取得する
             dic=ref_dict[dir] # 格納先辞書
             # 各向きについての壁の情報を取得する
-            self._decodeMapData(scn=scn, decode_dict=decode_dict, element_prefix=dir, out_dic=dic, data_bit_len=2, data_per_word=8, set_func=self._setInteger)
+            self._decodeMapData(toc=toc, decode_dict=decode_dict, element_prefix=dir, out_dic=dic, data_bit_len=2, data_per_word=8, set_func=self._setInteger)
 
         return
 
-    def _decodeEventType(self, scn:scnDecoder, decode_dict:dict[str,Any], out_dic:dict[int,int])->None:
+    def _decodeEventType(self, toc:WizardrySCNTOC, decode_dict:dict[str,Any], out_dic:dict[int,int])->None:
         """各イベント番号のイベントに設定されているイベント種別を取得する
 
         Args:
-            scn (scnDecoder): シナリオ解析機
+            toc (WizardrySCNTOC): 目次情報
             decode_dict (dict[str,Any]): unpackしたフロア情報の辞書(unpackしたデータの要素名->bytes列のタプル)
             out_dic (dict[int,int]): 出力先辞書
         """
@@ -680,11 +679,11 @@ class mazeFloorDecoder(dataEntryDecoder):
 
         return
 
-    def _decodeEventParams(self, scn:scnDecoder, decode_dict:dict[str,Any], event_type_dic:dict[int,int], res: WizardryMazeFloorDataEntry)->None:
+    def _decodeEventParams(self, toc:WizardrySCNTOC, decode_dict:dict[str,Any], event_type_dic:dict[int,int], res: WizardryMazeFloorDataEntry)->None:
         """イベントのパラメタを格納する
 
         Args:
-            scn (scnDecoder): シナリオ解析機
+            toc (WizardrySCNTOC): 目次情報
             decode_dict (dict[str,Any]): unpackしたフロア情報の辞書(unpackしたデータの要素名->bytes列のタプル)
             event_type_dic (dict[int,int]): イベント番号からイベント種別への辞書
             res (WizardryMazeFloorDataEntry): pythonのオブジェクトであらわしたフロア情報
@@ -708,7 +707,7 @@ class mazeFloorDecoder(dataEntryDecoder):
 
         return
 
-    def _decodeMonsterTables(self, scn: scnDecoder, decode_dict:dict[str,Any], res: WizardryMazeFloorDataEntry)->None:
+    def _decodeMonsterTables(self, toc:WizardrySCNTOC, decode_dict:dict[str,Any], res: WizardryMazeFloorDataEntry)->None:
 
         for series in range(modules.consts.FLOOR_NR_MONSTER_TABLE_SERIES): # 全ての系統について
 
@@ -739,11 +738,11 @@ class mazeFloorDecoder(dataEntryDecoder):
 
         return
 
-    def _dict2MazeFloorDataEntry(self, scn:scnDecoder, decode_dict:dict[str,Any])->WizardryMazeFloorDataEntry:
+    def _dict2MazeFloorDataEntry(self, toc:WizardrySCNTOC, decode_dict:dict[str,Any])->WizardryMazeFloorDataEntry:
         """unpackしたフロア情報をpythonのオブジェクトに変換
 
         Args:
-            scn (scnDecoder): シナリオ解析機
+            toc (WizardrySCNTOC): 目次情報
             decode_dict (dict[str,Any]): unpackしたフロア情報の辞書(unpackしたデータの要素名->bytes列のタプル)
 
         Returns:
@@ -756,48 +755,48 @@ class mazeFloorDecoder(dataEntryDecoder):
                                          in_room={}, event_map={}, event_info_dic={}, monster_tables={})
 
         # フロアレイアウト情報を格納
-        self._decodeFloorLayout(scn=scn, decode_dict=decode_dict, res=res)
+        self._decodeFloorLayout(toc=toc, decode_dict=decode_dict, res=res)
 
         # 各座標の玄室情報を格納
-        self._decodeMapData(scn=scn, decode_dict=decode_dict, element_prefix='FIGHTS',
+        self._decodeMapData(toc=toc, decode_dict=decode_dict, element_prefix='FIGHTS',
                             out_dic=res.in_room, data_bit_len=1, data_per_word=16, set_func=self._setBool)
 
         # 各座標のイベント番号を格納
-        self._decodeMapData(scn=scn, decode_dict=decode_dict, element_prefix='SQREXTRA',
+        self._decodeMapData(toc=toc, decode_dict=decode_dict, element_prefix='SQREXTRA',
                             out_dic=res.event_map, data_bit_len=4, data_per_word=4, set_func=self._setInteger)
 
         # 各イベント番号のイベント種別を取得
-        self._decodeEventType(scn=scn, decode_dict=decode_dict, out_dic=event_number_to_type)
+        self._decodeEventType(toc=toc, decode_dict=decode_dict, out_dic=event_number_to_type)
 
         # イベントパラメタを格納
-        self._decodeEventParams(scn=scn, decode_dict=decode_dict, event_type_dic=event_number_to_type, res=res)
+        self._decodeEventParams(toc=toc, decode_dict=decode_dict, event_type_dic=event_number_to_type, res=res)
 
         # モンスター出現テーブルを格納
-        self._decodeMonsterTables(scn=scn, decode_dict=decode_dict, res=res)
+        self._decodeMonsterTables(toc=toc, decode_dict=decode_dict, res=res)
 
         return res
 
-    def decodeOneData(self, scn:scnDecoder, data: Any, index: int)->Optional[Any]:
+    def decodeOneData(self, toc:WizardrySCNTOC, data: Any, index: int)->Optional[Any]:
         """シナリオデータファイル中の迷宮フロアデータを解析する
 
         Args:
-            scn (scnDecoder): シナリオ解析機
+            toc (WizardrySCNTOC): 目次情報
             data (Any): シナリオデータファイル情報
             index (int): 調査対象アイテムのインデクス
 
         Returns:
             Optional[Any]: 解析結果のオブジェクト, インデクスがレンジ外の場合, None
         """
-        nr_items=scn.toc.RECPERDK[modules.consts.ZMAZE] # フロア数
+        nr_items=toc.RECPERDK[modules.consts.ZMAZE] # フロア数
 
         if 0 > index or index >= nr_items:
             return None # 不正インデクス
 
         # 対象のアイテム情報開始オフセット位置(単位:バイト)を得る
-        data_offset = scn.calcDataEntryOffset(category=modules.consts.ZMAZE, item_len=MAZE_FLOOR_ENTRY_SIZE, index=index)
+        data_offset = calcDataEntryOffset(toc=toc, category=modules.consts.ZMAZE, item_len=MAZE_FLOOR_ENTRY_SIZE, index=index)
 
         # 解析対象データをunpackする
         decode_dict = getDecodeDict(data=data,layout=WizardryMazeFloorDataEntryDef,offset=data_offset)
 
         # unpackしたデータをpythonのオブジェクトに変換
-        return self._dict2MazeFloorDataEntry(scn=scn, decode_dict=decode_dict)
+        return self._dict2MazeFloorDataEntry(toc=toc, decode_dict=decode_dict)

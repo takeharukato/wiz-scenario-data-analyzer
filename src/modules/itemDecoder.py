@@ -25,10 +25,9 @@ import os
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from modules.scnDecoder import scnDecoder
 from modules.dataEntryDecoder import dataEntryDecoder
-from modules.datadef import WizardryItemDataEntry, dice_type
-from modules.utils import getDecodeDict,word_to_use_string,word_to_dic
+from modules.datadef import WizardrySCNTOC, WizardryItemDataEntry, dice_type
+from modules.utils import getDecodeDict,word_to_use_string,word_to_dic,calcDataEntryOffset
 import modules.consts
 
 """アイテム情報のPascal定義
@@ -91,11 +90,11 @@ WizardryItemDataEntryDef:dict[str,Any]={
 class itemDecoder(dataEntryDecoder):
 
 
-    def _dict2ItemDataEntry(self, scn:scnDecoder, decode_dict:dict[str,Any])->WizardryItemDataEntry:
+    def _dict2ItemDataEntry(self, toc:WizardrySCNTOC, decode_dict:dict[str,Any])->WizardryItemDataEntry:
         """unpackしたアイテム情報をpythonのオブジェクトに変換
 
         Args:
-            scn (scnDecoder): シナリオ解析機
+            toc (WizardrySCNTOC): 目次情報
             decode_dict (dict[str,Any]): unpackしたアイテム情報の辞書(unpackしたデータの要素名->bytes列のタプル)
 
         Returns:
@@ -129,8 +128,8 @@ class itemDecoder(dataEntryDecoder):
                         res.obj_type_string=modules.consts.UNKNOWN_STRING
                 case 'ALIGN':
                     res.alignment_value=int(decode_dict[key][0])
-                    if res.alignment_value in scn.toc.ALIGN:
-                        res.alignment_string=scn.toc.ALIGN[res.alignment_value]
+                    if res.alignment_value in toc.ALIGN:
+                        res.alignment_string=toc.ALIGN[res.alignment_value]
                     else:
                         res.alignment_string=modules.consts.UNKNOWN_STRING
                 case 'CURSED':
@@ -205,27 +204,27 @@ class itemDecoder(dataEntryDecoder):
 
         return res
 
-    def decodeOneData(self, scn:scnDecoder, data: Any, index: int)->Optional[Any]:
+    def decodeOneData(self, toc:WizardrySCNTOC, data: Any, index: int)->Optional[Any]:
         """シナリオデータファイル中のアイテムデータを解析する
 
         Args:
-            scn (scnDecoder): シナリオ解析機
+            toc (WizardrySCNTOC): 目次情報
             data (Any): シナリオデータファイル情報
             index (int): 調査対象アイテムのインデクス
 
         Returns:
             Optional[Any]: 解析結果のオブジェクト, インデクスがレンジ外の場合, None
         """
-        nr_items=scn.toc.RECPERDK[modules.consts.ZOBJECT] # アイテムの数
+        nr_items=toc.RECPERDK[modules.consts.ZOBJECT] # アイテムの数
 
         if 0 > index or index >= nr_items:
             return None # 不正インデクス
 
         # 対象のアイテム情報開始オフセット位置(単位:バイト)を得る
-        data_offset = scn.calcDataEntryOffset(category=modules.consts.ZOBJECT, item_len=ITEM_ENTRY_SIZE, index=index)
+        data_offset = calcDataEntryOffset(toc=toc, category=modules.consts.ZOBJECT, item_len=ITEM_ENTRY_SIZE, index=index)
 
         # 解析対象データをunpackする
         decode_dict = getDecodeDict(data=data,layout=WizardryItemDataEntryDef,offset=data_offset)
 
         # unpackしたデータをpythonのオブジェクトに変換
-        return self._dict2ItemDataEntry(scn=scn, decode_dict=decode_dict)
+        return self._dict2ItemDataEntry(toc=toc, decode_dict=decode_dict)

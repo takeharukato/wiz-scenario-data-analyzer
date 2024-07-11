@@ -12,8 +12,7 @@
 
 from __future__ import annotations # 型定義のみを参照する
 from typing import TYPE_CHECKING   # 型チェック実施判定
-from typing import TextIO
-from typing import Any,Optional
+from typing import Any
 
 if TYPE_CHECKING:
     pass
@@ -40,37 +39,6 @@ class scnDecoder(ABC):
 
         Returns:
             Any: 解析結果のオブジェクト
-        """
-        return
-
-    @abstractmethod
-    def calcDataEntryOffset(self, category: str, item_len:int, index: int)->int:
-        """シナリオ情報先頭からのオフセット位置(単位:バイト)を算出する
-
-        Args:
-            category (str): 目次の項目
-                - ZZERO    シナリオ情報
-                - ZMAZE    迷宮フロア情報
-                - ZENEMY   モンスター情報
-                - ZREWARD  報酬情報
-                - ZOBJECT  アイテム情報
-                - ZCHAR    キャラクター名簿
-                - ZSPCCHRS モンスター/宝箱画像
-                - ZEXP     経験値表
-            item_len (int): アイテム一つ当たりのサイズ(単位:バイト)
-            index (int): アイテムの配列中のインデクス
-
-        Returns:
-            int: シナリオ情報先頭からのオフセット位置(単位:バイト)
-        """
-        return
-
-    @abstractmethod
-    def plainDump(self, fp: Optional[TextIO]=None)->None:
-        """格納している情報をテキストとして出力する
-
-        Args:
-            fp (Optional[TextIO], optional): 出力先. Defaults to None.
         """
         return
 

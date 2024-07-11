@@ -12,8 +12,7 @@
 
 from __future__ import annotations # 型定義のみを参照する
 from typing import TYPE_CHECKING   # 型チェック実施判定
-from typing import TextIO
-from typing import Any, Optional
+from typing import Any
 
 if TYPE_CHECKING:
     pass
@@ -328,102 +327,6 @@ class TOCDecoder(scnDecoder):
         self._toc=self.convertTableOfContents(data_dic=decode_dict)
         return
 
-    def calcDataEntryOffset(self, category: str, item_len:int, index: int)->int:
-        """シナリオ情報先頭からのオフセット位置(単位:バイト)を算出する
-
-        Args:
-            category (str): 目次の項目
-                - ZZERO    シナリオ情報
-                - ZMAZE    迷宮フロア情報
-                - ZENEMY   モンスター情報
-                - ZREWARD  報酬情報
-                - ZOBJECT  アイテム情報
-                - ZCHAR    キャラクター名簿
-                - ZSPCCHRS モンスター/宝箱画像
-                - ZEXP     経験値表
-            item_len (int): アイテム一つ当たりのサイズ(単位:バイト)
-            index (int): アイテムの配列中のインデクス
-
-        Returns:
-            int: シナリオ情報先頭からのオフセット位置(単位:バイト)
-        """
-
-        # 項目の開始オフセットブロック(単位:ブロック)を算出
-        start_block = self.toc.BLOFF[category]
-        # 項目の開始オフセット位置(単位:バイト)を算出
-        start_offset = modules.consts.BLK_SIZ * start_block
-
-        # キャッシュに読み込むディスクデータのシナリオ情報ファイルの先頭からのオフセット位置(単位:ブロック)を算出
-        data_block = 2 * ( index // self.toc.RECPER2B[category] )
-        data_block_offset = modules.consts.BLK_SIZ * data_block # オフセット位置をバイト単位に変換
-        # 対象データのキャッシュ内でのオフセット位置(単位:バイト)を算出
-        entry_offset = (index % self.toc.RECPER2B[category]) * item_len
-
-        # 解析対象データのシナリオ情報先頭からのオフセット位置(単位:バイト)を算出
-        data_offset = start_offset + data_block_offset + entry_offset
-
-        return data_offset
-
-    def plainDump(self, fp: Optional[TextIO]=None)->None:
-        """格納している情報をテキストとして出力する
-
-        Args:
-            fp (Optional[TextIO], optional): 出力先. Defaults to None.
-        """
-        if not fp:
-            fp = sys.stdout
-        print(f"# シナリオ情報", file=fp)
-        print(f"", file=fp)
-        print(f"## ディスクレイアウト", file=fp)
-        print(f"", file=fp)
-        print(f"|項目|キャッシュ領域に格納可能なアイテム数(RECPER2B 単位:個)|総要素数(RECPERDK 単位:個)|シナリオ情報中のオフセット(BLOFF 単位:ブロック)|シナリオ情報ファイル中のオフセットアドレス(単位:バイト)|")
-        print(f"|---|---|---|---|---|", file=fp)
-        for section in (modules.consts.TOC_INDEX_TO_KEY[sub_key] for sub_key in modules.consts.TOC_INDEX_TO_KEY):
-            hex_offset=hex(self.toc.BLOFF[section]*modules.consts.BLK_SIZ)
-            print(f"|{section}|{self.toc.RECPER2B[section]}|{self.toc.RECPERDK[section]}|{self.toc.BLOFF[section]}|{self.toc.BLOFF[section]*modules.consts.BLK_SIZ} ({hex_offset})|",file=fp)
-        print(f"", file=fp)
-
-        print(f"## 種族名", file=fp)
-        print(f"", file=fp)
-        print(f"|連番|種族名文字列|", file=fp)
-        print(f"|---|---|", file=fp)
-        for idx,name in self.toc.RACE.items():
-            print(f"|{idx}|{name}|", file=fp)
-        print(f"", file=fp)
-
-        print(f"## 職業名", file=fp)
-        print(f"", file=fp)
-        print(f"|連番|職業名文字列|", file=fp)
-        print(f"|---|---|", file=fp)
-        for idx,name in self.toc.CLASS_NAME.items():
-            print(f"|{idx}|{name}|", file=fp)
-        print(f"", file=fp)
-
-        print(f"## 状態名", file=fp)
-        print(f"", file=fp)
-        print(f"|連番|状態名文字列|", file=fp)
-        print(f"|---|---|", file=fp)
-        for idx,name in self.toc.STATUS.items():
-            print(f"|{idx}|{name}|", file=fp)
-        print(f"", file=fp)
-
-        print(f"## 属性名", file=fp)
-        print(f"", file=fp)
-        print(f"|連番|属性名文字列|", file=fp)
-        print(f"|---|---|", file=fp)
-        for idx,name in self.toc.ALIGN.items():
-            print(f"|{idx}|{name}|", file=fp)
-        print(f"", file=fp)
-
-        print(f"## 呪文情報", file=fp)
-        print(f"", file=fp)
-        print(f"|連番|呪文名文字列|ハッシュ値(SPELLHSH)|呪文レベル(SPELLGRP)|呪文種別(SPELL012)|", file=fp)
-        print(f"|---|---|---|---|---|---|", file=fp)
-        for idx,name in enumerate(modules.consts.DBG_WIZ_SPELL_NAMES):
-            print(f"|{idx}|{name}|{self.toc.SPELLHSH[idx]}({hex(self.toc.SPELLHSH[idx])})|{self.toc.SPELLGRP[idx]}|{modules.consts.DBG_WIZ_SPELL_TYPES[self.toc.SPELL012[idx]]}({self.toc.SPELL012[idx]})|", file=fp)
-        print(f"", file=fp)
-
-        return
     @property
     def toc(self)->WizardrySCNTOC:
         """目次情報

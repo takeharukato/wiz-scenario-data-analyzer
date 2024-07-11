@@ -25,10 +25,9 @@ import os
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from modules.scnDecoder import scnDecoder
 from modules.dataEntryDecoder import dataEntryDecoder
-from modules.datadef import WizardryMonsterDataEntry, dice_type
-from modules.utils import getDecodeDict, word_to_dic
+from modules.datadef import WizardrySCNTOC, WizardryMonsterDataEntry, dice_type
+from modules.utils import getDecodeDict, word_to_dic, calcDataEntryOffset
 import modules.consts
 
 """モンスター情報のPascal定義
@@ -297,25 +296,25 @@ class monsterDecoder(dataEntryDecoder):
 
         return res
 
-    def decodeOneData(self, scn:scnDecoder, data: Any, index: int)->Optional[Any]:
+    def decodeOneData(self, toc:WizardrySCNTOC, data: Any, index: int)->Optional[Any]:
         """シナリオデータファイル中のモンスターデータを解析する
 
         Args:
-            scn (scnDecoder): シナリオ解析機
+            toc (WizardrySCNTOC): 目次情報
             data (Any): シナリオデータファイル情報
             index (int): 調査対象アイテムのインデクス
 
         Returns:
             Optional[Any]: 解析結果のオブジェクト, インデクスがレンジ外の場合, None
         """
-        nr_monsters=scn.toc.RECPERDK[modules.consts.ZENEMY] # モンスターの数
+        nr_monsters=toc.RECPERDK[modules.consts.ZENEMY] # モンスターの数
 
         if 0 > index or index >= nr_monsters:
             return None # 不正インデクス
         if index == 99:
             pass
         # 対象のモンスター情報開始オフセット位置(単位:バイト)を得る
-        data_offset = scn.calcDataEntryOffset(category=modules.consts.ZENEMY, item_len=MONSTER_ENTRY_SIZE, index=index)
+        data_offset = calcDataEntryOffset(toc=toc, category=modules.consts.ZENEMY, item_len=MONSTER_ENTRY_SIZE, index=index)
 
         # 解析対象データをunpackする
         decode_dict = getDecodeDict(data=data,layout=WizardryMonsterDataEntryDef,offset=data_offset)

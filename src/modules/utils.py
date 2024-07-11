@@ -25,6 +25,8 @@ import os
 import struct
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+
+from modules.datadef import WizardrySCNTOC
 import modules.consts
 
 def decodePackedArrayUint16(data_dic:dict[int,int], bit_len:int, max_index:int)->dict[int,int]:
@@ -139,3 +141,40 @@ def property_dic_to_string(dic:dict[int,str])->str:
         str: キー値昇順で値を','で区切った文字列
     """
     return ','.join([dic[key] for key in sorted(dic.keys())])
+
+def calcDataEntryOffset(toc:WizardrySCNTOC, category: str, item_len:int, index: int)->int:
+    """シナリオ情報先頭からのオフセット位置(単位:バイト)を算出する
+
+    Args:
+        toc (WizardrySCNTOC): 目次情報
+        category (str): 目次の項目
+            - ZZERO    シナリオ情報
+            - ZMAZE    迷宮フロア情報
+            - ZENEMY   モンスター情報
+            - ZREWARD  報酬情報
+            - ZOBJECT  アイテム情報
+            - ZCHAR    キャラクター名簿
+            - ZSPCCHRS モンスター/宝箱画像
+            - ZEXP     経験値表
+        item_len (int): アイテム一つ当たりのサイズ(単位:バイト)
+        index (int): アイテムの配列中のインデクス
+
+    Returns:
+        int: シナリオ情報先頭からのオフセット位置(単位:バイト)
+    """
+
+    # 項目の開始オフセットブロック(単位:ブロック)を算出
+    start_block = toc.BLOFF[category]
+    # 項目の開始オフセット位置(単位:バイト)を算出
+    start_offset = modules.consts.BLK_SIZ * start_block
+
+    # キャッシュに読み込むディスクデータのシナリオ情報ファイルの先頭からのオフセット位置(単位:ブロック)を算出
+    data_block = 2 * ( index // toc.RECPER2B[category] )
+    data_block_offset = modules.consts.BLK_SIZ * data_block # オフセット位置をバイト単位に変換
+    # 対象データのキャッシュ内でのオフセット位置(単位:バイト)を算出
+    entry_offset = (index % toc.RECPER2B[category]) * item_len
+
+    # 解析対象データのシナリオ情報先頭からのオフセット位置(単位:バイト)を算出
+    data_offset = start_offset + data_block_offset + entry_offset
+
+    return data_offset

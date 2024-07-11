@@ -26,10 +26,9 @@ import re
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from modules.scnDecoder import scnDecoder
 from modules.dataEntryDecoder import dataEntryDecoder
-from modules.datadef import WizardryRewardDataEntry, WizardryRewardInfo
-from modules.utils import getDecodeDict
+from modules.datadef import WizardrySCNTOC, WizardryRewardDataEntry, WizardryRewardInfo
+from modules.utils import getDecodeDict,calcDataEntryOffset
 import modules.consts
 
 """報酬情報のPascal定義
@@ -96,7 +95,7 @@ WizardryRewardInfoDef:dict[str,Any]={
 
 class rewardDecoder(dataEntryDecoder):
 
-    def _setHeader(self, scn:scnDecoder, reward:WizardryRewardDataEntry, header:dict[str,Any])->None:
+    def _setHeader(self, toc:WizardrySCNTOC, reward:WizardryRewardDataEntry, header:dict[str,Any])->None:
 
         v = int(header['BCHEST'][0])
         if v != 0:
@@ -108,7 +107,7 @@ class rewardDecoder(dataEntryDecoder):
 
         return
 
-    def _setInfo(self, scn:scnDecoder, reward:WizardryRewardDataEntry, index:int, info:dict[str,Any])->None:
+    def _setInfo(self, toc:WizardrySCNTOC, reward:WizardryRewardDataEntry, index:int, info:dict[str,Any])->None:
 
         new_inf=WizardryRewardInfo(percentage=0, has_item=False, reward_param={})
 
@@ -125,23 +124,23 @@ class rewardDecoder(dataEntryDecoder):
         reward.rewards[index]=new_inf
         return
 
-    def _dict2RewardDataEntry(self, scn:scnDecoder, header:dict[str,Any], info:dict[int,dict[str,Any]])->WizardryRewardDataEntry:
+    def _dict2RewardDataEntry(self, toc:WizardrySCNTOC, header:dict[str,Any], info:dict[int,dict[str,Any]])->WizardryRewardDataEntry:
 
         res = WizardryRewardDataEntry(in_chest=False,
                                       trap_type_value=0,
                                       reward_count_value=0,
                                       rewards={})
         # ヘッダ部を設定する
-        self._setHeader(scn=scn, reward=res, header=header)
+        self._setHeader(toc=toc, reward=res, header=header)
         for idx in info.keys():
-            self._setInfo(scn=scn, reward=res, index=idx, info=info[idx])
+            self._setInfo(toc=toc, reward=res, index=idx, info=info[idx])
         return res
 
-    def decodeOneData(self, scn:scnDecoder, data: Any, index: int)->Optional[Any]:
+    def decodeOneData(self, toc:WizardrySCNTOC, data: Any, index: int)->Optional[Any]:
         """シナリオデータファイル中のアイテムデータを解析する
 
         Args:
-            scn (scnDecoder): シナリオ解析機
+            toc (WizardrySCNTOC): 目次情報
             data (Any): シナリオデータファイル情報
             index (int): 調査対象アイテムのインデクス
 
@@ -151,13 +150,13 @@ class rewardDecoder(dataEntryDecoder):
 
         reward_info_dic:dict[int,dict[str,Any]]={} # 詳細報酬情報の辞書
 
-        nr_rewards=scn.toc.RECPERDK[modules.consts.ZREWARD] # 報酬情報の数
+        nr_rewards=toc.RECPERDK[modules.consts.ZREWARD] # 報酬情報の数
 
         if 0 > index or index >= nr_rewards:
             return None # 不正インデクス
 
         # 対象の報酬情報開始オフセット位置(単位:バイト)を得る
-        data_offset = scn.calcDataEntryOffset(category=modules.consts.ZREWARD, item_len=REWARD_ENTRY_SIZE, index=index)
+        data_offset = calcDataEntryOffset(toc=toc, category=modules.consts.ZREWARD, item_len=REWARD_ENTRY_SIZE, index=index)
 
         # ヘッダ情報をunpackする
         header_dict=getDecodeDict(data=data, layout=WizardryRewardHeaderDef, offset=data_offset)
@@ -173,4 +172,4 @@ class rewardDecoder(dataEntryDecoder):
             reward_info_dic[reward_index] = info_dict
 
         # unpackしたデータをpythonのオブジェクトに変換
-        return self._dict2RewardDataEntry(scn=scn, header=header_dict, info=reward_info_dic)
+        return self._dict2RewardDataEntry(toc=toc, header=header_dict, info=reward_info_dic)
