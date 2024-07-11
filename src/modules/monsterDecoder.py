@@ -94,48 +94,48 @@ WizardryMonsterDataEntryDef:dict[str,Any]={
 
     'CALC1_0': {'offset':66, 'type': '<H'},    # 出現数ダイス 試行回数
     'CALC1_1': {'offset':68, 'type': '<H'},    # 出現数ダイス ダイス面数
-    'CALC1_2': {'offset':70, 'type': '<H'},    # 出現数ダイス 加算値
+    'CALC1_2': {'offset':70, 'type': '<h'},    # 出現数ダイス 加算値
 
     'HPREC_0': {'offset':72, 'type': '<H'},    # HPダイス 試行回数
     'HPREC_1': {'offset':74, 'type': '<H'},    # HPダイス ダイス面数
-    'HPREC_2': {'offset':76, 'type': '<H'},    # HPダイス 加算値
+    'HPREC_2': {'offset':76, 'type': '<h'},    # HPダイス 加算値
 
     'CLASS'  :  {'offset':78, 'type': '<H'},   # モンスター種別
     'AC'     :  {'offset':80, 'type': '<h'},   # アーマクラス
-    'RECSN'  :  {'offset':82, 'type': '<H'},   # 最大攻撃回数
+    'RECSN'  :  {'offset':82, 'type': '<h'},   # 最大攻撃回数
 
     'RECS_1_0': {'offset':84, 'type': '<H'},   # 攻撃ダイス1 試行回数
     'RECS_1_1': {'offset':86, 'type': '<H'},   # 攻撃ダイス1 ダイス面数
-    'RECS_1_2': {'offset':88, 'type': '<H'},   # 攻撃ダイス1 加算値
+    'RECS_1_2': {'offset':88, 'type': '<h'},   # 攻撃ダイス1 加算値
 
     'RECS_2_0': {'offset':90, 'type': '<H'},   # 攻撃ダイス2 試行回数
     'RECS_2_1': {'offset':92, 'type': '<H'},   # 攻撃ダイス2 ダイス面数
-    'RECS_2_2': {'offset':94, 'type': '<H'},   # 攻撃ダイス2 加算値
+    'RECS_2_2': {'offset':94, 'type': '<h'},   # 攻撃ダイス2 加算値
 
     'RECS_3_0': {'offset':96, 'type': '<H'},   # 攻撃ダイス3 試行回数
     'RECS_3_1': {'offset':98, 'type': '<H'},   # 攻撃ダイス3 ダイス面数
-    'RECS_3_2': {'offset':100, 'type': '<H'},  # 攻撃ダイス3 加算値
+    'RECS_3_2': {'offset':100, 'type': '<h'},  # 攻撃ダイス3 加算値
 
     'RECS_4_0': {'offset':102, 'type': '<H'},   # 攻撃ダイス4 試行回数
     'RECS_4_1': {'offset':104, 'type': '<H'},   # 攻撃ダイス4 ダイス面数
-    'RECS_4_2': {'offset':106, 'type': '<H'},  # 攻撃ダイス4 加算値
+    'RECS_4_2': {'offset':106, 'type': '<h'},  # 攻撃ダイス4 加算値
 
     'RECS_5_0': {'offset':108, 'type': '<H'},  # 攻撃ダイス5 試行回数
     'RECS_5_1': {'offset':110, 'type': '<H'},  # 攻撃ダイス5 ダイス面数
-    'RECS_5_2': {'offset':112, 'type': '<H'},  # 攻撃ダイス5 加算値
+    'RECS_5_2': {'offset':112, 'type': '<h'},  # 攻撃ダイス5 加算値
 
     'RECS_6_0': {'offset':114, 'type': '<H'},  # 攻撃ダイス6 試行回数
     'RECS_6_1': {'offset':116, 'type': '<H'},  # 攻撃ダイス6 ダイス面数
-    'RECS_6_2': {'offset':118, 'type': '<H'},  # 攻撃ダイス6 加算値
+    'RECS_6_2': {'offset':118, 'type': '<h'},  # 攻撃ダイス6 加算値
 
     'RECS_7_0': {'offset':120, 'type': '<H'},  # 攻撃ダイス7 試行回数
     'RECS_7_1': {'offset':122, 'type': '<H'},  # 攻撃ダイス7 ダイス面数
-    'RECS_7_2': {'offset':124, 'type': '<H'},  # 攻撃ダイス7 加算値
+    'RECS_7_2': {'offset':124, 'type': '<h'},  # 攻撃ダイス7 加算値
 
     'EXPAMT':   {'offset':126, 'type': '<H'},  # 獲得経験値
 
     'DRAINAMT': {'offset':132, 'type': '<H'},  # ドレインレベル数
-    'HEALPTS':  {'offset':134, 'type': '<H'},  # リジェネレレーション値
+    'HEALPTS':  {'offset':134, 'type': '<h'},  # リジェネレレーション値
 
     'REWARD1':  {'offset':136, 'type': '<H'},  # ワンダリングモンスターの報酬種別
     'REWARD2':  {'offset':138, 'type': '<H'},  # 玄室モンスターの報酬種別

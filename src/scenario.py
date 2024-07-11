@@ -50,6 +50,7 @@ from modules.TOCDecoder import TOCDecoder
 from modules.monsterDecoder import monsterDecoder
 from modules.itemDecoder import itemDecoder
 from modules.rewardDecoder import rewardDecoder
+from modules.utils import value_to_string,property_dic_to_string
 import modules.consts
 
 #
@@ -279,12 +280,12 @@ class ReadScenario:
         uniq=f"無制限 ({data.unique})" if data.unique == -1 else f"{data.unique - -1} 回 ({data.unique})"
         breathe=f"{data.breathe} ({hex(data.breathe_value)} = {bin(data.breathe_value)})" if data.breathe_value != 0 else f""
         unaffect_ratio=f"{data.unaffect_ratio}"
-        resist_set=','.join([data.resist_dic[key] for key in sorted(data.resist_dic.keys())])
+        resist_set=property_dic_to_string(dic=data.resist_dic)
         resist_string=f"{resist_set} ({hex(data.wepvsty3_value)} = {bin(data.wepvsty3_value)})" if data.wepvsty3_value != 0 else f""
         sppc_string=f"{data.sppc_value} ({hex(data.sppc_value)} = {bin(data.sppc_value)})"
-        special_attack_string=','.join([data.special_attack_dic[key] for key in sorted(data.special_attack_dic.keys())])
-        weak_points_string = ','.join([data.weak_point_dic[key] for key in sorted(data.weak_point_dic.keys())])
-        capability_string =  ','.join([data.capability_dic[key] for key in sorted(data.capability_dic.keys())])
+        special_attack_string = property_dic_to_string(dic=data.special_attack_dic)
+        weak_points_string = property_dic_to_string(dic=data.weak_point_dic)
+        capability_string = property_dic_to_string(dic=data.capability_dic)
         print(f"|{index}|{name}|{names}|{unknown_name}|{unknown_names}|{pic}|{nr_member}|{hp_dice}|"
               f"{enemy_class}|{ac}|{swing_count}|{dmg_dice_table}|{exp}|{drain}|{heal_pts}|{reward1}|{reward2}|"
               f"{follows}|{follow_percentage} %|{mage_spell}|{pri_spell}|{uniq}|{breathe}|"
@@ -292,8 +293,80 @@ class ReadScenario:
               f"{capability_string}|{sppc_string}|",file=fp)
         return
 
-    def plainDump(self, fp:Optional[TextIO]=None)->None:
-        self._toc_decoder.plainDump(fp=fp)
+    def plainOneDumpItem(self, index:int, data:Any, fp: Optional[TextIO]=None)->None:
+        """格納しているアイテム情報をテキストとして出力する
+
+        Args:
+            index (int): インデクス
+            data (Any): 表示対象データ
+            fp (Optional[TextIO], optional): 出力先. Defaults to None.
+        """
+
+        if not isinstance(data, WizardryItemDataEntry):
+            return
+
+        if not fp:
+            fp = sys.stdout
+        """
+        name:str
+        name_unknown:str
+        obj_type_value:int
+        obj_type_string:str
+        alignment_value:int
+        alignment_string:str
+        cursed:bool
+        special_value:int
+        change_to_value:int
+        change_percentage:int
+        price_value:int
+        stock_value:int
+        spell_power_value:int
+        class_use_value:int
+        class_use_string:str
+        class_use_dic:dict[int,str]
+        heal_pts:int
+        wepvsty2_value:int
+        prot_dic:dict[int,str]
+        wepvsty3_value:int
+        resist_dic:dict[int,str]
+        ac_mod_value:int
+        wephitmd_value:int
+        wephpdam:dice_type
+        swing_count_value:int
+        critical_hit:bool
+        wepvstyp_value:int
+        purpose_dic:dict[int,str]
+        """
+        # TODO: ZREWARDの報酬情報と統合して, どのモンスターが何%の確率で出すのかを表示すること
+        item_type_string=f"{data.obj_type_string} ({value_to_string(data.obj_type_value)})"
+        alignment_string=f"{data.alignment_string} ({value_to_string(data.alignment_value)})"
+        cursed_string=f"呪" if data.cursed else ""
+        special_pwr_string=f"{modules.consts.ITEM_SPECIAL_DIC[data.special_value]}" if data.special_value in modules.consts.ITEM_SPECIAL_DIC else f"{modules.consts.UNKNOWN_STRING}" if data.special_value > 0 else f""
+        change_to_string=f"{self._items[data.change_to_value].name} ({data.change_to_value})" if data.change_percentage > 0 and data.change_to_value in self._items else f""
+        change_percentage_string=f"{data.change_percentage}"
+        price_string=f"{data.price_value}"
+        stock_string=f"無制限 ({data.stock_value})" if 0 > data.stock_value else f"{data.stock_value}"
+        spell_power_string = f"{modules.consts.DBG_WIZ_SPELL_NAMES[data.spell_power_value]} ({data.spell_power_value})" if data.spell_power_value > 0 and len(modules.consts.DBG_WIZ_SPELL_NAMES) > (data.spell_power_value) else f""
+        class_equip_string = f"{data.class_use_string} ({value_to_string(data.class_use_value)})"
+        heal_pts_string=f"{data.heal_pts}"
+        prot_string = f"{property_dic_to_string(dic=data.prot_dic)} ({value_to_string(data.wepvsty2_value)})" if data.wepvsty2_value != 0 else f""
+        resist_string = f"{property_dic_to_string(dic=data.resist_dic)} ({value_to_string(data.wepvsty3_value)})" if data.wepvsty3_value != 0 else f""
+        ac_string = f"{-1 * data.ac_mod_value} ({data.ac_mod_value})"
+        wephitmd_string = f"{data.wephitmd_value}" if data.wephitmd_value != 0 else f""
+        wephpdam_string = f"{data.wephpdam.name} ({data.wephpdam.min}--{data.wephpdam.max})" if data.wephpdam.min > 0 else f""
+        swing_count_string = f"{data.swing_count_value}" if data.swing_count_value != 0 else f""
+        critical_hit = f"有" if data.critical_hit else f""
+        purpose_string = f"{property_dic_to_string(dic=data.purpose_dic)} ({value_to_string(data.wepvstyp_value)})" if data.wepvstyp_value != 0 else f""
+
+        print(f"|{index}|{data.name}|{data.name_unknown}|{item_type_string}|"
+              f"{alignment_string}|{cursed_string}|{special_pwr_string}|{change_to_string}|"
+              f"{change_percentage_string}|{price_string}|{stock_string}|{spell_power_string}|"
+              f"{class_equip_string}|{heal_pts_string}|{prot_string}|{resist_string}|{ac_string}|"
+              f"{wephitmd_string}|{wephpdam_string}|{swing_count_string}|{critical_hit}|{purpose_string}|"
+              ,file=fp)
+        return
+
+    def _dumpMonsters(self, fp:Optional[TextIO]=None)->None:
 
         print("## モンスター一覧表",file=fp)
         print("",file=fp)
@@ -311,6 +384,34 @@ class ReadScenario:
         for idx in sorted(self._monsters.keys()):
             self.plainOneDumpMonster(index=idx,data=self._monsters[idx],fp=fp)
         print("",file=fp)
+        return
+
+    def _dumpItems(self, fp:Optional[TextIO]=None)->None:
+
+        print("## アイテム一覧表",file=fp)
+        print("",file=fp)
+        print(f"|連番|名前|不確定名称|種別|"
+              f"属性(アラインメント)|呪い|スペシャルパワーの効果|破損後のアイテム(使用後に変化するアイテム)|"
+              f"使用に伴うアイテム破損率|価格|商店の初期在庫数|使用時に発動する呪文|"
+              f"装備可能職業|リジェネレレーション値|防御特性|抵抗属性|アーマクラス(括弧内は補正値)|"
+              f"命中率補正値|ダメージダイス|最大攻撃回数|クリティカルヒット付与|倍打特性|",file=fp)
+        print(f"|---|---|---|---|"
+              f"---|---|---|---|"
+              f"---|---|---|---|"
+              f"---|---|---|---|---|"
+              f"---|---|---|---|---|",file=fp)
+
+        for idx in sorted(self._items.keys()):
+            self.plainOneDumpItem(index=idx, data=self._items[idx], fp=fp)
+
+        print("",file=fp)
+
+        return
+
+    def plainDump(self, fp:Optional[TextIO]=None)->None:
+        self._toc_decoder.plainDump(fp=fp)
+        self._dumpMonsters(fp=fp)
+        self._dumpItems(fp=fp)
         return
 
     @property

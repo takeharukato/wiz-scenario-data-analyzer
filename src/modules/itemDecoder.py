@@ -75,15 +75,15 @@ WizardryItemDataEntryDef:dict[str,Any]={
     'BOLTACXX':{'offset':50, 'type': '<h'}, # 在庫
     'SPELLPWR':{'offset':52, 'type': '<H'}, # 使用時の呪文番号
     'CLASSUSE':{'offset':54, 'type': '<H'}, # 装備可能な職業
-    'HEALPTS':{'offset':56, 'type': '<H'}, # リジェネレレーション値
+    'HEALPTS':{'offset':56, 'type': '<h'}, # リジェネレレーション値
     'WEPVSTY2':{'offset':58, 'type': '<H'}, # 防御特性ビットマップ
     'WEPVSTY3':{'offset':60, 'type': '<H'}, # 抵抗属性ビットマップ
     'ARMORMOD':{'offset':62, 'type': '<H'}, # アーマクラス補正値
-    'WEPHITMD':{'offset':64, 'type': '<H'}, # 命中補正値
+    'WEPHITMD':{'offset':64, 'type': '<h'}, # 命中補正値
     'WEPHPDAM_0':{'offset':66, 'type': '<H'}, # 攻撃ダイス試行回数
     'WEPHPDAM_1':{'offset':68, 'type': '<H'}, # 攻撃ダイス面数
-    'WEPHPDAM_2':{'offset':70, 'type': '<H'}, # 攻撃ダイス加算値
-    'XTRASWNG':{'offset':72, 'type': '<H'}, # 最大攻撃回数
+    'WEPHPDAM_2':{'offset':70, 'type': '<h'}, # 攻撃ダイス加算値
+    'XTRASWNG':{'offset':72, 'type': '<h'}, # 最大攻撃回数
     'CRITHITM':{'offset':74, 'type': '<h'}, # クリティカル付与
     'WEPVSTYP':{'offset':76, 'type': '<H'}, # 倍打特性ビットマップ
 }

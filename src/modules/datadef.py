@@ -63,7 +63,10 @@ class dice_type:
     @property
     def name(self)->str:
         """ダイス文字列を返す"""
-        return f"{self.trial}D{self.factor}+{self.add_val}"
+        if self.trial == 0 or self.factor == 0:
+            return f"{self.add_val}" if self.add_val != 0 else f"0"
+
+        return f"{self.trial}D{self.factor}+{self.add_val}" if self.add_val != 0 else f"{self.trial}D{self.factor}"
 
     @property
     def min(self)->int:

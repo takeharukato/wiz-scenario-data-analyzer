@@ -117,3 +117,25 @@ def getDecodeDict(data:Any, layout:dict[str,dict[str,Any]],offset:int)->dict[str
         decode_dict[k] = struct.unpack_from(data_type, data, member_offset)
 
     return decode_dict
+
+def value_to_string(val:int)->str:
+    """値を表示用の文字列に変換
+
+    Args:
+        val (int): 値
+
+    Returns:
+        str: 文字列
+    """
+    return f"{val} {hex(val)} = {bin(val)}"
+
+def property_dic_to_string(dic:dict[int,str])->str:
+    """倍打/防御/抵抗辞書を文字列化する
+
+    Args:
+        dic (dict[int,str]): 倍打/防御/抵抗辞書
+
+    Returns:
+        str: キー値昇順で値を','で区切った文字列
+    """
+    return ','.join([dic[key] for key in sorted(dic.keys())])
