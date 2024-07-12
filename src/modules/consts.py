@@ -277,8 +277,6 @@ ITEM_SPECIAL_DIC:dict[int,str]={
 #
 NR_REWARD_PARAM=7 # 報酬情報パラメタ数
 # トラップ番号内のビットとトラップ種別の対応表
-# POISON NEEDLE	GAS BOMB	CROSSBOW BOLT/EXPLODING BOX/SPLINTERS/BLADES/STUNNER	TELEPORTER	ANTI-MAGE	ANTI-PRIEST	ALARM
-
 REWARD_TRAP_DIC:dict[int,list[str]]={
     0:["無し"], # トラップなし
     1:["毒針"], # 毒針
