@@ -29,6 +29,8 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 #
 # 定数定義
 #
+FONT_FACES = ['Arial', 'Courier New', 'Georgia', 'Times New Roman', 'Verdana', 'Comic Sans MS']
+
 # Apple Pascal Operating System のディスクブロックサイズ(単位:バイト)
 BLK_SIZ=512
 # Wizardry キャッシュサイズ

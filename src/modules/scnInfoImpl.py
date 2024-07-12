@@ -255,6 +255,75 @@ class scnInfoImpl(scnInfo):
 
         return
 
+    def _drawFloorLayoutWithSVG(self, drawer:drawMazeSVG, floor:WizardryMazeFloorDataEntry, outfile:str)->None:
+
+        for x in range(modules.consts.FLOOR_WIDTH):
+            for y in range(modules.consts.FLOOR_HEIGHT):
+                for dir in modules.consts.DIR_VALID:
+                    # DIR_NORTH=0,DIR_EAST=1,DIR_SOUTH=2,DIR_WEST=3
+
+                    v=floor.getWallInfo(x=x, y=y, dir=dir)
+                    if v == modules.consts.FLOOR_WALL_WALL:
+                        drawer.addWall(x=x, y=y, dir=dir)
+                    elif v == modules.consts.FLOOR_WALL_DOOR:
+                        drawer.addDoor(x=x, y=y, dir=dir)
+                    elif v == modules.consts.FLOOR_WALL_HIDDEN:
+                        drawer.addDoor(x=x, y=y, dir=dir, hidden=True)
+        drawer.save()
+        return drawer
+
+    def _drawFloorRooms(self, floor:WizardryMazeFloorDataEntry, basename:str, format:str='png')->None:
+
+        with tempfile.TemporaryDirectory() as dir_name:
+
+            # SVGファイルを作成
+            svg_file=os.path.join(dir_name,f"{basename}.svg")
+
+            # 描画オブジェクトを生成
+            drawer=drawMazeSVG(outfile=svg_file, draw_coordinate=True)
+
+            # 玄室情報を書き込み
+            for x in range(modules.consts.FLOOR_WIDTH):
+                for y in range(modules.consts.FLOOR_HEIGHT):
+                    pos=(x,y)
+                    if pos in floor.in_room and floor.in_room[pos]: # 玄室の場合
+                        drawer.addRoom(x=x, y=y)
+
+            # フロアレイアウト情報を書き込み
+            self._drawFloorLayoutWithSVG(drawer=drawer, floor=floor, outfile=svg_file)
+
+            drawer.save()
+
+            # PNGに変換
+            drawing = svg2rlg(f"{svg_file}")
+            if drawing:
+
+                if format == 'png':
+                    renderPM.drawToFile(drawing, f"{basename}.png", fmt="PNG")
+
+        return
+
+    def _drawFloorLayout(self, floor:WizardryMazeFloorDataEntry, basename:str, format:str='png')->None:
+
+        with tempfile.TemporaryDirectory() as dir_name:
+            # SVGファイルを作成
+            svg_file=os.path.join(dir_name,f"{basename}.svg")
+
+            # 描画オブジェクトを生成
+            drawer=drawMazeSVG(outfile=svg_file, draw_coordinate=True)
+
+            # フロアレイアウト情報を書き込み
+            self._drawFloorLayoutWithSVG(drawer=drawer,floor=floor, outfile=svg_file)
+
+            # PNGに変換
+            drawing = svg2rlg(f"{svg_file}")
+            if drawing:
+
+                if format == 'png':
+                    renderPM.drawToFile(drawing, f"{basename}.png", fmt="PNG")
+
+        return
+
     def _plainOneDumpFloorEventInfo(self, depth:int, floor:WizardryMazeFloorDataEntry, fp: TextIO)->None:
 
         print(f"##### {depth}階 イベント一覧", file=fp)
@@ -312,6 +381,14 @@ class scnInfoImpl(scnInfo):
         print(f"#### {depth}階 玄室情報", file=fp)
         print(f"", file=fp)
 
+        basename=f"floor-room-{depth:02}"
+        self._drawFloorRooms(floor=floor, basename=basename)
+        outfile=f"{basename}.png"
+        if os.path.exists(outfile):
+            print(f"", file=fp)
+            print(f"![{depth:02}階玄室情報]({outfile})", file=fp)
+            print(f"", file=fp)
+
         print(f"```:text", file=fp)
 
         y_lst=sorted(list(range(modules.consts.FLOOR_HEIGHT)), reverse=True)
@@ -336,39 +413,6 @@ class scnInfoImpl(scnInfo):
 
         return
 
-    def _drawFloorLayoutWithSVG(self, depth:int, floor:WizardryMazeFloorDataEntry, outfile:str)->None:
-
-        drawer:drawMazeSVG=drawMazeSVG(outfile=outfile, draw_coordinate=True)
-        for x in range(modules.consts.FLOOR_WIDTH):
-            for y in range(modules.consts.FLOOR_HEIGHT):
-                for dir in modules.consts.DIR_VALID:
-                    # DIR_NORTH=0,DIR_EAST=1,DIR_SOUTH=2,DIR_WEST=3
-
-                    v=floor.getWallInfo(x=x, y=y, dir=dir)
-                    if v == modules.consts.FLOOR_WALL_WALL:
-                        drawer.addWall(x=x, y=y, dir=dir)
-                    elif v == modules.consts.FLOOR_WALL_DOOR:
-                        drawer.addDoor(x=x, y=y, dir=dir)
-                    elif v == modules.consts.FLOOR_WALL_HIDDEN:
-                        drawer.addDoor(x=x, y=y, dir=dir, hidden=True)
-        drawer.save()
-        return
-
-    def _drawFloorLayout(self, depth:int, floor:WizardryMazeFloorDataEntry, format:str='png')->None:
-        filename=f"floor-layout-{depth:02}"
-        with tempfile.TemporaryDirectory() as dir_name:
-            # SVGファイルを作成
-            svg_file=os.path.join(dir_name,f"{filename}.svg")
-            self._drawFloorLayoutWithSVG(depth=depth, floor=floor, outfile=svg_file)
-            # PNGに変換
-            drawing = svg2rlg(f"{svg_file}")
-            if drawing:
-
-                if format == 'png':
-                    renderPM.drawToFile(drawing, f"{filename}.png", fmt="PNG")
-
-        return
-
     def _plainOneDumpFloorLayout(self, depth:int, floor:WizardryMazeFloorDataEntry, fp: TextIO)->None:
 
         order=['西側の壁','南の壁', '東側の壁', '北側の壁']
@@ -378,7 +422,13 @@ class scnInfoImpl(scnInfo):
         print(f"", file=fp)
         print(f"#### {depth}階 フロアレイアウト情報", file=fp)
 
-        self._drawFloorLayout(depth=depth, floor=floor)
+        basename=f"floor-layout-{depth:02}"
+        self._drawFloorLayout(floor=floor, basename=basename)
+        outfile=f"{basename}.png"
+        if os.path.exists(outfile):
+            print(f"", file=fp)
+            print(f"![{depth:02}階フロアレイアウト]({outfile})", file=fp)
+            print(f"", file=fp)
 
         for title, dic in info_dic:
             print(f"", file=fp)
