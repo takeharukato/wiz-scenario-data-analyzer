@@ -270,6 +270,34 @@ class scnInfoImpl(scnInfo):
         drawer.save()
         return
 
+    def _drawFloorEvents(self, floor:WizardryMazeFloorDataEntry, basename:str, format:str=modules.consts.DEFAULT_RASTER_IMAGE_TYPE)->None:
+
+        with tempfile.TemporaryDirectory() as dir_name:
+
+            # SVGファイルを作成
+            svg_file=os.path.join(dir_name,f"{basename}.svg")
+
+            # 描画オブジェクトを生成
+            drawer=drawMazeSVG(outfile=svg_file, draw_coordinate=True)
+
+            # イベント情報を書き込み
+            for x in range(modules.consts.FLOOR_WIDTH): # 各X座標について
+                for y in range(modules.consts.FLOOR_HEIGHT): # 各Y座標について
+
+                    pos=(x,y) # 検査する座標
+                    if pos in floor.event_map and floor.event_map[pos] != modules.consts.FLOOR_EVENT_NORMAL: # 通常の床でない場合,
+                        drawer.addEventNumber(x=x,y=y,event_number=floor.event_map[pos]) # イベント番号を書き込む
+
+            # フロアレイアウト情報を書き込み
+            self._drawFloorLayoutWithSVG(drawer=drawer, floor=floor, outfile=svg_file)
+
+            drawer.save() # 画像を保存する
+
+            # PNGに変換
+            convertSVGtoRaster(infile=svg_file, outfile=f"{basename}.{modules.consts.DEFAULT_RASTER_IMAGE_EXT}", format=modules.consts.RASTER_IMAGE_TYPE_PNG)
+
+        return
+
     def _drawFloorRooms(self, floor:WizardryMazeFloorDataEntry, basename:str, format:str=modules.consts.DEFAULT_RASTER_IMAGE_TYPE)->None:
 
         with tempfile.TemporaryDirectory() as dir_name:
@@ -340,6 +368,14 @@ class scnInfoImpl(scnInfo):
         print(f"", file=fp)
         print(f"##### イベントマップ情報", file=fp)
         print(f"", file=fp)
+
+        basename=f"floor-event-map-{depth:02}"
+        self._drawFloorEvents(floor=floor, basename=basename)
+        outfile=f"{basename}.{modules.consts.DEFAULT_RASTER_IMAGE_EXT}"
+        if os.path.exists(outfile):
+            print(f"", file=fp)
+            print(f"![{depth:02}階イベントマップ]({outfile})", file=fp)
+            print(f"", file=fp)
 
         print(f"```:text", file=fp)
         y_lst=sorted(list(range(modules.consts.FLOOR_HEIGHT)), reverse=True)

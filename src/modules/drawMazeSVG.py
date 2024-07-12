@@ -42,7 +42,7 @@ COORD_STROKE_WIDTH=1
 DOOR_WALL_STROKE_WIDTH=3
 # 壁の幅
 WALL_STROKE_WIDTH=4
-# 壁の幅の1/4分両端を空けて, ドアの矩形を描画する
+# 壁の幅の1/4分両端を空けて, ドアの矩形, イベント番号を描画する
 DOOR_OFFSET=0.25
 # セルの20%の幅でドアを描画する
 DOOR_THICK=0.2
@@ -68,7 +68,7 @@ DARK_OPACITY=0.2
 ROCK_OPACITY=0.2
 
 # 文字のスケール
-TEXT_SCALE_FACTOR=0.6
+TEXT_SCALE_FACTOR=0.4
 
 #
 # 壁描画種別
@@ -88,12 +88,14 @@ DRAW_MAZE_DIR_EAST=modules.consts.DIR_EAST    # 東側(右)
 DRAW_MAZE_DIR_SOUTH=modules.consts.DIR_SOUTH  # 南側(下)
 DRAW_MAZE_DIR_WEST=modules.consts.DIR_WEST    # 西側(左)
 DRAW_MAZE_DIR_VALID=(DRAW_MAZE_DIR_NORTH, DRAW_MAZE_DIR_EAST, DRAW_MAZE_DIR_SOUTH, DRAW_MAZE_DIR_WEST)
+
 class drawMazeSVG:
 
     _dwg:svgwrite.Drawing
     """描画領域"""
     _outfile_path:str
     """描画ファイルのパス名"""
+
     def __init__(self, outfile:str, draw_coordinate: bool=True) -> None:
         """描画処理オブジェクトの初期化
 
@@ -316,7 +318,8 @@ class drawMazeSVG:
         #
 
         text = svgwrite.text.Text(f'{this_number:02}', # type: ignore
-                insert=((OFFSET_SIZE + dx * CELL_SIZE ) * cm, (OFFSET_SIZE + dy * CELL_SIZE )  * cm),
+                insert=((OFFSET_SIZE + dx * CELL_SIZE + DOOR_OFFSET * CELL_SIZE ) * cm,
+                        (OFFSET_SIZE + dy * CELL_SIZE - DOOR_OFFSET * CELL_SIZE ) * cm),
                 fill=TEXT_COLOR) # 文字列を設定
         text['font-size'] = f'{CELL_SIZE*TEXT_SCALE_FACTOR}cm' # 文字サイズを調整
         text['font-family'] = modules.consts.FONT_FACES[0]     # フォントを設定
@@ -356,8 +359,8 @@ class drawMazeSVG:
                 # X軸の目盛を書き込む
                 #
                 text = svgwrite.text.Text(f'{x:02}', # type: ignore
-                        insert=( ( OFFSET_SIZE + x * CELL_SIZE ) * cm,
-                                (OFFSET_SIZE + (height + 1) * CELL_SIZE) * cm ,), # Y=0の一つ下の位置に書き込む
+                        insert=( ( OFFSET_SIZE + x * CELL_SIZE + CELL_SIZE * DOOR_OFFSET ) * cm,
+                                (OFFSET_SIZE + (height + 1) * CELL_SIZE - CELL_SIZE * DOOR_OFFSET ) * cm ,), # Y=0の一つ下の位置に書き込む
                         fill=TEXT_COLOR) # テキストを得る
                 text['font-size'] = f'{CELL_SIZE*TEXT_SCALE_FACTOR}cm'  # 文字サイズを調整する
                 text['font-family'] = modules.consts.FONT_FACES[0]      # フォントを選択する
@@ -373,9 +376,10 @@ class drawMazeSVG:
                 dx = 0
                 dy = height - y # 座標0が最下点に来るように描画座標を変換
                 text = svgwrite.text.Text(f'{y:02}', # type: ignore
-                        insert=( dx * cm, (OFFSET_SIZE + ( dy * CELL_SIZE) ) * cm ,),
+                        insert=( (dx + CELL_SIZE * DOOR_OFFSET ) * cm,
+                                (OFFSET_SIZE + ( CELL_SIZE * dy - CELL_SIZE * DOOR_OFFSET ) ) * cm ,),
                         fill=TEXT_COLOR) # テキストを得る
-                text['font-size'] = f'{CELL_SIZE*TEXT_SCALE_FACTOR}cm' # 文字サイズを調整する
+                text['font-size'] = f'{ CELL_SIZE * TEXT_SCALE_FACTOR}cm' # 文字サイズを調整する
                 text['font-family'] = modules.consts.FONT_FACES[0]     # フォントを選択する
                 self._dwg.add(text) # type: ignore 書き込んだ文字列を反映する
 
