@@ -333,7 +333,8 @@ class WizardryRewardInfo:
             return 0 # お金による報酬でない
 
         if 0 not in self.reward_param:
-            return 0
+            return 0  # パラメタがない
+
         return self.reward_param[0]
 
     @property
@@ -344,7 +345,7 @@ class WizardryRewardInfo:
             return 0 # お金による報酬でない
 
         if 1 not in self.reward_param:
-            return 0
+            return 0 # パラメタがない
 
         return self.reward_param[1]
 
@@ -356,7 +357,7 @@ class WizardryRewardInfo:
             return 0 # お金による報酬でない
 
         if 2 not in self.reward_param:
-            return 0
+            return 0 # パラメタがない
 
         return self.reward_param[2]
 
@@ -368,7 +369,7 @@ class WizardryRewardInfo:
             return 0 # お金による報酬でない
 
         if 3 not in self.reward_param:
-            return 0
+            return 0 # パラメタがない
 
         return self.reward_param[3]
 
@@ -380,7 +381,7 @@ class WizardryRewardInfo:
             return 0 # お金による報酬でない
 
         if 4 not in self.reward_param:
-            return 0
+            return 0  # パラメタがない
 
         return self.reward_param[4]
 
@@ -392,7 +393,7 @@ class WizardryRewardInfo:
             return 0 # お金による報酬でない
 
         if 5 not in self.reward_param:
-            return 0
+            return 0 # パラメタがない
 
         return self.reward_param[5]
 
@@ -404,7 +405,7 @@ class WizardryRewardInfo:
             return 0 # お金による報酬でない
 
         if 6 not in self.reward_param:
-            return 0
+            return 0 # パラメタがない
 
         return self.reward_param[6]
 
@@ -416,7 +417,7 @@ class WizardryRewardInfo:
             return 0 # アイテム報酬でない
 
         if 0 not in self.reward_param:
-            return 0
+            return 0 # パラメタがない
 
         return self.reward_param[0]
 
@@ -428,7 +429,7 @@ class WizardryRewardInfo:
             return 0 # アイテム報酬でない
 
         if 1 not in self.reward_param:
-            return 0
+            return 0 # パラメタがない
 
         return self.reward_param[1]
 
@@ -440,7 +441,7 @@ class WizardryRewardInfo:
             return 0 # アイテム報酬でない
 
         if 2 not in self.reward_param:
-            return 0
+            return 0 # パラメタがない
 
         return self.reward_param[2]
 
@@ -452,7 +453,7 @@ class WizardryRewardInfo:
             return 0 # アイテム報酬でない
 
         if 3 not in self.reward_param:
-            return 0
+            return 0 # パラメタがない
 
         return self.reward_param[3]
 
@@ -464,14 +465,14 @@ class WizardryRewardInfo:
             return 0 # アイテム報酬でない
 
         if 4 not in self.reward_param:
-            return 0
+            return 0 # パラメタがない
 
         return self.reward_param[4]
 
 @dataclass
 class WizardryRewardDataEntry:
     in_chest:bool
-    """宝箱を出すか"""
+    """宝箱を出すことを表す真偽値(真の場合は, 宝箱を出す)"""
     trap_type_value:int
     """罠の種別を表すビットマップ"""
     reward_count_value:int
