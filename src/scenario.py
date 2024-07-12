@@ -38,7 +38,7 @@ import sys
 import argparse   # 引数解析
 import os
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
+sys.path.append(os.path.dirname(__file__))
 
 if TYPE_CHECKING:
     pass
