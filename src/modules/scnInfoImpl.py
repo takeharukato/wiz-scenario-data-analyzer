@@ -28,7 +28,7 @@ import tempfile
 #
 # サードパーティーモジュールの読込み
 #
-from svglib.svglib import svg2rlg
+from svglib.svglib import svg2rlg # type: ignore
 from reportlab.graphics import renderPM
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
@@ -270,7 +270,7 @@ class scnInfoImpl(scnInfo):
                     elif v == modules.consts.FLOOR_WALL_HIDDEN:
                         drawer.addDoor(x=x, y=y, dir=dir, hidden=True)
         drawer.save()
-        return drawer
+        return
 
     def _drawFloorRooms(self, floor:WizardryMazeFloorDataEntry, basename:str, format:str='png')->None:
 
@@ -295,6 +295,7 @@ class scnInfoImpl(scnInfo):
             drawer.save()
 
             # PNGに変換
+            # TODO ユーティリティに移動すること
             drawing = svg2rlg(f"{svg_file}")
             if drawing:
 

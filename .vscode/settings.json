@@ -108,6 +108,7 @@
         "SPPC",
         "SQRETYPE",
         "SQREXTRA",
+        "svglib",
         "svgwrite",
         "TALIGN",
         "TCLASS",

@@ -25,7 +25,6 @@ import os
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-
 #
 # 定数定義
 #
