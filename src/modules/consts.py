@@ -28,7 +28,19 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 #
 # 定数定義
 #
+# フォント
 FONT_FACES = ['Arial', 'Courier New', 'Georgia', 'Times New Roman', 'Verdana', 'Comic Sans MS']
+
+# ラスタイメージ形式名
+RASTER_IMAGE_TYPE_PNG="PNG"
+# ラスタイメージ形式名とrenderPMのフォーマット名との対応関係
+RASTER_IMAGE_TYPE_DIC:dict[str,str]={
+    RASTER_IMAGE_TYPE_PNG:"PNG",
+}
+# デフォルトラスタイメージ形式(PNG)
+DEFAULT_RASTER_IMAGE_TYPE=RASTER_IMAGE_TYPE_PNG
+# デフォルトラスタイメージ形式の拡張子(PNG)
+DEFAULT_RASTER_IMAGE_EXT='png'
 
 # Apple Pascal Operating System のディスクブロックサイズ(単位:バイト)
 BLK_SIZ=512

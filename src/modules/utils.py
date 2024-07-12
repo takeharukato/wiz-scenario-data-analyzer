@@ -24,6 +24,12 @@ import sys
 import os
 import struct
 
+#
+# サードパーティーモジュールの読込み
+#
+from svglib.svglib import svg2rlg # type: ignore
+from reportlab.graphics import renderPM
+
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from modules.datadef import WizardrySCNTOC
@@ -178,3 +184,27 @@ def calcDataEntryOffset(toc:WizardrySCNTOC, category: str, item_len:int, index: 
     data_offset = start_offset + data_block_offset + entry_offset
 
     return data_offset
+
+def convertSVGtoRaster(infile:str, outfile:str, format:str=modules.consts.DEFAULT_RASTER_IMAGE_TYPE)->None:
+    """SVG形式のベクタグラフィックスをラスタイメージに変換する
+
+    Args:
+        infile (str): 入力ファイル名
+        outfile (str): 出力ファイル名
+        format (str, optional): 出力フォーマット. Defaults to modules.consts.DEFAULT_RASTER_IMAGE_TYPE('png').
+    """
+
+    # ラスタイメージに変換するためのドロワーを取得
+    drawing = svg2rlg(infile)
+    if not drawing: # 入力ファイルを開けなかった場合
+        return  # 何もせず抜ける
+
+    upper_format=format.upper() # 大文字に変換する
+
+    if upper_format not in modules.consts.RASTER_IMAGE_TYPE_DIC: # 対応フォーマットにない場合は, 何もせず抜ける
+        return
+
+    # 指定された形式にファイルを変換する
+    renderPM.drawToFile(drawing, outfile, fmt=modules.consts.RASTER_IMAGE_TYPE_DIC[upper_format])
+
+    return

@@ -28,8 +28,6 @@ import tempfile
 #
 # サードパーティーモジュールの読込み
 #
-from svglib.svglib import svg2rlg # type: ignore
-from reportlab.graphics import renderPM
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
@@ -41,7 +39,7 @@ from modules.monsterDecoder import monsterDecoder
 from modules.itemDecoder import itemDecoder
 from modules.rewardDecoder import rewardDecoder
 from modules.drawMazeSVG import drawMazeSVG
-from modules.utils import property_dic_to_string,value_to_string
+from modules.utils import property_dic_to_string,value_to_string,convertSVGtoRaster
 import modules.consts
 
 class scnInfoImpl(scnInfo):
@@ -272,7 +270,7 @@ class scnInfoImpl(scnInfo):
         drawer.save()
         return
 
-    def _drawFloorRooms(self, floor:WizardryMazeFloorDataEntry, basename:str, format:str='png')->None:
+    def _drawFloorRooms(self, floor:WizardryMazeFloorDataEntry, basename:str, format:str=modules.consts.DEFAULT_RASTER_IMAGE_TYPE)->None:
 
         with tempfile.TemporaryDirectory() as dir_name:
 
@@ -295,16 +293,11 @@ class scnInfoImpl(scnInfo):
             drawer.save()
 
             # PNGに変換
-            # TODO ユーティリティに移動すること
-            drawing = svg2rlg(f"{svg_file}")
-            if drawing:
-
-                if format == 'png':
-                    renderPM.drawToFile(drawing, f"{basename}.png", fmt="PNG")
+            convertSVGtoRaster(infile=svg_file, outfile=f"{basename}.{modules.consts.DEFAULT_RASTER_IMAGE_EXT}", format=modules.consts.RASTER_IMAGE_TYPE_PNG)
 
         return
 
-    def _drawFloorLayout(self, floor:WizardryMazeFloorDataEntry, basename:str, format:str='png')->None:
+    def _drawFloorLayout(self, floor:WizardryMazeFloorDataEntry, basename:str, format:str=modules.consts.DEFAULT_RASTER_IMAGE_TYPE)->None:
 
         with tempfile.TemporaryDirectory() as dir_name:
             # SVGファイルを作成
@@ -317,11 +310,8 @@ class scnInfoImpl(scnInfo):
             self._drawFloorLayoutWithSVG(drawer=drawer,floor=floor, outfile=svg_file)
 
             # PNGに変換
-            drawing = svg2rlg(f"{svg_file}")
-            if drawing:
-
-                if format == 'png':
-                    renderPM.drawToFile(drawing, f"{basename}.png", fmt="PNG")
+            convertSVGtoRaster(infile=svg_file, outfile=f"{basename}.{modules.consts.DEFAULT_RASTER_IMAGE_EXT}",
+                               format=modules.consts.DEFAULT_RASTER_IMAGE_TYPE)
 
         return
 
@@ -384,7 +374,7 @@ class scnInfoImpl(scnInfo):
 
         basename=f"floor-room-{depth:02}"
         self._drawFloorRooms(floor=floor, basename=basename)
-        outfile=f"{basename}.png"
+        outfile=f"{basename}.{modules.consts.DEFAULT_RASTER_IMAGE_EXT}"
         if os.path.exists(outfile):
             print(f"", file=fp)
             print(f"![{depth:02}階玄室情報]({outfile})", file=fp)
@@ -425,7 +415,7 @@ class scnInfoImpl(scnInfo):
 
         basename=f"floor-layout-{depth:02}"
         self._drawFloorLayout(floor=floor, basename=basename)
-        outfile=f"{basename}.png"
+        outfile=f"{basename}.{modules.consts.DEFAULT_RASTER_IMAGE_EXT}"
         if os.path.exists(outfile):
             print(f"", file=fp)
             print(f"![{depth:02}階フロアレイアウト]({outfile})", file=fp)
