@@ -177,3 +177,5 @@ SCENARIO.DATA
 output.md
 tools/mazeinfo-layout.py
 docs/memo.md
+*.svg
+docs/svg-test.py
