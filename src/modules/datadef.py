@@ -478,3 +478,15 @@ class WizardryRewardDataEntry:
     """報酬の数"""
     rewards:dict[int,WizardryRewardInfo]
     """報酬詳細情報"""
+
+    @property
+    def trap_string(self)->str:
+        """罠の一覧を返す"""
+
+        candidate_traps:list[str]=[] # 罠の候補を初期化する
+        trap_bit_len = len(modules.consts.REWARD_TRAP_DIC) # 有効なビット数を得る
+        for shift in range(trap_bit_len): # 各ビットについて
+            if self.trap_type_value & (1 << shift): # 対象のビットが立っていたら
+                candidate_traps += modules.consts.REWARD_TRAP_DIC[shift] # 罠の候補を加える
+
+        return ','.join(candidate_traps)

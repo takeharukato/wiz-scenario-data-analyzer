@@ -26,7 +26,7 @@ import os
 from abc import ABC, abstractmethod
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from modules.datadef import WizardrySCNTOC,WizardryMazeFloorDataEntry
+from modules.datadef import WizardrySCNTOC
 
 class scnInfo(ABC):
 
@@ -73,15 +73,5 @@ class scnInfo(ABC):
     @abstractmethod
     def toc(self)->WizardrySCNTOC:
         """目次情報
-        """
-        return
-
-    @property
-    @abstractmethod
-    def maze(self)->dict[int,WizardryMazeFloorDataEntry]:
-        """迷宮情報
-
-        Returns:
-            dict[int,WizardryMazeFloorDataEntry]: インデクス(階層-1) からフロア情報への辞書
         """
         return

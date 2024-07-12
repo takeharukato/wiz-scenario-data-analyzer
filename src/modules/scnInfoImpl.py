@@ -31,7 +31,8 @@ import tempfile
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from modules.datadef import WizardrySCNTOC, WizardryMazeFloorDataEntry, WizardryMonsterDataEntry, WizardryItemDataEntry, WizardryRewardDataEntry, WizardryRewardInfo
+from modules.datadef import WizardrySCNTOC, WizardryMazeFloorDataEntry, WizardryMonsterDataEntry
+from modules.datadef import WizardryItemDataEntry, WizardryRewardDataEntry
 from modules.scnInfo import scnInfo
 from modules.TOCDecoder import TOCDecoder
 from modules.mazeFloorDecoder import mazeFloorDecoder
@@ -496,6 +497,57 @@ class scnInfoImpl(scnInfo):
 
         return
 
+
+    def _plainOneDumpReward(self, reward_number:int, reward:WizardryRewardDataEntry, fp: TextIO)->None:
+
+        index_string = f"{reward_number}"
+        in_chest_string=f"宝箱あり" if reward.in_chest else f"宝箱なし"
+        nr_rewards_string = f"{reward.reward_count_value}"
+        trap_string=f"{reward.trap_string} ( {value_to_string(val=reward.trap_type_value)} )" if reward.in_chest else f""
+
+        for reward_index in sorted(reward.rewards.keys()):
+
+            reward_info=reward.rewards[reward_index]
+
+            if reward_info.percentage == 0:
+                continue # 無効エントリ
+
+            percentage_string = f"{reward_info.percentage:3}"
+            has_item_string = f"あり" if reward_info.has_item else f"なし"
+            param_dict:dict[int,int]={}
+
+            for idx in range(modules.consts.NR_REWARD_PARAM):
+                if idx not in reward_info.reward_param:
+                    param_dict[idx] = 0
+                else:
+                    param_dict[idx] = reward_info.reward_param[idx]
+
+            print(f"|{index_string}|{reward_index} / {nr_rewards_string}|{in_chest_string}|{trap_string}|{percentage_string}|{has_item_string}|"
+                f"{param_dict[0]}|{param_dict[1]}|{param_dict[2]}|"
+                f"{param_dict[3]}|{param_dict[4]}|{param_dict[5]}|{param_dict[6]}|", file=fp)
+        return
+
+    def _dumpRewards(self, fp:TextIO)->None:
+
+        print("## 報酬一覧表",file=fp)
+        print("",file=fp)
+        print(f"|報酬番号|連番 / 総報酬数|宝箱の有無|罠|取得確率|アイテムの有無|"
+              f"パラメタ1|パラメタ2|パラメタ3|"
+              f"パラメタ4|パラメタ5|パラメタ6|パラメタ7|",
+              file=fp)
+
+        print(f"|---|---|---|---|---|---|"
+              f"---|---|---|"
+              f"---|---|---|---|",
+              file=fp)
+
+
+        for idx in sorted(self._rewards.keys()):
+
+            reward = self._rewards[idx]
+            self._plainOneDumpReward(reward_number=idx, reward=reward, fp=fp)
+        return
+
     def _dumpFloors(self, fp:TextIO)->None:
         for idx in sorted(self._floors.keys()):
             self._plainOneDumpFloor(depth=idx+1, floor=self._floors[idx], fp=fp)
@@ -620,10 +672,12 @@ class scnInfoImpl(scnInfo):
             fp (TextIO): 表示先ファイルのTextIO.
         """
 
+        self._dumpRewards(fp=fp)
         self._dumpTOC(fp=fp)
         self._dumpFloors(fp=fp)
         self._dumpMonsters(fp=fp)
         self._dumpItems(fp=fp)
+
         return
     def getWallInfo(self, x:int, y:int, z:int, dir:int)->int:
         """壁情報を得る
@@ -642,16 +696,9 @@ class scnInfoImpl(scnInfo):
             return -1 # 不正な階層
 
         return self._floors[z-1].getWallInfo(x=x, y=y, dir=dir)
+
     @property
     def toc(self)->WizardrySCNTOC:
         """目次情報
         """
         return self._toc
-    @property
-    def maze(self)->dict[int,WizardryMazeFloorDataEntry]:
-        """迷宮情報
-
-        Returns:
-            dict[int,WizardryMazeFloorDataEntry]: インデクス(階層-1) からフロア情報への辞書
-        """
-        return self._floors
