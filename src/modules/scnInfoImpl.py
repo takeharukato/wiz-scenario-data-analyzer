@@ -23,6 +23,13 @@ if TYPE_CHECKING:
 #
 import sys
 import os
+import tempfile
+
+#
+# サードパーティーモジュールの読込み
+#
+from svglib.svglib import svg2rlg
+from reportlab.graphics import renderPM
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
@@ -33,6 +40,7 @@ from modules.mazeFloorDecoder import mazeFloorDecoder
 from modules.monsterDecoder import monsterDecoder
 from modules.itemDecoder import itemDecoder
 from modules.rewardDecoder import rewardDecoder
+from modules.drawMazeSVG import drawMazeSVG
 from modules.utils import property_dic_to_string,value_to_string
 import modules.consts
 
@@ -58,6 +66,7 @@ class scnInfoImpl(scnInfo):
         self._monsters={}
         self._items={}
         self._rewards={}
+
         return
 
     def _readTOC(self, data:Any)->None:
@@ -327,6 +336,39 @@ class scnInfoImpl(scnInfo):
 
         return
 
+    def _drawFloorLayoutWithSVG(self, depth:int, floor:WizardryMazeFloorDataEntry, outfile:str)->None:
+
+        drawer:drawMazeSVG=drawMazeSVG(outfile=outfile, draw_coordinate=True)
+        for x in range(modules.consts.FLOOR_WIDTH):
+            for y in range(modules.consts.FLOOR_HEIGHT):
+                for dir in modules.consts.DIR_VALID:
+                    # DIR_NORTH=0,DIR_EAST=1,DIR_SOUTH=2,DIR_WEST=3
+
+                    v=floor.getWallInfo(x=x, y=y, dir=dir)
+                    if v == modules.consts.FLOOR_WALL_WALL:
+                        drawer.addWall(x=x, y=y, dir=dir)
+                    elif v == modules.consts.FLOOR_WALL_DOOR:
+                        drawer.addDoor(x=x, y=y, dir=dir)
+                    elif v == modules.consts.FLOOR_WALL_HIDDEN:
+                        drawer.addDoor(x=x, y=y, dir=dir, hidden=True)
+        drawer.save()
+        return
+
+    def _drawFloorLayout(self, depth:int, floor:WizardryMazeFloorDataEntry, format:str='png')->None:
+        filename=f"floor-layout-{depth:02}"
+        with tempfile.TemporaryDirectory() as dir_name:
+            # SVGファイルを作成
+            svg_file=os.path.join(dir_name,f"{filename}.svg")
+            self._drawFloorLayoutWithSVG(depth=depth, floor=floor, outfile=svg_file)
+            # PNGに変換
+            drawing = svg2rlg(f"{svg_file}")
+            if drawing:
+
+                if format == 'png':
+                    renderPM.drawToFile(drawing, f"{filename}.png", fmt="PNG")
+
+        return
+
     def _plainOneDumpFloorLayout(self, depth:int, floor:WizardryMazeFloorDataEntry, fp: TextIO)->None:
 
         order=['西側の壁','南の壁', '東側の壁', '北側の壁']
@@ -335,6 +377,8 @@ class scnInfoImpl(scnInfo):
 
         print(f"", file=fp)
         print(f"#### {depth}階 フロアレイアウト情報", file=fp)
+
+        self._drawFloorLayout(depth=depth, floor=floor)
 
         for title, dic in info_dic:
             print(f"", file=fp)
@@ -504,9 +548,33 @@ class scnInfoImpl(scnInfo):
         self._dumpMonsters(fp=fp)
         self._dumpItems(fp=fp)
         return
+    def getWallInfo(self, x:int, y:int, z:int, dir:int)->int:
+        """壁情報を得る
 
+        Args:
+            x (int): X座標
+            y (int): Y座標
+            z (int): Z座標
+            dir (int): 向き
+
+        Returns:
+            int: 壁情報
+        """
+
+        if (z - 1) not in self._floors:
+            return -1 # 不正な階層
+
+        return self._floors[z-1].getWallInfo(x=x, y=y, dir=dir)
     @property
     def toc(self)->WizardrySCNTOC:
         """目次情報
         """
         return self._toc
+    @property
+    def maze(self)->dict[int,WizardryMazeFloorDataEntry]:
+        """迷宮情報
+
+        Returns:
+            dict[int,WizardryMazeFloorDataEntry]: インデクス(階層-1) からフロア情報への辞書
+        """
+        return self._floors

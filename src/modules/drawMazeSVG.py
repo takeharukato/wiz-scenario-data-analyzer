@@ -2,18 +2,16 @@
 # -*- coding: utf-8 -*-
 
 ##
-# @file drawMaze.py
+# @file drawMazeSVG.py
 # @version 1.0
 # @author Takeharu KATO
 # @date 2024.07.08
-# @brief データクラス定義
+# @brief SVG迷宮描画実装部
 # @copyright 2024年 Takeharu KATO All Rights Reserved.
-# @details データクラス定義
+# @details SVG迷宮描画実装部
 
 from __future__ import annotations # 型定義のみを参照する
 from typing import TYPE_CHECKING   # 型チェック実施判定
-from typing import Any,Optional
-from typing import Callable
 
 if TYPE_CHECKING:
     pass
@@ -52,12 +50,12 @@ LINE_TYPE_WALL=1
 LINE_TYPE_DOOR=2
 LINE_TYPES=(LINE_TYPE_COORD,LINE_TYPE_WALL,LINE_TYPE_DOOR)
 
-DRAW_MAZE_DIR_NORTH=0
-DRAW_MAZE_DIR_EAST=1
-DRAW_MAZE_DIR_SOUTH=2
-DRAW_MAZE_DIR_WEST=3
+DRAW_MAZE_DIR_NORTH=modules.consts.DIR_NORTH
+DRAW_MAZE_DIR_EAST=modules.consts.DIR_EAST
+DRAW_MAZE_DIR_SOUTH=modules.consts.DIR_SOUTH
+DRAW_MAZE_DIR_WEST=modules.consts.DIR_WEST
 
-class drawMaze:
+class drawMazeSVG:
 
     _dwg:svgwrite.Drawing
     def __init__(self, outfile:str, draw_coordinate: bool=True) -> None:
@@ -203,7 +201,7 @@ class drawMaze:
 
 if __name__ == '__main__':
 
-    draw=drawMaze(outfile='test.svg')
+    draw=drawMazeSVG(outfile='test.svg')
 
     draw.addWall(x=0,y=0,dir=DRAW_MAZE_DIR_NORTH)
     draw.addWall(x=2,y=2,dir=DRAW_MAZE_DIR_SOUTH)

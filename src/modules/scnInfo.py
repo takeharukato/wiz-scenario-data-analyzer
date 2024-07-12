@@ -26,6 +26,7 @@ import os
 from abc import ABC, abstractmethod
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from modules.datadef import WizardrySCNTOC,WizardryMazeFloorDataEntry
 
 class scnInfo(ABC):
 
@@ -43,11 +44,44 @@ class scnInfo(ABC):
         """シナリオ情報を変換する
         """
         return
+
     @abstractmethod
     def plainDump(self, fp:TextIO)->None:
         """テキスト形式で表示する
 
         Args:
             fp (TextIO): 表示先ファイルのTextIO.
+        """
+        return
+
+    @abstractmethod
+    def getWallInfo(self, x:int, y:int, z:int, dir:int)->int:
+        """壁情報を得る
+
+        Args:
+            x (int): X座標
+            y (int): Y座標
+            z (int): Z座標
+            dir (int): 向き
+
+        Returns:
+            int: 壁情報
+        """
+        return
+
+    @property
+    @abstractmethod
+    def toc(self)->WizardrySCNTOC:
+        """目次情報
+        """
+        return
+
+    @property
+    @abstractmethod
+    def maze(self)->dict[int,WizardryMazeFloorDataEntry]:
+        """迷宮情報
+
+        Returns:
+            dict[int,WizardryMazeFloorDataEntry]: インデクス(階層-1) からフロア情報への辞書
         """
         return

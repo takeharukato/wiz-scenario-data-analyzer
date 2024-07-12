@@ -179,3 +179,4 @@ tools/mazeinfo-layout.py
 docs/memo.md
 *.svg
 docs/svg-test.py
+*.png

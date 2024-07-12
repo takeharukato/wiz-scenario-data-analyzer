@@ -136,6 +136,26 @@ class WizardryMazeFloorDataEntry:
     monster_tables:dict[int,WizardryMazeMonsterTableEntry]
     """モンスター出現テーブルの辞書 モンスター出現系統番号からテーブルへの辞書"""
 
+    def getWallInfo(self, x:int, y:int, dir:int)->int:
+
+        dic_map:dict[int,dict[tuple[int,int],int]]={
+            modules.consts.DIR_NORTH:self.wall_info_north,
+            modules.consts.DIR_EAST:self.wall_info_east,
+            modules.consts.DIR_SOUTH:self.wall_info_south,
+            modules.consts.DIR_WEST:self.wall_info_west
+        }
+
+        pos=(x,y) # 確認対象座標
+
+        if dir not in dic_map: # 不正な方角の場合
+            return -1
+
+        dic = dic_map[dir] # マップを取得
+        if pos not in dic: # 不正座標の場合
+            return -1
+
+        return dic[pos] # 壁の情報を返す
+
     @property
     def monster_series(self)->Iterator[tuple[int,int,int]]:
         """モンスター出現範囲を返すイテレータ
