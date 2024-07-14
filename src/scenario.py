@@ -174,7 +174,7 @@ class ReadScenario:
             scenario=fr.read()
             # TODO: FactoryMethodを適用
             self._scnInfo=scnInfoImpl(scenario=scenario)
-            self._scnInfo.doConvert()
+            self._scnInfo.readContents()
         return
 
     def plainDump(self)->None:

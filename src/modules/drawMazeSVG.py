@@ -12,6 +12,9 @@
 
 from __future__ import annotations # 型定義のみを参照する
 from typing import TYPE_CHECKING   # 型チェック実施判定
+from typing import Optional
+from typing import Iterator
+from collections.abc import Generator
 
 if TYPE_CHECKING:
     pass
@@ -21,6 +24,7 @@ if TYPE_CHECKING:
 #
 import sys
 import os
+import math
 
 #
 # サードパーティーモジュールの読込み
@@ -42,11 +46,44 @@ COORD_STROKE_WIDTH=1
 DOOR_WALL_STROKE_WIDTH=3
 # 壁の幅
 WALL_STROKE_WIDTH=4
+# 矢印の幅
+ARROW_STROKE_WIDTH=2
 # 壁の幅の1/4分両端を空けて, ドアの矩形, イベント番号を描画する
 DOOR_OFFSET=0.25
 # セルの20%の幅でドアを描画する
 DOOR_THICK=0.2
 
+#
+# 上向き矢印
+#
+# 矢じりの幅
+ARROW_WIDTH=0.25
+ARROW_HEIGHT=0.25
+# 矢じり壁上位部の高さ( セルの1/8 )
+ARROW_BASE_HEIGHT=ARROW_HEIGHT/2
+# 矢じり壁上位部の幅( セルの1/8 )
+ARROW_BASE_WIDTH=ARROW_WIDTH/2
+# 矢じりの高さ( 矢印の高さの半分 )
+ARROW_TRIANGLE_HEIGHT=ARROW_HEIGHT/2
+# 中心から見た矢印の矢じり(三角形)の左隅
+ARROW_LEFT_CORNER=(0 - ARROW_BASE_WIDTH*2, 0 - ARROW_BASE_HEIGHT)
+# 中心から見た三角形の頂点
+ARROW_CENTER_CORNER=(0, 0 - ARROW_BASE_HEIGHT - ARROW_TRIANGLE_HEIGHT)
+# 中心から見た矢印の矢じり(三角形)の右隅
+ARROW_RIGHT_CORNER=(1 * ARROW_BASE_WIDTH*2, 0 - ARROW_BASE_HEIGHT)
+# 中心から見た矢印の矢じりの基底右上
+ARROW_RIGHT_BASE_UPPER_RIGHT=(0 + ARROW_BASE_WIDTH, - ARROW_BASE_HEIGHT)
+# 中心から見た矢印の矢じりの基底右下
+ARROW_RIGHT_BASE_LOWER_RIGHT=(0 + ARROW_BASE_WIDTH, ARROW_BASE_HEIGHT*2)
+# 中心から見た矢印の矢じりの基底左下
+ARROW_RIGHT_BASE_LOWER_LEFT=(0 - ARROW_BASE_WIDTH, ARROW_BASE_HEIGHT*2)
+# 中心から見た矢印の矢じりの基底左上
+ARROW_RIGHT_BASE_UPPER_LEFT=(0 - ARROW_BASE_WIDTH, - ARROW_BASE_HEIGHT)
+# 矢印の線分
+ARROW_SHAPE=(ARROW_LEFT_CORNER, ARROW_CENTER_CORNER, ARROW_RIGHT_CORNER,
+             ARROW_RIGHT_BASE_UPPER_RIGHT, ARROW_RIGHT_BASE_LOWER_RIGHT,
+             ARROW_RIGHT_BASE_LOWER_LEFT, ARROW_RIGHT_BASE_UPPER_LEFT,
+             ARROW_LEFT_CORNER)
 #
 # 描画色
 #
@@ -88,7 +125,12 @@ DRAW_MAZE_DIR_EAST=modules.consts.DIR_EAST    # 東側(右)
 DRAW_MAZE_DIR_SOUTH=modules.consts.DIR_SOUTH  # 南側(下)
 DRAW_MAZE_DIR_WEST=modules.consts.DIR_WEST    # 西側(左)
 DRAW_MAZE_DIR_VALID=(DRAW_MAZE_DIR_NORTH, DRAW_MAZE_DIR_EAST, DRAW_MAZE_DIR_SOUTH, DRAW_MAZE_DIR_WEST)
-
+DRAW_MAZE_DIR_TO_DEGREE:dict[int,int]={
+    DRAW_MAZE_DIR_NORTH:0,   #  上 (0度)
+    DRAW_MAZE_DIR_EAST:90,   #  右 (90度)
+    DRAW_MAZE_DIR_SOUTH:180, #  下 (180度)
+    DRAW_MAZE_DIR_WEST:270   #  下 (270度)
+}
 class drawMazeSVG:
 
     _dwg:svgwrite.Drawing
@@ -201,6 +243,86 @@ class drawMazeSVG:
 
         # 描画した線分を反映
         lines.add(line) # type: ignore
+
+        return
+
+    def arrowShape(self)->Iterator[tuple[tuple[float,float],tuple[float,float]]]:
+        """中心を0,0とした矢印を描く線分のイテレータを返す
+
+        Yields:
+            Iterator[tuple[tuple[float,float],tuple[float,float]]]: 矢印の線分
+        """
+        def arrowShapeGenerator()->Generator[tuple[tuple[float,float],tuple[float,float]],None,None]:
+            """中心を0,0とした矢印を描く線分を生成"""
+            for idx in range(len(ARROW_SHAPE) - 1):
+                yield ARROW_SHAPE[idx],ARROW_SHAPE[idx+1]
+            return
+        return arrowShapeGenerator()
+
+    def rotatePosition(self, degree:float, multi:int, x:float, y:float)->tuple[float,float]:
+        nx = x * multi * math.cos(math.radians(degree)) - y * multi * math.sin(math.radians(degree))
+        ny = x * multi * math.sin(math.radians(degree)) + y * multi * math.cos(math.radians(degree))
+        return nx, ny
+
+    def movePosition(self, x:float, y:float, vx:float, vy:float)->tuple[float,float]:
+        return x + vx, y + vy
+    def getPathPoint(self, x:float, y:float, degree:float, vx:float,vy:float)-> tuple[float, float]:
+        dx,dy = self.rotatePosition(degree=degree, multi=CELL_SIZE, x=x, y=y)
+        dx,dy = self.movePosition(x=dx,y=dy,vx=vx,vy=vy)
+        return dx, dy
+    def getArrowOffset(self, pos:int)->tuple[float,float]:
+        """矢印を配置する場所を設定する
+
+        Args:
+            pos (int): 場所指定
+                - DRAW_MAZE_DIR_NORTH 北側の壁に設置する
+                - DRAW_MAZE_DIR_SOUTH 南側の壁に設置する
+                - DRAW_MAZE_DIR_WEST  西側の壁に設置する
+                - DRAW_MAZE_DIR_WEST  東の壁に設置する
+        Returns:
+            tuple[float,float]: _description_
+        """
+        if pos == DRAW_MAZE_DIR_NORTH:
+            return CELL_SIZE / 2, 0
+        elif pos == DRAW_MAZE_DIR_SOUTH:
+            return CELL_SIZE / 2, CELL_SIZE
+        elif pos == DRAW_MAZE_DIR_WEST:
+            return 0, CELL_SIZE / 2
+        else:
+            return CELL_SIZE, CELL_SIZE / 2
+
+    def addArrow(self, x:int, y:int, dir:int, pos:int, fill: Optional[str]=None)->None:
+
+        # 矢印の向きを決定する
+        degree = DRAW_MAZE_DIR_TO_DEGREE[dir] if dir in DRAW_MAZE_DIR_TO_DEGREE else 0
+
+        # 描画グループを生成
+        arrow = self._dwg.add(self._dwg.g(id='arrow', stroke=LINE_COLOR, stroke_width=ARROW_STROKE_WIDTH)) # type: ignore
+
+        dx,dy = self.getDrawCoord(x=x, y=y)      # 座標変換
+
+        # 設置位置(東西南北)に応じて中心位置を移動
+        off_x, off_y = self.getArrowOffset(pos=pos)
+        mx = dx + off_x
+        my = dy + off_y
+
+        point_list = list(self.arrowShape())       # (一筆書き可能な)線分
+        for start,end in point_list:
+
+            sx,sy=self.rotatePosition(degree=degree, multi=CELL_SIZE, x=start[0], y=start[1])
+            sx,sy = self.movePosition(x=sx,y=sy,vx=mx,vy=my)
+
+            ex,ey=self.rotatePosition(degree=degree, multi=CELL_SIZE, x=end[0], y=end[1])
+            ex,ey = self.movePosition(x=ex,y=ey,vx=mx,vy=my)
+
+            #print(f"({start[0]},{start[1]})-({end[0]}, {end[1]}) => ({sx},{sy})-({ex},{ey})")
+
+            # 線分を描画する
+            line = self._dwg.line(start=((OFFSET_SIZE + sx)*cm, (OFFSET_SIZE + sy) * cm),  # type: ignore
+                                end=((OFFSET_SIZE + ex)*cm, (OFFSET_SIZE + ey) * cm))
+
+            # 描画した線分を反映
+            arrow.add(line) # type: ignore
 
         return
 
@@ -430,5 +552,9 @@ if __name__ == '__main__':
     draw.addDoor(x=5,y=6,dir=DRAW_MAZE_DIR_WEST)
     draw.addRoom(x=6,y=6)
     draw.addEventNumber(x=7,y=7,event_number=15)
+    draw.addArrow(x=8,y=8,  pos=DRAW_MAZE_DIR_NORTH, dir=DRAW_MAZE_DIR_SOUTH)
+    draw.addArrow(x=8,y=9,  pos=DRAW_MAZE_DIR_EAST, dir=DRAW_MAZE_DIR_WEST)
+    draw.addArrow(x=8,y=10, pos=DRAW_MAZE_DIR_WEST, dir=DRAW_MAZE_DIR_EAST)
+    draw.addArrow(x=8,y=11, pos=DRAW_MAZE_DIR_SOUTH, dir=DRAW_MAZE_DIR_NORTH)
     draw.save()
     pass

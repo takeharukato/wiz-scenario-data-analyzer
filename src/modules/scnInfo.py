@@ -40,7 +40,7 @@ class scnInfo(ABC):
         return
 
     @abstractmethod
-    def doConvert(self)->None:
+    def readContents(self)->None:
         """シナリオ情報を変換する
         """
         return

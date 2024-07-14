@@ -23,10 +23,25 @@ if TYPE_CHECKING:
 #
 import sys
 import os
+
 from dataclasses import dataclass
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import modules.consts
+
+
+def simple_round(number:float, ndigits:int=0)-> float:
+    """四捨五入する
+
+    Args:
+        number (float): 四捨五入する値
+        ndigits (int, optional): 四捨五入する桁数. Defaults to 0.
+
+    Returns:
+        float: 小数点ndigitsで四捨五入した値
+    """
+    p = 10 ** ndigits
+    return (number * p * 2 + 1) // 2 / p
 
 @dataclass
 class WizardrySCNTOC:
@@ -99,6 +114,7 @@ class WizardryMazeFloorEventInfo:
 @dataclass
 class WizardryMazeMonsterTableEntry:
     """モンスター出現テーブルエントリ"""
+
     number:int          # エントリの系統番号
     min_enemy:int       # MINENEMY 出現モンスター番号の最小値
     multiplier:int      # MULTWORS モンスター出現範囲の系統(0からWORSE01 - 1) * MULTWORS 分最小モンスター番号に加算する
@@ -324,6 +340,100 @@ class WizardryRewardInfo:
     """アイテムを含む場合は真"""
     reward_param:dict[int,int]
     """報酬情報0-6の内容(インデクス->値への辞書)"""
+
+    @property
+    def gold_range_tuple(self)->Iterator[tuple[float, int, int]]:
+        """総獲得Gold値の範囲のイテレータを返す
+
+
+        報酬情報一つ当たりの取得金額 =
+            報酬情報の報酬額ダイス1(TRIES D AVEAMT + MINADD のダイスで決定)
+          * 報酬情報の報酬乗数値(MULTX)
+          * 報酬情報の報酬額ダイス2(TRIES2 D AVEAMT2 + MINADD2 のダイスで決定)
+
+        Returns:
+            tuple[int, int,int]: 獲得確率, 獲得最小値, 獲得最大値
+        """
+
+        if self.has_item: # アイテム取得の場合
+            return iter([(0,0,0)])  # 0を返す
+
+        # 報酬情報の報酬額ダイス1
+        dice1=dice_type(self.gold_tries, self.gold_aveamt, self.gold_minadd)
+        # 報酬情報の報酬額ダイス2
+        dice2=dice_type(self.gold_tries2, self.gold_aveamt2, self.gold_minadd2)
+
+        # 最小金額
+        min = dice1.min * self.gold_multx * dice2.min
+        # 最大金額
+        max = dice1.max * self.gold_multx * dice2.max
+
+        return iter([(100, min, max)])
+
+    @property
+    def item_range_tuple(self)->Iterator[tuple[float, int, int]]:
+        """獲得アイテムの範囲のイテレータを返す
+
+        取得するアイテムのアイテム番号 = アイテム番号最小値(MININDX) +
+        アイテム出現レンジ基数(CHARIII) * アイテム出現値乗数(MFACTOR)
+        + アイテム番号を算出する際に使用するダイス(ダイスの面数:RANGE) の値(1 D RANGE + 1 )
+
+        Returns:
+            tuple[float, int,int]: 獲得確率, 獲得アイテム番号最小値, 獲得アイテム番号最大値
+        """
+
+        def item_range_generator():
+
+            # アイテム番号算出ダイス
+            dice=dice_type(0, 0, 0)
+            if self.item_range > 0:
+                dice=dice_type(1, self.item_range, 1)
+
+            if self.item_maxtimes == 0 or self.item_percbigr == 0:
+
+                #
+                # 補正値がない場合
+                #
+
+                # 最小アイテム番号
+                min = self.item_minindx + dice.min
+
+                # 最大アイテム番号
+                max = self.item_minindx + dice.max
+
+                yield 100, min, max
+
+            else:
+
+                remain_percentage=100
+
+                for idx in range(self.item_maxtimes+1):
+
+                    # アイテムレンジ基数(CHARIII)
+                    char_iii = idx
+
+                    # 補正値を算出(補正値 = アイテムレンジ基数 *  アイテム出現値乗数)
+                    mod_val =  char_iii * self.item_mfactor
+
+                    # 最小アイテム番号
+                    min = self.item_minindx + mod_val + dice.min
+
+                    # 最大アイテム番号
+                    max = self.item_minindx + mod_val + dice.max
+                    if self.item_maxtimes > idx:
+                        this_percentage = simple_round(remain_percentage - ( (remain_percentage) / 100 ) * ( (self.item_percbigr) / 100 ) * 100, ndigits=1)
+                    else:
+                        this_percentage = simple_round(remain_percentage,ndigits=1)
+                    remain_percentage -= this_percentage
+                    yield this_percentage, min, max
+
+
+            return
+
+        if not self.has_item: # アイテム取得スロットでない場合
+            return iter([(0,0,0)])
+
+        return item_range_generator()
 
     @property
     def gold_tries(self)->int:

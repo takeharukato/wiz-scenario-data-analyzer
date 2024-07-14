@@ -58,6 +58,9 @@ class scnInfoImpl(scnInfo):
     _rewards:dict[int,WizardryRewardDataEntry]
     """報酬情報"""
 
+    _reward2monster:dict[int,set[int]]
+    """報酬番号からモンスター番号の集合への辞書"""
+
     def __init__(self, scenario:Any) -> None:
 
         self._scenario=scenario
@@ -65,7 +68,7 @@ class scnInfoImpl(scnInfo):
         self._monsters={}
         self._items={}
         self._rewards={}
-
+        self._reward2monster={}
         return
 
     def _readTOC(self, data:Any)->None:
@@ -118,6 +121,44 @@ class scnInfoImpl(scnInfo):
             if isinstance(reward, WizardryRewardDataEntry):
                 self._rewards[idx]=reward
 
+        return
+
+    def _fillRewardToMonster(self)->None:
+        """報酬番号からモンスターへの関係をマップする"""
+
+        for monster_number in self._monsters.keys():
+
+            monster = self._monsters[monster_number]
+            for reward_number in [monster.reward1, monster.reward2]:
+                if reward_number in self._rewards:
+                    if reward_number not in self._rewards:
+                        continue # 無効
+                    if reward_number not in self._reward2monster:
+                        self._reward2monster[reward_number]=set()
+                    self._reward2monster[reward_number].add(monster_number)
+        return
+
+        """
+
+        for reward_idx in self._rewards.keys():
+            # TODO パーセンテージ取得処理を修正
+            reward = self._rewards[reward_idx]
+            percentage = reward.percentage
+            for mon_num in self._monsters.keys():
+                if mon_num not in self._reward2monster:
+                    self._reward2monster[mon_num]={} # 辞書を初期化する
+                r2m_entry = self._reward2monster[mon_num]
+        """
+        return
+
+    def readContents(self)->None:
+        """シナリオ情報を読み込む
+        """
+        self._readTOC(data=self._scenario) # 目次情報を読み込む
+        self._readFloorTable(data=self._scenario) # 迷宮フロア情報を読み込む
+        self._readMonsterTable(data=self._scenario) # モンスター情報を読み込む
+        self._readItemTable(data=self._scenario) # アイテム情報を読み込む
+        self._readRewardTable(data=self._scenario) # 報酬情報を読み込む
         return
 
     def _plainOneDumpMonster(self, index:int, data:Any, fp: TextIO)->None:
@@ -262,8 +303,30 @@ class scnInfoImpl(scnInfo):
                     # DIR_NORTH=0,DIR_EAST=1,DIR_SOUTH=2,DIR_WEST=3
 
                     v=floor.getWallInfo(x=x, y=y, dir=dir)
+
                     if v == modules.consts.FLOOR_WALL_WALL:
-                        drawer.addWall(x=x, y=y, dir=dir)
+                        if dir == modules.consts.DIR_NORTH: # 北側に壁を配置する場合
+                            counter_x = x
+                            counter_y = ( (y + 1) + modules.consts.FLOOR_HEIGHT ) % modules.consts.FLOOR_HEIGHT
+                            counter_dir = modules.consts.DIR_SOUTH
+                        elif dir == modules.consts.DIR_SOUTH: # 南側に壁を配置する場合
+                            counter_x = x
+                            counter_y = ( (y - 1) + modules.consts.FLOOR_HEIGHT ) % modules.consts.FLOOR_HEIGHT
+                            counter_dir = modules.consts.DIR_NORTH
+                        elif dir == modules.consts.DIR_WEST: # 西側に壁を配置する場合
+                            counter_x = ( (x - 1) + modules.consts.FLOOR_WIDTH ) % modules.consts.FLOOR_WIDTH
+                            counter_y = y
+                            counter_dir = modules.consts.DIR_EAST
+                        else: # 東側に壁を設置する場合
+                            counter_x = ( (x + 1) + modules.consts.FLOOR_WIDTH ) % modules.consts.FLOOR_WIDTH
+                            counter_y = y
+                            counter_dir = modules.consts.DIR_WEST
+
+                        counter_v = floor.getWallInfo(x=counter_x, y=counter_y, dir=counter_dir)
+                        if counter_v == modules.consts.FLOOR_WALL_OPEN:
+                            drawer.addArrow(x=x, y=y, pos=dir, dir=counter_dir)
+                        else:
+                            drawer.addWall(x=x, y=y, dir=dir)
                     elif v == modules.consts.FLOOR_WALL_DOOR:
                         drawer.addDoor(x=x, y=y, dir=dir)
                     elif v == modules.consts.FLOOR_WALL_HIDDEN:
@@ -497,55 +560,77 @@ class scnInfoImpl(scnInfo):
 
         return
 
-
-    def _plainOneDumpReward(self, reward_number:int, reward:WizardryRewardDataEntry, fp: TextIO)->None:
+    def _plainOneDumpRewardHumanReadable(self, reward_number:int, reward:WizardryRewardDataEntry, fp: TextIO)->None:
 
         index_string = f"{reward_number}"
         in_chest_string=f"宝箱あり" if reward.in_chest else f"宝箱なし"
         nr_rewards_string = f"{reward.reward_count_value}"
         trap_string=f"{reward.trap_string} ( {value_to_string(val=reward.trap_type_value)} )" if reward.in_chest else f""
 
-        for reward_index in sorted(reward.rewards.keys()):
+        for info_index in sorted(reward.rewards.keys()):
 
-            reward_info=reward.rewards[reward_index]
+            reward_info=reward.rewards[info_index]
 
             if reward_info.percentage == 0:
                 continue # 無効エントリ
 
-            percentage_string = f"{reward_info.percentage:3}"
-            has_item_string = f"あり" if reward_info.has_item else f"なし"
-            param_dict:dict[int,int]={}
+            percentage_string = f"{reward_info.percentage:3} %"
+            has_item_string = f"アイテム" if reward_info.has_item else f"お金"
 
-            for idx in range(modules.consts.NR_REWARD_PARAM):
-                if idx not in reward_info.reward_param:
-                    param_dict[idx] = 0
+            if info_index > reward.reward_count_value:
+                continue # 無効エントリ
+
+            if reward_info.has_item: # アイテム報酬の場合
+                range_lst=list(reward_info.item_range_tuple)
+            else: # お金報酬の場合
+                range_lst=list(reward_info.gold_range_tuple)
+
+            reward_lst:list[str]=[]
+            for idx,gold_or_item in enumerate(range_lst):
+                if range_lst[idx][0] == 100:
+                    reward_lst += [f"{gold_or_item[1]}--{gold_or_item[2]}"]
                 else:
-                    param_dict[idx] = reward_info.reward_param[idx]
-
-            print(f"|{index_string}|{reward_index} / {nr_rewards_string}|{in_chest_string}|{trap_string}|{percentage_string}|{has_item_string}|"
-                f"{param_dict[0]}|{param_dict[1]}|{param_dict[2]}|"
-                f"{param_dict[3]}|{param_dict[4]}|{param_dict[5]}|{param_dict[6]}|", file=fp)
+                    reward_lst += [f"{gold_or_item[1]}--{gold_or_item[2]} ( {range_lst[idx][0]} % )"]
+            each_reward="|".join(reward_lst)
+            print(f"|{index_string}|{info_index} / {nr_rewards_string}|{in_chest_string}|{trap_string}|{percentage_string}|{has_item_string}|"
+                f"{each_reward}|", file=fp)
+            pass
         return
 
     def _dumpRewards(self, fp:TextIO)->None:
 
-        print("## 報酬一覧表",file=fp)
-        print("",file=fp)
-        print(f"|報酬番号|連番 / 総報酬数|宝箱の有無|罠|取得確率|アイテムの有無|"
-              f"パラメタ1|パラメタ2|パラメタ3|"
-              f"パラメタ4|パラメタ5|パラメタ6|パラメタ7|",
-              file=fp)
-
-        print(f"|---|---|---|---|---|---|"
-              f"---|---|---|"
-              f"---|---|---|---|",
-              file=fp)
-
-
+        #
+        # 報酬レンジ総数を算出する
+        #
+        max_reward_range=0
         for idx in sorted(self._rewards.keys()):
 
             reward = self._rewards[idx]
-            self._plainOneDumpReward(reward_number=idx, reward=reward, fp=fp)
+            for info_index in sorted(reward.rewards.keys()):
+
+                if info_index > reward.reward_count_value:
+                    continue # 無効エントリ
+
+                info = reward.rewards[info_index]
+
+                if info.has_item: # アイテム報酬の場合
+                    range_lst=list(info.item_range_tuple)
+                else:
+                    range_lst=list(info.gold_range_tuple)
+                max_reward_range=max(max_reward_range, len(range_lst))
+
+        range_names="|".join([f"報酬{i+1}(獲得ゴールド/取得アイテム番号の範囲[最小値--最大値])" for i in range(max_reward_range)])
+        print("## 報酬一覧表",file=fp)
+        print("",file=fp)
+        print(f"|報酬番号|連番 / 総報酬数|宝箱の有無|罠|取得確率|報酬種別|"
+              f"{range_names}|",
+              file=fp)
+        range_cols="|".join([f"---" for _i in range(max_reward_range)])
+        print(f"|---|---|---|---|---|---|"
+              f"{range_cols}|", file=fp)
+
+        for idx in sorted(self._rewards.keys()):
+            self._plainOneDumpRewardHumanReadable(reward_number=idx, reward=self._rewards[idx], fp=fp)
         return
 
     def _dumpFloors(self, fp:TextIO)->None:
@@ -655,16 +740,6 @@ class scnInfoImpl(scnInfo):
 
         return
 
-    def doConvert(self)->None:
-        """シナリオ情報を変換する
-        """
-        self._readTOC(data=self._scenario) # 目次情報を読み込む
-        self._readFloorTable(data=self._scenario) # 迷宮フロア情報を読み込む
-        self._readMonsterTable(data=self._scenario) # モンスター情報を読み込む
-        self._readItemTable(data=self._scenario) # アイテム情報を読み込む
-        self._readRewardTable(data=self._scenario) # 報酬情報を読み込む
-        return
-
     def plainDump(self, fp:TextIO)->None:
         """テキスト形式で表示する
 
@@ -672,13 +747,14 @@ class scnInfoImpl(scnInfo):
             fp (TextIO): 表示先ファイルのTextIO.
         """
 
-        self._dumpRewards(fp=fp)
         self._dumpTOC(fp=fp)
         self._dumpFloors(fp=fp)
         self._dumpMonsters(fp=fp)
         self._dumpItems(fp=fp)
+        self._dumpRewards(fp=fp)
 
         return
+
     def getWallInfo(self, x:int, y:int, z:int, dir:int)->int:
         """壁情報を得る
 

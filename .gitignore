@@ -180,3 +180,5 @@ docs/memo.md
 *.svg
 docs/svg-test.py
 *.png
+docs/arrow-marker.py
+docs/chute.py
