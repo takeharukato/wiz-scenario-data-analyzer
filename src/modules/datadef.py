@@ -177,7 +177,7 @@ class WizardryMazeFloorDataEntry:
         """モンスター出現範囲を返すイテレータ
             ENCOUNTR手続きを元に実装
         Yields:
-            Iterator[tuple[int,int,int, int]]: テーブルインデクス, サブインデクス, モンスター出現範囲最小値, 最大値
+            Iterator[tuple[int,int,int, int]]: テーブルインデクス, テーブル内のモンスター出現系列番号, モンスター出現範囲最小値, 最大値
         """
         def series_generator():
             """モンスター出現テーブルの範囲を返す"""
@@ -205,7 +205,7 @@ class WizardryMazeFloorDataEntry:
 
         """
         # モンスター出現テーブル中の最大モンスター番号を返す
-        return max([ max for _idx, _min, max in self.monster_series])
+        return max([ max for _idx, _sub_idx, _min, max in self.monster_series])
 
 @dataclass
 class WizardryMonsterDataEntry:
