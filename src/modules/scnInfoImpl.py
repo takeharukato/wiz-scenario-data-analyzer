@@ -265,15 +265,15 @@ class scnInfoImpl(scnInfo):
         print(f"##### {depth}階 モンスター出現レンジ一覧", file=fp)
         print(f"", file=fp)
 
-        print(f"|出現系列連番|モンスター出現テーブル番号|モンスター出現テーブル内の系列番号|出現モンスター最小値|出現モンスター最大値|", file=fp)
-        print(f"|---|---|---|---|---|", file=fp)
+        print(f"|出現系列連番|モンスター出現テーブル番号|モンスター出現テーブル内の系列番号|出現モンスター最小値|出現モンスター最大値|系列上昇確率|本系列発生確率|", file=fp)
+        print(f"|---|---|---|---|---|---|---|", file=fp)
         idx=1
         for idx, info in enumerate(floor.monster_series):
 
-            table_idx, series_num, min_num, max_num = info
+            table_idx, series_num, min_num, max_num, inc_perc, this_perc = info
             min_mon_string=f"{self._monsters[min_num].name} ({min_num})" if min_num in self._monsters else f"{modules.consts.UNKNOWN_STRING} ({min_num})"
             max_mon_string=f"{self._monsters[max_num].name} ({max_num})" if max_num in self._monsters else f"{modules.consts.UNKNOWN_STRING} ({max_num})"
-            print(f"|{idx+1}|{table_idx}|{series_num}|{min_mon_string}|{max_mon_string}|",file=fp)
+            print(f"|{idx+1}|{table_idx}|{series_num}|{min_mon_string}|{max_mon_string}|{inc_perc}|{this_perc}|",file=fp)
 
         print(f"", file=fp)
 

@@ -28,20 +28,7 @@ from dataclasses import dataclass
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import modules.consts
-
-
-def simple_round(number:float, ndigits:int=0)-> float:
-    """四捨五入する
-
-    Args:
-        number (float): 四捨五入する値
-        ndigits (int, optional): 四捨五入する桁数. Defaults to 0.
-
-    Returns:
-        float: 小数点ndigitsで四捨五入した値
-    """
-    p = 10 ** ndigits
-    return (number * p * 2 + 1) // 2 / p
+from modules.calcMisc import simple_round
 
 @dataclass
 class WizardrySCNTOC:
@@ -173,24 +160,41 @@ class WizardryMazeFloorDataEntry:
         return dic[pos] # 壁の情報を返す
 
     @property
-    def monster_series(self)->Iterator[tuple[int,int, int,int]]:
+    def monster_series(self)->Iterator[tuple[int, int, int, int, float, float]]:
         """モンスター出現範囲を返すイテレータ
             ENCOUNTR手続きを元に実装
         Yields:
-            Iterator[tuple[int,int,int, int]]: テーブルインデクス, テーブル内のモンスター出現系列番号, モンスター出現範囲最小値, 最大値
+            Iterator[tuple[int, int, int, int, float, float]]: テーブルインデクス, テーブル内のモンスター出現系列番号, モンスター出現範囲最小値, 最大値, モンスター出現系列上昇確率, 本系列の発生確率
         """
         def series_generator():
             """モンスター出現テーブルの範囲を返す"""
+            """
+                    if self.item_maxtimes > idx:
+                        this_percentage = simple_round(remain_percentage - ( (remain_percentage) / 100 ) * ( (self.item_percbigr) / 100 ) * 100, ndigits=1)
+                    else:
+                        this_percentage = simple_round(remain_percentage,ndigits=1)
+                    remain_percentage -= this_percentage
+            """
 
             for idx in range(modules.consts.FLOOR_NR_MONSTER_TABLE_SERIES): # 各系統について
                 assert idx in self.monster_tables, f"{idx} not found"
                 entry = self.monster_tables[idx] # 出現テーブルエントリを参照
-                yield (idx, 0, entry.min_enemy, entry.min_enemy + entry.monster_range - 1) # 最小レンジ
-                if entry.inc_series_percentage > 0 and entry.max_table_index > 0: # 乗数値を掛ける場合
+                if 0 >= entry.inc_series_percentage or 0 >= entry.max_table_index: # 系列が一意に決定する場合
+                    yield (idx, 0, entry.min_enemy, entry.min_enemy + entry.monster_range - 1, 0, 100) # 最小レンジ
+                else: # 系列変更を伴う場合
+                    remain_percentage = 100
                     for series_idx in range(0,entry.max_table_index): # 乗数値の最大係数を取得
                         series_num = series_idx + 1
                         enc_calc = series_num
-                        yield (idx, series_num, entry.min_enemy + entry.multiplier * enc_calc,entry.min_enemy + entry.multiplier * enc_calc + entry.monster_range - 1)
+                        if entry.max_table_index - 1 > series_idx: # 上昇する余地がある場合
+                            # 上昇確率の余事象の発生確率(上昇しない確率)を算出し, 本系列の発生確率とする
+                            this_percentage = simple_round(remain_percentage - ( (remain_percentage) / 100 ) * ( (entry.inc_series_percentage) / 100 ) * 100, ndigits=2)
+                            this_inc_percentage = entry.inc_series_percentage
+                        else:
+                            this_percentage = simple_round(remain_percentage, ndigits=2)
+                            this_inc_percentage = 0
+                        remain_percentage -= this_percentage
+                        yield (idx, series_num, entry.min_enemy + entry.multiplier * enc_calc,entry.min_enemy + entry.multiplier * enc_calc + entry.monster_range - 1, this_inc_percentage, this_percentage)
             return
         return series_generator()
 
