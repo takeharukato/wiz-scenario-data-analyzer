@@ -265,13 +265,15 @@ class scnInfoImpl(scnInfo):
         print(f"##### {depth}階 モンスター出現レンジ一覧", file=fp)
         print(f"", file=fp)
 
-        print(f"|出現系列番号|モンスター出現テーブル連番|出現モンスター最小値|出現モンスター最大値|", file=fp)
-        print(f"|---|---|---|---|", file=fp)
-        for idx, monsters in enumerate( (series, min,max) for series,min,max in floor.monster_series ):
-            series, min_num, max_num = monsters
+        print(f"|出現系列連番|モンスター出現テーブル番号|モンスター出現テーブル内の系列番号|出現モンスター最小値|出現モンスター最大値|", file=fp)
+        print(f"|---|---|---|---|---|", file=fp)
+        idx=1
+        for idx, info in enumerate(floor.monster_series):
+
+            table_idx, series_num, min_num, max_num = info
             min_mon_string=f"{self._monsters[min_num].name} ({min_num})" if min_num in self._monsters else f"{modules.consts.UNKNOWN_STRING} ({min_num})"
             max_mon_string=f"{self._monsters[max_num].name} ({max_num})" if max_num in self._monsters else f"{modules.consts.UNKNOWN_STRING} ({max_num})"
-            print(f"|{idx}|{series}|{min_mon_string}|{max_mon_string}|",file=fp)
+            print(f"|{idx+1}|{table_idx}|{series_num}|{min_mon_string}|{max_mon_string}|",file=fp)
 
         print(f"", file=fp)
 
@@ -285,7 +287,7 @@ class scnInfoImpl(scnInfo):
         monster_range:int   # RANGE0N 出現モンスターの範囲(0 から RANGE0N - 1 までの範囲の乱数でモンスター番号を決定する)
         inc_series_percentage:int # PERCWORS モンスター出現範囲の系統を加算する確率 系統番号がWORSE01以上の場合は加算しない
         """
-        print(f"|連番|出現モンスター番号最小値(MINENEMY)|モンスター出現範囲系統乗数(MULTWORS)|モンスター出現範囲系統最大値(WORSE01)|出現モンスターの範囲(RANGE0N)|モンスター出現範囲系統加算確率(PERCWORS)|", file=fp)
+        print(f"|モンスター出現テーブル番号|出現モンスター番号最小値(MINENEMY)|モンスター出現範囲系統乗数(MULTWORS)|モンスター出現範囲系統最大値(WORSE01)|出現モンスターの範囲(RANGE0N)|モンスター出現範囲系統加算確率(PERCWORS)|", file=fp)
         print(f"|---|---|---|---|---|---|", file=fp)
         for idx in floor.monster_tables.keys():
             entry=floor.monster_tables[idx]

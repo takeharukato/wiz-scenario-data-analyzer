@@ -173,22 +173,24 @@ class WizardryMazeFloorDataEntry:
         return dic[pos] # 壁の情報を返す
 
     @property
-    def monster_series(self)->Iterator[tuple[int,int,int]]:
+    def monster_series(self)->Iterator[tuple[int,int, int,int]]:
         """モンスター出現範囲を返すイテレータ
             ENCOUNTR手続きを元に実装
         Yields:
-            Iterator[tuple[int,int,int]]: テーブルインデクス, モンスター出現範囲最小値, 最大値
+            Iterator[tuple[int,int,int, int]]: テーブルインデクス, サブインデクス, モンスター出現範囲最小値, 最大値
         """
         def series_generator():
             """モンスター出現テーブルの範囲を返す"""
+
             for idx in range(modules.consts.FLOOR_NR_MONSTER_TABLE_SERIES): # 各系統について
                 assert idx in self.monster_tables, f"{idx} not found"
                 entry = self.monster_tables[idx] # 出現テーブルエントリを参照
-                yield (idx, entry.min_enemy, entry.min_enemy + entry.monster_range - 1) # 最小レンジ
+                yield (idx, 0, entry.min_enemy, entry.min_enemy + entry.monster_range - 1) # 最小レンジ
                 if entry.inc_series_percentage > 0 and entry.max_table_index > 0: # 乗数値を掛ける場合
-                    for table_idx in range(0,entry.max_table_index): # 乗数値の最大係数を取得
-                        enc_calc = table_idx + 1
-                        yield (idx, entry.min_enemy + entry.multiplier * enc_calc,entry.min_enemy + entry.multiplier * enc_calc + entry.monster_range - 1)
+                    for series_idx in range(0,entry.max_table_index): # 乗数値の最大係数を取得
+                        series_num = series_idx + 1
+                        enc_calc = series_num
+                        yield (idx, series_num, entry.min_enemy + entry.multiplier * enc_calc,entry.min_enemy + entry.multiplier * enc_calc + entry.monster_range - 1)
             return
         return series_generator()
 
