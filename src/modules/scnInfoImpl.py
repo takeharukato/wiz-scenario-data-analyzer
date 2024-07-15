@@ -178,7 +178,7 @@ class scnInfoImpl(scnInfo):
     def _handleChuteEvent(self, aux0:int, aux1:int, aux2:int)->str:
 
         if aux0 == 0:
-            f"シュート: 城へのシュート"
+            return f"シュート: 城へのシュート"
 
         return f"シュート: {aux0}階 ({aux2:2},{aux1:2})へのシュート"
 
@@ -193,7 +193,7 @@ class scnInfoImpl(scnInfo):
     def _handleTransferEvent(self, aux0:int, aux1:int, aux2:int)->str:
 
         if aux0 == 0:
-            f"テレポート: 城へのテレポート"
+            return f"テレポート: 城へのテレポート"
 
         return f"テレポート: {aux0}階 ({aux2:2},{aux1:2})へのテレポート"
 
@@ -207,7 +207,7 @@ class scnInfoImpl(scnInfo):
 
     def _handleRockwateEvent(self, aux0:int, aux1:int, aux2:int)->str:
 
-        return f"岩: X,Y座標は変えず, 1階にテレポートする"
+        return f"石: X,Y座標は変えず, 1階にテレポートする"
 
     def _handleFizzleEvent(self, aux0:int, aux1:int, aux2:int)->str:
 
@@ -270,15 +270,17 @@ class scnInfoImpl(scnInfo):
     def _handleEncounte(self, aux0:int, aux1:int, aux2:int)->str:
 
         min = max = aux2
-        if aux1 > 0:
+        if aux1 > 1:
             max = aux2 + aux1 - 1
         if min == max:
             monster_name=f"{self._monsters[min].name} ({min})" if min in self._monsters else f"{min}番のモンスター"
         else:
             min_monster_name=f"{self._monsters[min].name} ({min})" if min in self._monsters else f"{min}番のモンスター"
             max_monster_name=f"{self._monsters[max].name} ({max})" if max in self._monsters else f"{max}番のモンスター"
-            monster_name=f"{min_monster_name}から{max_monster_name}までのいずれかの敵"
-
+            if aux0 > 0:
+                monster_name=f"最大{aux0}回, {min_monster_name}から{max_monster_name}までのいずれかの敵"
+            else:
+                monster_name=f"{min_monster_name}から{max_monster_name}までのいずれかの敵"
         return f"{monster_name}との戦闘"
 
     def getEventInfo(self, x:int, y:int, z:int)->Optional[WizardryMazeFloorEventInfo]:
@@ -461,7 +463,7 @@ class scnInfoImpl(scnInfo):
         print(f"##### {depth}階 モンスター出現レンジ一覧", file=fp)
         print(f"", file=fp)
 
-        print(f"|出現系列連番|モンスター出現テーブル番号|モンスター出現テーブル内の系列番号|出現モンスター最小値|出現モンスター最大値|系列上昇確率|本系列発生確率|", file=fp)
+        print(f"|出現系列連番|モンスター出現テーブル番号|モンスター出現テーブル内の系列番号|出現モンスター最小値|出現モンスター最大値|系列上昇確率|当該出現テーブル番号内での系列発生確率|", file=fp)
         print(f"|---|---|---|---|---|---|---|", file=fp)
         idx=1
         for idx, info in enumerate(floor.monster_series):
@@ -642,11 +644,18 @@ class scnInfoImpl(scnInfo):
                     reason += ["イベント未配置"]
 
                 if info.event_type in [modules.consts.FLOOR_EVENT_ENCOUNTE]:
+                    if 0 in info.params:
+                        aux0=info.params[0]
+                        if aux0 == 0:
+                            enabled=False
+                            reason += ["出現回数制限(残り0回)"]
+
                     lst=[event_pos for event_pos in pos_list if event_pos in floor.in_room and floor.in_room[event_pos]]
-                    if len(lst) == 0:
+                    if len(lst) == 0: # 玄室内にない
                         enabled=False
-                    if not enabled:
                         reason += ["玄室外"]
+
+
 
                 event_string = self.getEventString(info=info)
                 if len(pos_list) == 0:
