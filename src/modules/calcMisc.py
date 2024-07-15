@@ -12,7 +12,7 @@
 
 from __future__ import annotations # 型定義のみを参照する
 from typing import TYPE_CHECKING   # 型チェック実施判定
-from typing import Any #,Optional
+#from typing import Any #,Optional
 
 if TYPE_CHECKING:
     pass
@@ -22,13 +22,10 @@ if TYPE_CHECKING:
 #
 import sys
 import os
-import struct
 
 #
 # サードパーティーモジュールの読込み
 #
-from svglib.svglib import svg2rlg # type: ignore
-from reportlab.graphics import renderPM
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
