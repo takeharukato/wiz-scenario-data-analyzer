@@ -642,13 +642,14 @@ class scnInfoImpl(scnInfo):
                 print(f"#### 報酬系列番号{index_string:2} 報酬金額獲得情報",file=fp)
 
             print("",file=fp)
-            print(f"|報酬系列番号|宝箱有無(BCHEST)|報酬総数(REWRDCNT)|罠種別(BTRAPTYP)", end='', file=fp)
+            print(f"|報酬系列番号|宝箱有無(BCHEST)|報酬総数(REWRDCNT)|罠種別(BTRAPTYP)|報酬情報連番(REWARDXX配列インデクス値)", end='', file=fp)
             if print_item:
                 print(f"|報酬獲得確率(REWDPERC)|アイテム有無(BITEM)|アイテム番号最小値(MININDX)|アイテム番号乗数値(MFACTOR)|アイテム番号系列最大値(MAXTIMES)|アイテム番号算出範囲(RANGE)|アイテム番号系列上昇確率(PERCBIGR)|未使用項目(UNUSEDXX)|未使用項目(UNUSEDYY)|", file=fp)
             else:
                 print(f"|報酬獲得確率(REWDPERC)|アイテム有無(BITEM)|金額算出ダイス1試行回数(TRIES)|金額算出1ダイス面数(AVEAMT)|金額算出1ダイス加算値(MINADD)|金額乗数値(MULTX)|金額算出ダイス1試行回数(TRIES2)|金額算出1ダイス面数(AVEAMT2)|金額算出1ダイス加算値(MINADD2)|", file=fp)
 
-            print(f"|---|---|---|---|---|---|", end='', file=fp)
+            print(f"|---|---|---|---|---", end='', file=fp)
+            print(f"|---|---|", end='', file=fp)
             print(f"{'|'.join(['---' for _i in range(max_reward_cols)])}", end='', file=fp)
             print(f"|", file=fp)
 
@@ -659,9 +660,8 @@ class scnInfoImpl(scnInfo):
                 #
                 # 報酬情報パラメタ表示
                 #
-                print(f"|{index_string}|{in_chest_string}|{nr_rewards_string}|{trap_string}", end='', file=fp)
+                print(f"|{index_string}|{in_chest_string}|{nr_rewards_string}|{trap_string}|{reward_info_idx}", end='', file=fp)
                 print(f"|{reward_info.percentage}|{reward_info.has_item_value}", end='', file=fp)
-                print(f"|{reward_info_idx}", end='', file=fp)
                 self._plainOneDumpRewardParam(max_reward_cols=max_reward_cols,
                                             params=reward_info.reward_param,
                                             fp=fp)
