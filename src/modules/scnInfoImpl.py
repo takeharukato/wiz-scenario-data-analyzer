@@ -12,7 +12,7 @@
 
 from __future__ import annotations # 型定義のみを参照する
 from typing import TYPE_CHECKING   # 型チェック実施判定
-from typing import Any
+from typing import Any,Iterator,Generator
 from typing import TextIO
 
 if TYPE_CHECKING:
@@ -32,7 +32,7 @@ import tempfile
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from modules.datadef import WizardrySCNTOC, WizardryMazeFloorDataEntry, WizardryMonsterDataEntry
-from modules.datadef import WizardryItemDataEntry, WizardryRewardDataEntry
+from modules.datadef import WizardryItemDataEntry, WizardryRewardDataEntry, WizardryRewardInfo
 from modules.scnInfo import scnInfo
 from modules.TOCDecoder import TOCDecoder
 from modules.mazeFloorDecoder import mazeFloorDecoder
@@ -136,19 +136,6 @@ class scnInfoImpl(scnInfo):
                     if reward_number not in self._reward2monster:
                         self._reward2monster[reward_number]=set()
                     self._reward2monster[reward_number].add(monster_number)
-        return
-
-        """
-
-        for reward_idx in self._rewards.keys():
-            # TODO パーセンテージ取得処理を修正
-            reward = self._rewards[reward_idx]
-            percentage = reward.percentage
-            for mon_num in self._monsters.keys():
-                if mon_num not in self._reward2monster:
-                    self._reward2monster[mon_num]={} # 辞書を初期化する
-                r2m_entry = self._reward2monster[mon_num]
-        """
         return
 
     def readContents(self)->None:
@@ -599,7 +586,99 @@ class scnInfoImpl(scnInfo):
             pass
         return
 
-    def _dumpRewards(self, fp:TextIO)->None:
+    def _plainOneDumpRewardParam(self, max_reward_cols:int, params:dict[int,int], fp: TextIO)->None:
+
+        for reward_info_idx in range(max_reward_cols):
+            if reward_info_idx in params:
+                print(f"|{params[reward_info_idx]}", end='', file=fp)
+            else:
+                print(f"|0", end='', file=fp)
+
+        return
+
+    def _getItemRewardParams(self, need_item:bool, rewards:dict[int,WizardryRewardInfo])->Iterator[tuple[int,WizardryRewardInfo]]:
+
+        def item_reward_generator()->Generator[tuple[int,WizardryRewardInfo]]:
+            for idx in sorted(rewards.keys()):
+                info = rewards[idx]
+                if info.has_item == need_item:
+                    yield idx, info
+            return
+        return item_reward_generator()
+
+    def _plainOneDumpRewardDataStruct(self, reward_number:int, reward_table:WizardryRewardDataEntry, fp: TextIO)->None:
+
+        # 報酬情報最大エントリ数を得る
+        max_reward_cols=-1
+        for reward_info_dic in [reward.rewards for reward in self._rewards.values()]:
+            max_reward_cols=max(max_reward_cols, max([len(reward_info.reward_param) for reward_info in reward_info_dic.values()]))
+
+        index_string = f"{reward_number}"
+        in_chest_string=f"{reward_table.in_chest_value}"
+        nr_rewards_string = f"{reward_table.reward_count_value}"
+        trap_string=f"{reward_table.trap_type_value} ( {value_to_string(val=reward_table.trap_type_value)} )" if reward_table.in_chest else f""
+
+        #
+        # 報酬情報表示
+        #
+        for print_item in [False, True]:
+
+            if len(list(self._getItemRewardParams(need_item=print_item, rewards=reward_table.rewards))) == 0:
+                continue # 表示対象無し
+
+            print(f"", file=fp)
+            if print_item:
+                print(f"#### 報酬系列番号{index_string:2} アイテム獲得情報",file=fp)
+            else:
+                print(f"#### 報酬系列番号{index_string:2} 報酬金額獲得情報",file=fp)
+
+            print("",file=fp)
+            print(f"|報酬系列番号|宝箱有無(BCHEST)|報酬総数(REWRDCNT)|罠種別(BTRAPTYP)", end='', file=fp)
+            if print_item:
+                print(f"|報酬獲得確率(REWDPERC)|アイテム有無(BITEM)|アイテム番号最小値(MININDX)|アイテム番号乗数値(MFACTOR)|アイテム番号系列最大値(MAXTIMES)|アイテム番号算出範囲(RANGE)|アイテム番号系列上昇確率(PERCBIGR)|未使用項目(UNUSEDXX)|未使用項目(UNUSEDYY)|", file=fp)
+            else:
+                print(f"|報酬獲得確率(REWDPERC)|アイテム有無(BITEM)|金額算出ダイス1試行回数(TRIES)|金額算出1ダイス面数(AVEAMT)|金額算出1ダイス加算値(MINADD)|金額乗数値(MULTX)|金額算出ダイス1試行回数(TRIES2)|金額算出1ダイス面数(AVEAMT2)|金額算出1ダイス加算値(MINADD2)|", file=fp)
+
+            print(f"|---|---|---|---|---|---|", end='', file=fp)
+            print(f"{'|'.join(['---' for _i in range(max_reward_cols)])}", end='', file=fp)
+            print(f"|", file=fp)
+
+            for reward_param_info in self._getItemRewardParams(need_item=print_item, rewards=reward_table.rewards):
+
+                reward_info_idx, reward_info = reward_param_info
+
+                #
+                # 報酬情報パラメタ表示
+                #
+                print(f"|{index_string}|{in_chest_string}|{nr_rewards_string}|{trap_string}", end='', file=fp)
+                print(f"|{reward_info.percentage}|{reward_info.has_item_value}", end='', file=fp)
+                print(f"|{reward_info_idx}", end='', file=fp)
+                self._plainOneDumpRewardParam(max_reward_cols=max_reward_cols,
+                                            params=reward_info.reward_param,
+                                            fp=fp)
+                print(f"|", file=fp)
+
+        return
+
+    def _dumpRewardsDataStruct(self, fp:TextIO)->None:
+
+        print("### 獲得報酬情報",file=fp)
+        print("",file=fp)
+
+        #
+        # 報酬レンジ総数を算出する
+        #
+        for idx in sorted(self._rewards.keys()):
+
+            reward = self._rewards[idx]
+            self._plainOneDumpRewardDataStruct(reward_number=idx, reward_table=reward, fp=fp)
+
+        return
+
+    def _dumpRewardsHumanReadable(self, fp:TextIO)->None:
+
+        print("### 獲得報酬一覧",file=fp)
+        print("",file=fp)
 
         #
         # 報酬レンジ総数を算出する
@@ -622,8 +701,6 @@ class scnInfoImpl(scnInfo):
                 max_reward_range=max(max_reward_range, len(range_lst))
 
         range_names="|".join([f"報酬{i+1}(獲得ゴールド/取得アイテム番号の範囲[最小値--最大値])" for i in range(max_reward_range)])
-        print("## 報酬一覧表",file=fp)
-        print("",file=fp)
         print(f"|報酬番号|連番 / 総報酬数|宝箱の有無|罠|取得確率|報酬種別|"
               f"{range_names}|",
               file=fp)
@@ -633,6 +710,19 @@ class scnInfoImpl(scnInfo):
 
         for idx in sorted(self._rewards.keys()):
             self._plainOneDumpRewardHumanReadable(reward_number=idx, reward=self._rewards[idx], fp=fp)
+
+        print("",file=fp)
+
+        return
+
+    def _dumpRewards(self, fp:TextIO)->None:
+
+        print("## 報酬情報",file=fp)
+        print("",file=fp)
+
+        self._dumpRewardsHumanReadable(fp=fp)
+        self._dumpRewardsDataStruct(fp=fp)
+
         return
 
     def _dumpFloors(self, fp:TextIO)->None:

@@ -98,6 +98,7 @@ class rewardDecoder(dataEntryDecoder):
     def _setHeader(self, toc:WizardrySCNTOC, reward:WizardryRewardDataEntry, header:dict[str,Any])->None:
 
         v = int(header['BCHEST'][0])
+        reward.in_chest_value=v
         if v != 0:
             reward.in_chest = True
         else:
@@ -109,10 +110,11 @@ class rewardDecoder(dataEntryDecoder):
 
     def _setInfo(self, toc:WizardrySCNTOC, reward:WizardryRewardDataEntry, index:int, info:dict[str,Any])->None:
 
-        new_inf=WizardryRewardInfo(percentage=0, has_item=False, reward_param={})
+        new_inf=WizardryRewardInfo(percentage=0, has_item=False, has_item_value=0, reward_param={})
 
         new_inf.percentage = int(info['REWDPERC'][0])
         v = int(info['BITEM'][0])
+        new_inf.has_item_value=v
         if v != 0:
             new_inf.has_item = True
         else:
@@ -127,6 +129,7 @@ class rewardDecoder(dataEntryDecoder):
     def _dict2RewardDataEntry(self, toc:WizardrySCNTOC, header:dict[str,Any], info:dict[int,dict[str,Any]])->WizardryRewardDataEntry:
 
         res = WizardryRewardDataEntry(in_chest=False,
+                                      in_chest_value=0,
                                       trap_type_value=0,
                                       reward_count_value=0,
                                       rewards={})

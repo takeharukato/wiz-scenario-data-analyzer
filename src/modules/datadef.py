@@ -350,6 +350,8 @@ class WizardryRewardInfo:
     """報酬獲得確率"""
     has_item:bool
     """アイテムを含む場合は真"""
+    has_item_value:int
+    """アイテム有無を表す数値"""
     reward_param:dict[int,int]
     """報酬情報0-6の内容(インデクス->値への辞書)"""
 
@@ -597,6 +599,8 @@ class WizardryRewardInfo:
 class WizardryRewardDataEntry:
     in_chest:bool
     """宝箱を出すことを表す真偽値(真の場合は, 宝箱を出す)"""
+    in_chest_value:int
+    """宝箱を出すことを表す真偽値の値"""
     trap_type_value:int
     """罠の種別を表すビットマップ"""
     reward_count_value:int
