@@ -164,56 +164,56 @@ class scnInfoImpl(scnInfo):
                     self._reward2monster[reward_number].add(monster_number)
         return
 
-    def _handleStairEvent(self, aux0:int, aux1:int, aux2:int)->str:
+    def _handleStairEvent(self, name:str, aux0:int, aux1:int, aux2:int, *args:Any)->str:
 
         if aux0 == 0:
-            return f"階段: 城への階段"
+            return f"{name}: 城への階段"
 
-        return f"階段: {aux0}階 ({aux2:2},{aux1:2})への階段"
+        return f"{name}: {aux0}階 ({aux2:2},{aux1:2})への階段"
 
-    def _handlePitEvent(self, aux0:int, aux1:int, aux2:int)->str:
+    def _handlePitEvent(self, name:str, aux0:int, aux1:int, aux2:int, *args:Any)->str:
 
-        return f"落とし穴(ピット): AGILITYが, (0から24までの乱数 + 現在の階層)より小さいパーティメンバに, {aux2}D{aux1}のダメージを与える"
+        return f"{name}: AGILITYが, (0から24までの乱数 + 現在の階層)より小さいパーティメンバに, {aux2}D{aux1}のダメージを与える"
 
-    def _handleChuteEvent(self, aux0:int, aux1:int, aux2:int)->str:
-
-        if aux0 == 0:
-            return f"シュート: 城へのシュート"
-
-        return f"シュート: {aux0}階 ({aux2:2},{aux1:2})へのシュート"
-
-    def _handleSpinnerEvent(self, aux0:int, aux1:int, aux2:int)->str:
-
-        return f"回転床: ランダムに向きを変更する"
-
-    def _handleDarkEvent(self, aux0:int, aux1:int, aux2:int)->str:
-
-        return f"暗闇: MILWA/LOMILWAの効果を打ち消す"
-
-    def _handleTransferEvent(self, aux0:int, aux1:int, aux2:int)->str:
+    def _handleChuteEvent(self, name:str, aux0:int, aux1:int, aux2:int, *args:Any)->str:
 
         if aux0 == 0:
-            return f"テレポート: 城へのテレポート"
+            return f"{name}: 城へのシュート"
 
-        return f"テレポート: {aux0}階 ({aux2:2},{aux1:2})へのテレポート"
+        return f"{name}: {aux0}階 ({aux2:2},{aux1:2})へのシュート"
 
-    def _handleOuchyEvent(self, aux0:int, aux1:int, aux2:int)->str:
+    def _handleSpinnerEvent(self, name:str, aux0:int, aux1:int, aux2:int, *args:Any)->str:
 
-        return f"落とし穴2(Ouchy): AGILITYが, (0から24までの乱数 + 現在の階層)より小さいパーティメンバに, {aux2}D{aux1}のダメージを与える"
+        return f"{name}: ランダムに向きを変更する"
 
-    def _handleButtonEvent(self, aux0:int, aux1:int, aux2:int)->str:
+    def _handleDarkEvent(self, name:str, aux0:int, aux1:int, aux2:int, *args:Any)->str:
 
-        return f"エレベータ: {aux2:2}階から{aux1:2}階までのエレベータ"
+        return f"{name}: MILWA/LOMILWAの効果を打ち消す"
 
-    def _handleRockwateEvent(self, aux0:int, aux1:int, aux2:int)->str:
+    def _handleTransferEvent(self, name:str, aux0:int, aux1:int, aux2:int, *args:Any)->str:
 
-        return f"石: X,Y座標は変えず, 1階にテレポートする"
+        if aux0 == 0:
+            return f"{name}: 城へのテレポート"
 
-    def _handleFizzleEvent(self, aux0:int, aux1:int, aux2:int)->str:
+        return f"{name}: {aux0}階 ({aux2:2},{aux1:2})へのテレポート"
 
-        return f"呪文無効化: 異なる階層に移動するまで, 呪文を使用不可能にする"
+    def _handleOuchyEvent(self, name:str, aux0:int, aux1:int, aux2:int, *args:Any)->str:
 
-    def _handleScreenMessage(self, aux0:int, aux1:int, aux2:int)->str:
+        return f"{name}: AGILITYが, (0から24までの乱数 + 現在の階層)より小さいパーティメンバに, {aux2}D{aux1}のダメージを与える"
+
+    def _handleButtonEvent(self, name:str, aux0:int, aux1:int, aux2:int, *args:Any)->str:
+
+        return f"{name}: {aux2:2}階から{aux1:2}階までのエレベータ"
+
+    def _handleRockwateEvent(self, name:str, aux0:int, aux1:int, aux2:int, *args:Any)->str:
+
+        return f"{name}: X,Y座標は変えず, 1階にテレポートする"
+
+    def _handleFizzleEvent(self, name:str, aux0:int, aux1:int, aux2:int, *args:Any)->str:
+
+        return f"{name}: 異なる階層に移動するまで, 呪文を使用不可能にする"
+
+    def _handleScreenMessage(self, name:str, aux0:int, aux1:int, aux2:int, *args:Any)->str:
 
         common=f"メッセージ番号{aux1:3}番"
 
@@ -267,7 +267,7 @@ class scnInfoImpl(scnInfo):
 
         return f"{common}のメッセージを表示"
 
-    def _handleEncounte(self, aux0:int, aux1:int, aux2:int)->str:
+    def _handleEncounte(self, name:str, aux0:int, aux1:int, aux2:int, *args:Any)->str:
 
         min = max = aux2
         if aux1 > 1:
@@ -281,7 +281,7 @@ class scnInfoImpl(scnInfo):
                 monster_name=f"最大{aux0}回, {min_monster_name}から{max_monster_name}までのいずれかの敵"
             else:
                 monster_name=f"{min_monster_name}から{max_monster_name}までのいずれかの敵"
-        return f"{monster_name}との戦闘"
+        return f"{name}: {monster_name}との戦闘"
 
     def getEventInfo(self, x:int, y:int, z:int)->Optional[WizardryMazeFloorEventInfo]:
         """イベント情報を返す
@@ -321,31 +321,35 @@ class scnInfoImpl(scnInfo):
 
         if info.event_type == modules.consts.FLOOR_EVENT_NORMAL:
             return None
+        if info.event_type in modules.consts.FLOOR_EVENT_TO_STRING:
+            name = modules.consts.FLOOR_EVENT_TO_STRING[info.event_type]
+        else:
+            name = modules.consts.UNKNOWN_STRING
 
         if info.event_type == modules.consts.FLOOR_EVENT_STAIRS:
-            return self._handleStairEvent(aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
+            return self._handleStairEvent(name=name, aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
         elif info.event_type == modules.consts.FLOOR_EVENT_PIT:
-            return self._handlePitEvent(aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
+            return self._handlePitEvent(name=name, aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
         elif info.event_type == modules.consts.FLOOR_EVENT_CHUTE:
-            return self._handleChuteEvent(aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
+            return self._handleChuteEvent(name=name, aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
         elif info.event_type == modules.consts.FLOOR_EVENT_SPINNER:
-            return self._handleSpinnerEvent(aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
+            return self._handleSpinnerEvent(name=name, aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
         elif info.event_type == modules.consts.FLOOR_EVENT_DARK:
-            return self._handleDarkEvent(aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
+            return self._handleDarkEvent(name=name, aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
         elif info.event_type == modules.consts.FLOOR_EVENT_TRANSFER:
-            return self._handleTransferEvent(aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
+            return self._handleTransferEvent(name=name, aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
         elif info.event_type == modules.consts.FLOOR_EVENT_OUCHY:
-                return self._handleOuchyEvent(aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
+                return self._handleOuchyEvent(name=name, aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
         elif info.event_type == modules.consts.FLOOR_EVENT_BUTTONZ:
-                return self._handleButtonEvent(aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
+                return self._handleButtonEvent(name=name, aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
         elif info.event_type == modules.consts.FLOOR_EVENT_ROCKWATE:
-                return self._handleRockwateEvent(aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
+                return self._handleRockwateEvent(name=name, aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
         elif info.event_type == modules.consts.FLOOR_EVENT_FIZZLE:
-                return self._handleFizzleEvent(aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
+                return self._handleFizzleEvent(name=name, aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
         elif info.event_type == modules.consts.FLOOR_EVENT_SCNMSG:
-                return self._handleScreenMessage(aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
+                return self._handleScreenMessage(name=name, aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
         elif info.event_type == modules.consts.FLOOR_EVENT_ENCOUNTE:
-                return self._handleEncounte(aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
+                return self._handleEncounte(name=name, aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
 
         return modules.consts.UNKNOWN_STRING
 

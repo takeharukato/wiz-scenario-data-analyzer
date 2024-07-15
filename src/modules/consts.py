@@ -142,7 +142,7 @@ FLOOR_EVENT_TO_STRING:dict[int,str]={
     FLOOR_EVENT_DARK:"暗闇",
     FLOOR_EVENT_TRANSFER:"テレポート",
     FLOOR_EVENT_OUCHY:"落とし穴2",
-    FLOOR_EVENT_BUTTONZ:"ボタン/エレベータ",
+    FLOOR_EVENT_BUTTONZ:"エレベータのボタン",
     FLOOR_EVENT_ROCKWATE:"石",
     FLOOR_EVENT_FIZZLE:"呪文無効化",
     FLOOR_EVENT_SCNMSG:"メッセージ",
