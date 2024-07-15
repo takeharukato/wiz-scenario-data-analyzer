@@ -143,6 +143,9 @@ class WizardryMazeFloorDataEntry:
     depth:int
     """階層"""
 
+    event_to_coord:dict[int,list[tuple[int,int]]]
+    """イベント番号から発生座標へのマップ"""
+
     def getWallInfo(self, x:int, y:int, dir:int)->int:
         """壁の種類を返却する
 

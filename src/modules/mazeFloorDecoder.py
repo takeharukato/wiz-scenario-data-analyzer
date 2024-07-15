@@ -752,7 +752,8 @@ class mazeFloorDecoder(dataEntryDecoder):
         event_number_to_type:dict[int,int]={} # イベント番号からイベント種別への辞書(TSQUARE)
 
         res = WizardryMazeFloorDataEntry(depth=0, wall_info_west={}, wall_info_south={}, wall_info_east={}, wall_info_north={},
-                                         in_room={}, event_map={}, event_info_dic={}, monster_tables={})
+                                         in_room={}, event_map={}, event_info_dic={}, monster_tables={},
+                                         event_to_coord={})
 
         # フロアレイアウト情報を格納
         self._decodeFloorLayout(toc=toc, decode_dict=decode_dict, res=res)

@@ -83,6 +83,29 @@ class scnInfoImpl(scnInfo):
         self._toc = toc_decoder.toc
         return
 
+    def _fillFloorInfo(self, depth:int, floor:WizardryMazeFloorDataEntry)->None:
+
+        floor.depth = depth
+        #
+        # イベントから座標へのマップ
+        #
+        for x in range(modules.consts.FLOOR_WIDTH):
+            for y in range(modules.consts.FLOOR_HEIGHT):
+                pos=(x,y)
+                if pos in floor.event_map:
+                    event_number=floor.event_map[pos]
+                    if event_number not in floor.event_info_dic:
+                        continue # イベントに対応するイベント情報がない
+                    info = floor.event_info_dic[event_number]
+                    if info.event_type not in modules.consts.FLOOR_EVENT_TO_STRING:
+                        continue # イベント種別不明
+                    if info.event_type in modules.consts.FLOOR_EVENT_NO_NEED_DESC_EVENTS:
+                        continue # 説明不要
+                    if event_number not in floor.event_to_coord:
+                        floor.event_to_coord[event_number] = []
+                    floor.event_to_coord[event_number].append(pos)
+        return
+
     def _readFloorTable(self, data:Any)->None:
 
         decoder=mazeFloorDecoder()
@@ -91,7 +114,7 @@ class scnInfoImpl(scnInfo):
         for idx in range(nr_floors):
             floor=decoder.decodeOneData(toc=self.toc, data=data, index=idx)
             if isinstance(floor, WizardryMazeFloorDataEntry):
-                floor.depth = idx + 1
+                self._fillFloorInfo(depth=idx+1, floor=floor)
                 self._floors[idx]=floor
 
         return
@@ -246,8 +269,17 @@ class scnInfoImpl(scnInfo):
 
     def _handleEncounte(self, aux0:int, aux1:int, aux2:int)->str:
 
-        monster_name=f"{self._monsters[aux2].name} ({aux2})" if aux2 in self._monsters else f"{aux2}番のモンスター"
-        return f"{monster_name}との戦闘を実施"
+        min = max = aux2
+        if aux1 > 0:
+            max = aux2 + aux1 - 1
+        if min == max:
+            monster_name=f"{self._monsters[min].name} ({min})" if min in self._monsters else f"{min}番のモンスター"
+        else:
+            min_monster_name=f"{self._monsters[min].name} ({min})" if min in self._monsters else f"{min}番のモンスター"
+            max_monster_name=f"{self._monsters[max].name} ({max})" if max in self._monsters else f"{max}番のモンスター"
+            monster_name=f"{min_monster_name}から{max_monster_name}までのいずれかの敵"
+
+        return f"{monster_name}との戦闘"
 
     def getEventInfo(self, x:int, y:int, z:int)->Optional[WizardryMazeFloorEventInfo]:
         """イベント情報を返す
@@ -591,15 +623,40 @@ class scnInfoImpl(scnInfo):
         print(f"", file=fp)
         print(f"###### {depth}階 イベント内容", file=fp)
 
-        event_lst=[ (number,floor.event_info_dic[number]) for number in sorted(floor.event_info_dic.keys()) if floor.event_info_dic[number].event_type not in modules.consts.FLOOR_EVENT_TILE_EVENTS]
+        event_lst=[ (number,floor.event_info_dic[number]) for number in sorted(floor.event_info_dic.keys()) if floor.event_info_dic[number].event_type not in modules.consts.FLOOR_EVENT_NO_NEED_DESC_EVENTS]
         if len(event_lst) > 0:
             print(f"", file=fp)
-            print(f"|イベント番号|イベントの意味|", file=fp)
-            print(f"|---|---|", file=fp)
+            print(f"|イベント番号|発生座標|イベントの意味|備考|", file=fp)
+            print(f"|---|---|---|---|", file=fp)
             for entry in event_lst:
+
                 num, info = entry
+
+                enabled=True
+                reason:list[str]=[]
+                pos_list:list[tuple[int,int]]=[] # イベント発生座標
+                if num in floor.event_to_coord:
+                    pos_list=floor.event_to_coord[num]
+                else:
+                    enabled=False
+                    reason += ["イベント未配置"]
+
+                if info.event_type in [modules.consts.FLOOR_EVENT_ENCOUNTE]:
+                    lst=[event_pos for event_pos in pos_list if event_pos in floor.in_room and floor.in_room[event_pos]]
+                    if len(lst) == 0:
+                        enabled=False
+                    if not enabled:
+                        reason += ["玄室外"]
+
                 event_string = self.getEventString(info=info)
-                print(f"|{num}|{event_string}|", file=fp)
+                if len(pos_list) == 0:
+                    pos_string="なし"
+                else:
+                    pos_string=','.join([f"({pos[0]},{pos[1]})" for pos in pos_list])
+                if enabled:
+                    print(f"|{num}|{pos_string}|{event_string}||", file=fp)
+                else:
+                    print(f"|{num}|{pos_string}|{event_string}| 無効なイベント ({','.join(reason)})|", file=fp)
         else:
             print(f"", file=fp)
             print(f"イベント無し", file=fp)
