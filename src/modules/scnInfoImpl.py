@@ -12,8 +12,8 @@
 
 from __future__ import annotations # 型定義のみを参照する
 from typing import TYPE_CHECKING   # 型チェック実施判定
-from typing import Any,Iterator,Generator
-from typing import TextIO
+from typing import Any, Optional
+from typing import TextIO,Iterator,Generator
 
 if TYPE_CHECKING:
     pass
@@ -32,7 +32,7 @@ import tempfile
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from modules.datadef import WizardrySCNTOC, WizardryMazeFloorDataEntry, WizardryMonsterDataEntry
-from modules.datadef import WizardryItemDataEntry, WizardryRewardDataEntry, WizardryRewardInfo
+from modules.datadef import WizardryItemDataEntry, WizardryRewardDataEntry, WizardryRewardInfo, WizardryMazeFloorEventInfo
 from modules.scnInfo import scnInfo
 from modules.TOCDecoder import TOCDecoder
 from modules.mazeFloorDecoder import mazeFloorDecoder
@@ -84,11 +84,14 @@ class scnInfoImpl(scnInfo):
         return
 
     def _readFloorTable(self, data:Any)->None:
+
         decoder=mazeFloorDecoder()
         nr_floors=self.toc.RECPERDK[modules.consts.ZMAZE]
+
         for idx in range(nr_floors):
             floor=decoder.decodeOneData(toc=self.toc, data=data, index=idx)
             if isinstance(floor, WizardryMazeFloorDataEntry):
+                floor.depth = idx + 1
                 self._floors[idx]=floor
 
         return
@@ -137,6 +140,180 @@ class scnInfoImpl(scnInfo):
                         self._reward2monster[reward_number]=set()
                     self._reward2monster[reward_number].add(monster_number)
         return
+
+    def _handleStairEvent(self, aux0:int, aux1:int, aux2:int)->str:
+
+        if aux0 == 0:
+            return f"階段: 城への階段"
+
+        return f"階段: {aux0}階 ({aux2:2},{aux1:2})への階段"
+
+    def _handlePitEvent(self, aux0:int, aux1:int, aux2:int)->str:
+
+        return f"落とし穴(ピット): AGILITYが, (0から24までの乱数 + 現在の階層)より小さいパーティメンバに, {aux2}D{aux1}のダメージを与える"
+
+    def _handleChuteEvent(self, aux0:int, aux1:int, aux2:int)->str:
+
+        if aux0 == 0:
+            f"シュート: 城へのシュート"
+
+        return f"シュート: {aux0}階 ({aux2:2},{aux1:2})へのシュート"
+
+    def _handleSpinnerEvent(self, aux0:int, aux1:int, aux2:int)->str:
+
+        return f"回転床: ランダムに向きを変更する"
+
+    def _handleDarkEvent(self, aux0:int, aux1:int, aux2:int)->str:
+
+        return f"暗闇: MILWA/LOMILWAの効果を打ち消す"
+
+    def _handleTransferEvent(self, aux0:int, aux1:int, aux2:int)->str:
+
+        if aux0 == 0:
+            f"テレポート: 城へのテレポート"
+
+        return f"テレポート: {aux0}階 ({aux2:2},{aux1:2})へのテレポート"
+
+    def _handleOuchyEvent(self, aux0:int, aux1:int, aux2:int)->str:
+
+        return f"落とし穴2(Ouchy): AGILITYが, (0から24までの乱数 + 現在の階層)より小さいパーティメンバに, {aux2}D{aux1}のダメージを与える"
+
+    def _handleButtonEvent(self, aux0:int, aux1:int, aux2:int)->str:
+
+        return f"エレベータ: {aux2:2}階から{aux1:2}階までのエレベータ"
+
+    def _handleRockwateEvent(self, aux0:int, aux1:int, aux2:int)->str:
+
+        return f"岩: X,Y座標は変えず, 1階にテレポートする"
+
+    def _handleFizzleEvent(self, aux0:int, aux1:int, aux2:int)->str:
+
+        return f"呪文無効化: 異なる階層に移動するまで, 呪文を使用不可能にする"
+
+    def _handleScreenMessage(self, aux0:int, aux1:int, aux2:int)->str:
+
+        common=f"メッセージ番号{aux1:3}番"
+
+        if -1000 >= aux0:
+            aux0 += 1000
+
+        if aux2 == modules.consts.SCNMSG_TYPE_TRYGET:
+            item_name=f"{self._items[aux0].name} ({aux0})" if aux0 in self._items else f"{aux0}番のアイテム"
+
+            return f"{common}のメッセージを表示し, {item_name} を取得"
+
+        if aux2 == modules.consts.SCNMSG_TYPE_WHOWADE:
+            return f"{common}のメッセージを表示し, 泉に入るメンバを選択"
+
+        if aux2 == modules.consts.SCNMSG_TYPE_GETYN:
+
+            if aux0 >= 0:
+                monster_name=f"{self._monsters[aux0].name} ({aux0})" if aux0 in self._monsters else f"{aux0}番のモンスター"
+                return f"{common}のメッセージを表示し, 「さがしますか(Y/N)?」を表示して, 'Y'を押下した場合, {monster_name}との戦闘を実施"
+            else:
+                aux0 *= -1
+                item_name=f"{self._items[aux0].name} ({aux0})" if aux0 in self._items else f"{aux0}番のアイテム"
+                return f"{common}のメッセージを表示し, 「さがしますか(Y/N)?」を表示して, 'Y'を押下した場合, {item_name}を取得"
+
+        if aux2 == modules.consts.SCNMSG_TYPE_ITM2PASS:
+            item_name=f"{self._items[aux0].name} ({aux0})" if aux0 in self._items else f"{aux0}番のアイテム"
+            return f"{item_name}を所持していない場合, {common}のメッセージを表示して, ひとつ前の座標に戻る"
+
+        if aux2 == modules.consts.SCNMSG_TYPE_CHKALIGN:
+            return f"パーティの属性(アラインメント)によって, {common}のメッセージを表示して, ひとつ前の座標に戻る"
+
+        if aux2 == modules.consts.SCNMSG_TYPE_CHKAUX0:
+            if aux0 == 99:
+                return f"{common}のメッセージを表示し, MILWAの効果を50ターン延長"
+            elif aux0 == -99:
+                return f"{common}のメッセージを表示し, MILWAの効果を打ち消す"
+            else:
+                return f"{common}のメッセージを表示し, 迷宮からでるまで, {aux0}の値だけパーティのACの数値を下げる(防御力を上げる)"
+
+        if aux2 == modules.consts.SCNMSG_TYPE_BCK2SHOP:
+            return f"{common}のメッセージを表示し, 城に戻る"
+
+        if aux2 == modules.consts.SCNMSG_TYPE_LOOKOUT:
+            return f"{common}のメッセージを表示し, 半径{aux0}の範囲に, モンスターを配置する"
+
+        if aux2 == modules.consts.SCNMSG_TYPE_RIDDLES:
+            f"{common}のメッセージを表示して, 謎かけを行い, 回答番号{aux0}で指定された答え(を複合した結果)と異なっていた場合, ひとつ前の座標に戻る"
+
+        if aux2 == modules.consts.SCNMSG_TYPE_FEEIS:
+            f"{common}のメッセージを表示して, お金を要求する. 所有金額が要求金額に満たない場合や支払いを拒否した場合, ひとつ前の座標に戻る"
+
+        return f"{common}のメッセージを表示"
+
+    def _handleEncounte(self, aux0:int, aux1:int, aux2:int)->str:
+
+        monster_name=f"{self._monsters[aux2].name} ({aux2})" if aux2 in self._monsters else f"{aux2}番のモンスター"
+        return f"{monster_name}との戦闘を実施"
+
+    def getEventInfo(self, x:int, y:int, z:int)->Optional[WizardryMazeFloorEventInfo]:
+        """イベント情報を返す
+
+        Args:
+            x (int): X座標
+            y (int): Y座標
+            z (int): Z座標
+
+        Returns:
+            Optional[WizardryMazeFloorEventInfo]: イベント情報(イベントが設定されていなければNone)
+        """
+        pos=(x,y)
+
+        if z not in self._floors:
+            return None
+
+        floor = self._floors[z]
+        if pos not in floor.event_map:
+            return None
+
+        event_number = floor.event_map[pos]
+        if event_number not in floor.event_info_dic:
+            return None
+
+        return floor.event_info_dic[event_number]
+
+    def getEventString(self, info:WizardryMazeFloorEventInfo)->Optional[str]:
+        """イベントの内容を表す文字列を返す
+
+        Args:
+            info (WizardryMazeFloorEventInfo): イベント情報
+
+        Returns:
+            Optional[str]: イベントの内容を表す文字列を返す(イベントが設定されていなければNone)
+        """
+
+        if info.event_type == modules.consts.FLOOR_EVENT_NORMAL:
+            return None
+
+        if info.event_type == modules.consts.FLOOR_EVENT_STAIRS:
+            return self._handleStairEvent(aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
+        elif info.event_type == modules.consts.FLOOR_EVENT_PIT:
+            return self._handlePitEvent(aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
+        elif info.event_type == modules.consts.FLOOR_EVENT_CHUTE:
+            return self._handleChuteEvent(aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
+        elif info.event_type == modules.consts.FLOOR_EVENT_SPINNER:
+            return self._handleSpinnerEvent(aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
+        elif info.event_type == modules.consts.FLOOR_EVENT_DARK:
+            return self._handleDarkEvent(aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
+        elif info.event_type == modules.consts.FLOOR_EVENT_TRANSFER:
+            return self._handleTransferEvent(aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
+        elif info.event_type == modules.consts.FLOOR_EVENT_OUCHY:
+                return self._handleOuchyEvent(aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
+        elif info.event_type == modules.consts.FLOOR_EVENT_BUTTONZ:
+                return self._handleButtonEvent(aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
+        elif info.event_type == modules.consts.FLOOR_EVENT_ROCKWATE:
+                return self._handleRockwateEvent(aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
+        elif info.event_type == modules.consts.FLOOR_EVENT_FIZZLE:
+                return self._handleFizzleEvent(aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
+        elif info.event_type == modules.consts.FLOOR_EVENT_SCNMSG:
+                return self._handleScreenMessage(aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
+        elif info.event_type == modules.consts.FLOOR_EVENT_ENCOUNTE:
+                return self._handleEncounte(aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
+
+        return modules.consts.UNKNOWN_STRING
 
     def readContents(self)->None:
         """シナリオ情報を読み込む
@@ -399,17 +576,33 @@ class scnInfoImpl(scnInfo):
     def _plainOneDumpFloorEventInfo(self, depth:int, floor:WizardryMazeFloorDataEntry, fp: TextIO)->None:
 
         print(f"##### {depth}階 イベント一覧", file=fp)
-        print(f"", file=fp)
 
+        print(f"", file=fp)
         print(f"|イベント番号|イベント種別|イベント引数1|イベント引数2|イベント引数3|", file=fp)
         print(f"|---|---|---|---|---|", file=fp)
 
-        for number in floor.event_info_dic.keys():
+        for number in sorted(floor.event_info_dic.keys()):
             entry=floor.event_info_dic[number]
 
             event_type_string=f"{modules.consts.FLOOR_EVENT_TO_STRING[entry.event_type]} ({entry.event_type})" if entry.event_type in modules.consts.FLOOR_EVENT_TO_STRING else f"{modules.consts.UNKNOWN_STRING} ({entry.event_type})"
             assert 0 in entry.params and 1 in entry.params and 2 in entry.params, f"invalid entry params [{entry.params}]"
             print(f"|{number}|{event_type_string}|{entry.params[0]}|{entry.params[1]}|{entry.params[2]}|", file=fp)
+
+        print(f"", file=fp)
+        print(f"###### {depth}階 イベント内容", file=fp)
+
+        event_lst=[ (number,floor.event_info_dic[number]) for number in sorted(floor.event_info_dic.keys()) if floor.event_info_dic[number].event_type not in modules.consts.FLOOR_EVENT_TILE_EVENTS]
+        if len(event_lst) > 0:
+            print(f"", file=fp)
+            print(f"|イベント番号|イベントの意味|", file=fp)
+            print(f"|---|---|", file=fp)
+            for entry in event_lst:
+                num, info = entry
+                event_string = self.getEventString(info=info)
+                print(f"|{num}|{event_string}|", file=fp)
+        else:
+            print(f"", file=fp)
+            print(f"イベント無し", file=fp)
 
         print(f"", file=fp)
 

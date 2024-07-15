@@ -122,6 +122,7 @@ class WizardryMazeMonsterTableEntry:
 @dataclass
 class WizardryMazeFloorDataEntry:
     """迷宮フロア情報"""
+
     wall_info_west:dict[tuple[int,int],int]
     """座標(x,y)を表すタプルから西側の壁の種類への辞書"""
     wall_info_south:dict[tuple[int,int],int]
@@ -139,7 +140,28 @@ class WizardryMazeFloorDataEntry:
     monster_tables:dict[int,WizardryMazeMonsterTableEntry]
     """モンスター出現テーブルの辞書 モンスター出現系統番号からテーブルへの辞書"""
 
+    depth:int
+    """階層"""
+
     def getWallInfo(self, x:int, y:int, dir:int)->int:
+        """壁の種類を返却する
+
+        Args:
+            x (int): X座標
+            y (int): Y座標
+            dir (int): 確認する向き
+                - DIR_NORTH 北
+                - DIR_EAST  東
+                - DIR_SOUTH 南
+                - DIR_WEST  西
+
+        Returns:
+            int: 壁の種類
+                - FLOOR_WALL_OPEN      通路
+                - FLOOR_WALL_WALL=1    壁
+                - FLOOR_WALL_DOOR=2    ドア
+                - FLOOR_WALL_HIDDEN=3  シークレットドア
+        """
 
         dic_map:dict[int,dict[tuple[int,int],int]]={
             modules.consts.DIR_NORTH:self.wall_info_north,
