@@ -105,7 +105,7 @@ class WizardryMazeMonsterTableEntry:
     number:int          # エントリの系統番号
     min_enemy:int       # MINENEMY 出現モンスター番号の最小値
     multiplier:int      # MULTWORS モンスター出現範囲の系統(0からWORSE01 - 1) * MULTWORS 分最小モンスター番号に加算する
-    max_table_index:int # WORSE01 使用するモンスター出現範囲の系統の最大値
+    max_series:int # WORSE01 使用するモンスター出現範囲の系統の最大値
     monster_range:int   # RANGE0N 出現モンスターの範囲(0 から RANGE0N - 1 までの範囲の乱数でモンスター番号を決定する)
     inc_series_percentage:int # PERCWORS モンスター出現範囲の系統を加算する確率 系統番号がWORSE01以上の場合は加算しない
 
@@ -179,22 +179,28 @@ class WizardryMazeFloorDataEntry:
             for idx in range(modules.consts.FLOOR_NR_MONSTER_TABLE_SERIES): # 各系統について
                 assert idx in self.monster_tables, f"{idx} not found"
                 entry = self.monster_tables[idx] # 出現テーブルエントリを参照
-                if 0 >= entry.inc_series_percentage or 0 >= entry.max_table_index: # 系列が一意に決定する場合
+                if 0 >= entry.inc_series_percentage or 0 >= entry.max_series: # 系列が一意に決定する場合
                     yield (idx, 0, entry.min_enemy, entry.min_enemy + entry.monster_range - 1, 0, 100) # 最小レンジ
                 else: # 系列変更を伴う場合
-                    remain_percentage = 100
-                    for series_idx in range(0,entry.max_table_index): # 乗数値の最大係数を取得
-                        series_num = series_idx + 1
-                        enc_calc = series_num
-                        if entry.max_table_index - 1 > series_idx: # 上昇する余地がある場合
+
+                    remain_percentile = 100 # 残りパーセンタイル
+                    for series_idx in range(0,entry.max_series+1): # 乗数値の最大係数を取得
+
+                        if entry.max_series > series_idx: # 上昇する余地がある場合
+
                             # 上昇確率の余事象の発生確率(上昇しない確率)を算出し, 本系列の発生確率とする
-                            this_percentage = simple_round(remain_percentage - ( (remain_percentage) / 100 ) * ( (entry.inc_series_percentage) / 100 ) * 100, ndigits=2)
+                            this_percentile = simple_round(remain_percentile - ( (remain_percentile) / 100 ) * ( (entry.inc_series_percentage) / 100 ) * 100, ndigits=2)
+                            # モンスター番号加算確率
                             this_inc_percentage = entry.inc_series_percentage
                         else:
-                            this_percentage = simple_round(remain_percentage, ndigits=2)
+                            # 上昇確率の余事象の発生確率(上昇しない確率)を算出し, 本系列の発生確率とする
+                            this_percentile = simple_round(remain_percentile, ndigits=2)
+                            # モンスター番号加算確率
                             this_inc_percentage = 0
-                        remain_percentage -= this_percentage
-                        yield (idx, series_num, entry.min_enemy + entry.multiplier * enc_calc,entry.min_enemy + entry.multiplier * enc_calc + entry.monster_range - 1, this_inc_percentage, this_percentage)
+
+                        remain_percentile -= this_percentile # 残りの確率
+                        multiplied_base = entry.multiplier * series_idx # 最小モンスター番号加算値
+                        yield (idx, series_idx, entry.min_enemy + multiplied_base,entry.min_enemy + multiplied_base + entry.monster_range - 1, this_inc_percentage, this_percentile)
             return
         return series_generator()
 
@@ -209,7 +215,7 @@ class WizardryMazeFloorDataEntry:
 
         """
         # モンスター出現テーブル中の最大モンスター番号を返す
-        return max([ max for _idx, _sub_idx, _min, max in self.monster_series])
+        return max([ max for _idx, _sub_idx, _min, max, _chg_ratio, _this_ratio in self.monster_series])
 
 @dataclass
 class WizardryMonsterDataEntry:
@@ -411,8 +417,8 @@ class WizardryRewardInfo:
 
             else:
 
-                remain_percentage=100
-
+                # 残りパーセンタイル
+                remain_percentile=100
                 for idx in range(self.item_maxtimes+1):
 
                     # アイテムレンジ基数(CHARIII)
@@ -426,12 +432,14 @@ class WizardryRewardInfo:
 
                     # 最大アイテム番号
                     max = self.item_minindx + mod_val + dice.max
+
+                    # アイテム出現パーセンタイル
                     if self.item_maxtimes > idx:
-                        this_percentage = simple_round(remain_percentage - ( (remain_percentage) / 100 ) * ( (self.item_percbigr) / 100 ) * 100, ndigits=1)
+                        this_percentile = simple_round(remain_percentile - ( (remain_percentile) / 100 ) * ( (self.item_percbigr) / 100 ) * 100, ndigits=1)
                     else:
-                        this_percentage = simple_round(remain_percentage,ndigits=1)
-                    remain_percentage -= this_percentage
-                    yield this_percentage, min, max
+                        this_percentile = simple_round(remain_percentile,ndigits=1)
+                    remain_percentile -= this_percentile # 残りパーセンタイルの更新
+                    yield this_percentile, min, max
 
 
             return

@@ -712,7 +712,7 @@ class mazeFloorDecoder(dataEntryDecoder):
         for series in range(modules.consts.FLOOR_NR_MONSTER_TABLE_SERIES): # 全ての系統について
 
             entry = WizardryMazeMonsterTableEntry(number=series, min_enemy=0, multiplier=0,
-                                                  max_table_index=0, monster_range=0,
+                                                  max_series=0, monster_range=0,
                                                   inc_series_percentage=0)
 
             for param in ['MINENEMY', 'MULTWORS', 'WORSE01', 'RANGE0N', 'PERCWORS']: # 各パラメタについて
@@ -726,7 +726,7 @@ class mazeFloorDecoder(dataEntryDecoder):
                     case 'MULTWORS':
                         entry.multiplier = array_value
                     case 'WORSE01':
-                        entry.max_table_index = array_value
+                        entry.max_series = array_value
                     case 'RANGE0N':
                         entry.monster_range = array_value
                     case 'PERCWORS':

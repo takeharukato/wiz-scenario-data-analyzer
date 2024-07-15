@@ -291,7 +291,7 @@ class scnInfoImpl(scnInfo):
         print(f"|---|---|---|---|---|---|", file=fp)
         for idx in floor.monster_tables.keys():
             entry=floor.monster_tables[idx]
-            print(f"|{idx}|{entry.min_enemy}|{entry.multiplier}|{entry.max_table_index}|{entry.monster_range}|{entry.inc_series_percentage}|", file=fp)
+            print(f"|{idx}|{entry.min_enemy}|{entry.multiplier}|{entry.max_series}|{entry.monster_range}|{entry.inc_series_percentage}|", file=fp)
 
         print(f"", file=fp)
 
