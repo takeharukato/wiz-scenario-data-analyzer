@@ -549,8 +549,11 @@ class scnInfoImpl(scnInfo):
 
         return
 
-    def _plainOneDumpRewardHumanReadable(self, reward_number:int, reward:WizardryRewardDataEntry, fp: TextIO)->None:
+    def _plainOneDumpRewardHumanReadable(self, reward_number:int, max_reward_range:int, reward:WizardryRewardDataEntry, fp: TextIO)->None:
 
+        null_prefix="|||||||"
+        null_reward_range_prefix='|'.join(['' for _i in range(max_reward_range)])
+        null_line=null_prefix + null_reward_range_prefix + '|'
         index_string = f"{reward_number}"
         in_chest_string=f"宝箱あり" if reward.in_chest else f"宝箱なし"
         nr_rewards_string = f"{reward.reward_count_value}"
@@ -561,12 +564,14 @@ class scnInfoImpl(scnInfo):
             reward_info=reward.rewards[info_index]
 
             if reward_info.percentage == 0:
+                print(f"{null_line}", file=fp)
                 continue # 無効エントリ
 
             percentage_string = f"{reward_info.percentage:3} %"
             has_item_string = f"アイテム" if reward_info.has_item else f"お金"
 
             if info_index > reward.reward_count_value:
+                print(f"{null_line}", file=fp)
                 continue # 無効エントリ
 
             if reward_info.has_item: # アイテム報酬の場合
@@ -575,6 +580,7 @@ class scnInfoImpl(scnInfo):
                 range_lst=list(reward_info.gold_range_tuple)
 
             reward_lst:list[str]=[]
+            actual_rewards=len(range_lst)
             for idx,gold_or_item in enumerate(range_lst):
                 if range_lst[idx][0] == 100:
                     reward_lst += [f"{gold_or_item[1]}--{gold_or_item[2]}"]
@@ -582,7 +588,10 @@ class scnInfoImpl(scnInfo):
                     reward_lst += [f"{gold_or_item[1]}--{gold_or_item[2]} ( {range_lst[idx][0]} % )"]
             each_reward="|".join(reward_lst)
             print(f"|{index_string}|{info_index} / {nr_rewards_string}|{in_chest_string}|{trap_string}|{percentage_string}|{has_item_string}|"
-                f"{each_reward}|", file=fp)
+                f"{each_reward}", end='', file=fp)
+            if max_reward_range > actual_rewards:
+                print(f"{'|'.join(['' for _i in range(max_reward_range - actual_rewards + 1)])}", end='', file=fp)
+            print(f"|", file=fp)
             pass
         return
 
@@ -709,7 +718,7 @@ class scnInfoImpl(scnInfo):
               f"{range_cols}|", file=fp)
 
         for idx in sorted(self._rewards.keys()):
-            self._plainOneDumpRewardHumanReadable(reward_number=idx, reward=self._rewards[idx], fp=fp)
+            self._plainOneDumpRewardHumanReadable(reward_number=idx, max_reward_range=max_reward_range, reward=self._rewards[idx], fp=fp)
 
         print("",file=fp)
 
