@@ -417,10 +417,10 @@ class scnInfoImpl(scnInfo):
 
     def _plainOneDumpFloorEventMap(self, depth:int, floor:WizardryMazeFloorDataEntry, fp: TextIO)->None:
 
-        print(f"#### {depth}階 イベントマップ", file=fp)
+        print(f"#### {depth:<2}階 イベントマップ", file=fp)
+
         print(f"", file=fp)
-        print(f"##### イベントマップ情報", file=fp)
-        print(f"", file=fp)
+        print(f"##### {depth:<2}階 イベントマップ情報", file=fp)
 
         basename=f"floor-event-map-{depth:02}"
         self._drawFloorEvents(floor=floor, basename=basename)
@@ -428,8 +428,8 @@ class scnInfoImpl(scnInfo):
         if os.path.exists(outfile):
             print(f"", file=fp)
             print(f"![{depth:02}階イベントマップ]({outfile})", file=fp)
-            print(f"", file=fp)
 
+        print(f"", file=fp)
         print(f"```:text", file=fp)
         y_lst=sorted(list(range(modules.consts.FLOOR_HEIGHT)), reverse=True)
         for y in y_lst:
@@ -459,7 +459,6 @@ class scnInfoImpl(scnInfo):
     def _plainOneDumpFloorRooms(self, depth:int, floor:WizardryMazeFloorDataEntry, fp: TextIO)->None:
 
         print(f"#### {depth}階 玄室情報", file=fp)
-        print(f"", file=fp)
 
         basename=f"floor-room-{depth:02}"
         self._drawFloorRooms(floor=floor, basename=basename)
@@ -467,8 +466,8 @@ class scnInfoImpl(scnInfo):
         if os.path.exists(outfile):
             print(f"", file=fp)
             print(f"![{depth:02}階玄室情報]({outfile})", file=fp)
-            print(f"", file=fp)
 
+        print(f"", file=fp)
         print(f"```:text", file=fp)
 
         y_lst=sorted(list(range(modules.consts.FLOOR_HEIGHT)), reverse=True)
@@ -508,13 +507,12 @@ class scnInfoImpl(scnInfo):
         if os.path.exists(outfile):
             print(f"", file=fp)
             print(f"![{depth:02}階フロアレイアウト]({outfile})", file=fp)
-            print(f"", file=fp)
 
         for title, dic in info_dic:
             print(f"", file=fp)
-            print(f"##### {title}", file=fp)
-            print(f"", file=fp)
+            print(f"##### {depth}階 {title}", file=fp)
 
+            print(f"", file=fp)
             print(f"```:text", file=fp)
 
             y_lst=sorted(list(range(modules.consts.FLOOR_HEIGHT)), reverse=True)
@@ -672,7 +670,6 @@ class scnInfoImpl(scnInfo):
     def _dumpRewardsDataStruct(self, fp:TextIO)->None:
 
         print("### 獲得報酬情報",file=fp)
-        print("",file=fp)
 
         #
         # 報酬レンジ総数を算出する
@@ -686,8 +683,8 @@ class scnInfoImpl(scnInfo):
 
     def _dumpRewardsHumanReadable(self, fp:TextIO)->None:
 
-        print("### 獲得報酬一覧",file=fp)
         print("",file=fp)
+        print("### 獲得報酬一覧",file=fp)
 
         #
         # 報酬レンジ総数を算出する
@@ -710,6 +707,8 @@ class scnInfoImpl(scnInfo):
                 max_reward_range=max(max_reward_range, len(range_lst))
 
         range_names="|".join([f"報酬{i+1}(獲得ゴールド/取得アイテム番号の範囲[最小値--最大値])" for i in range(max_reward_range)])
+
+        print("",file=fp)
         print(f"|報酬番号|連番 / 総報酬数|宝箱の有無|罠|取得確率|報酬種別|"
               f"{range_names}|",
               file=fp)
@@ -727,7 +726,6 @@ class scnInfoImpl(scnInfo):
     def _dumpRewards(self, fp:TextIO)->None:
 
         print("## 報酬情報",file=fp)
-        print("",file=fp)
 
         self._dumpRewardsHumanReadable(fp=fp)
         self._dumpRewardsDataStruct(fp=fp)
