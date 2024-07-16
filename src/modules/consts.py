@@ -228,15 +228,25 @@ CHAR_ALIGNMENT_NO_ALIGN=0
 
 # 装備可能職業文字列
 CHAR_CLASS_EQUIP_STRING="FMPTBSLN"
+#
+# アイテム種別
+#
+OBJ_TYPE_WEAPON=0
+OBJ_TYPE_ARMOR=1
+OBJ_TYPE_SHIELD=2
+OBJ_TYPE_HELM=3
+OBJ_TYPE_GLOVE=4
+OBJ_TYPE_SPECIAL=5
+OBJ_TYPE_MISC=6
 # アイテム種別からアイテム種別名への変換テーブル
 OBJ_TYPE_TO_STR:dict[int,str]={
-    0:"武器",
-    1:"鎧",
-    2:"盾",
-    3:"兜",
-    4:"手甲",
-    5:"特殊(装備対象外)",
-    6:"その他",
+    OBJ_TYPE_WEAPON:"武器",
+    OBJ_TYPE_ARMOR:"鎧",
+    OBJ_TYPE_SHIELD:"盾",
+    OBJ_TYPE_HELM:"兜",
+    OBJ_TYPE_GLOVE:"手甲",
+    OBJ_TYPE_SPECIAL:"特殊(装備対象外)",
+    OBJ_TYPE_MISC:"その他",
 }
 # 抵抗属性,ブレス/呪文属性(WEPVSTYP3)のビット位置と意味
 RESIST_BREATH_DIC:dict[int,str]={
@@ -283,6 +293,10 @@ SPPC_CAPABILITY_DIC:dict[int,str]={
     5:"逃", # 逃走可能
     6:"呼", # 仲間を呼ぶ
 }
+
+#
+# スペシャルパワー効果
+#
 ITEM_SPECIAL_DIC:dict[int,str]={
     1:"能力値STRENGTHに1加算する",
     2:"能力値I.Q.に1加算する",

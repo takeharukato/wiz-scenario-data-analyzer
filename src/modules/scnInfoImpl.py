@@ -438,7 +438,7 @@ class scnInfoImpl(scnInfo):
             #
             for floor_idx in sorted(self._floors.keys()):
                 floor=self._floors[floor_idx]
-                # SCNMSGイベントのGETYNイベントでモンスター遭遇があるものを抽出
+                # SCNMSGイベントのGETYNイベントでモンスター遭遇があるもの(AUX0が正の整数)を抽出
                 lst = [floor.event_info_dic[idx] for idx in floor.event_info_dic.keys() if floor.event_info_dic[idx].event_type == modules.consts.FLOOR_EVENT_SCNMSG and 2 in floor.event_info_dic[idx].params and floor.event_info_dic[idx].params[2] == modules.consts.SCNMSG_TYPE_GETYN and 0 in floor.event_info_dic[idx].params and floor.event_info_dic[idx].params[0] > 0]
                 if len(lst) > 0: # イベントがあれば
                     getyn_info_lst += [(floor.depth, lst)]
@@ -481,7 +481,9 @@ class scnInfoImpl(scnInfo):
                     encounters=info.encounte_range
                     if not encounters:
                         continue # 不正データ
-                    if not info.is_enabled:
+                    # 戦闘回数制限以外の理由を調査
+                    reasons = [reason_num for reason_num in info.broken_reason.keys() if reason_num not in [modules.consts.FLOOR_EVENT_REASON_EMERGENCE_LIMIT]]
+                    if not info.is_enabled and len(reasons) > 0:
                         continue # 無効イベント
                     if encounters[0] != 0 and  number >= encounters[1] and encounters[2] >= number: # 範囲内にある場合
                         yield from ( (x,y,depth) for x,y in info.positions )
@@ -505,6 +507,138 @@ class scnInfoImpl(scnInfo):
             return
 
         return generate_location(number=number)
+
+    def getGetYNEventLocationByItemNumber(self, number:int)->Iterator[tuple[int,int,int]]:
+        """GETYNでのアイテム取得イベント座標を返す
+
+        Args:
+            number (int): アイテム番号
+
+        Yields:
+            Iterator[tuple[int,int,int]]: 取得座標
+        """
+        def getyn_item_location_generator(number:int)->Generator[tuple[int,int,int],None,None]:
+
+            getyn_info_lst:list[tuple[int,list[WizardryMazeFloorEventInfo]]]=[]
+            #
+            # 全階層のGETYNイベントを取得する
+            #
+            for floor_idx in sorted(self._floors.keys()):
+                floor=self._floors[floor_idx]
+                # SCNMSGイベントのGETYNイベントでアイテム取得があるもの(AUX0が-1000より小さい負の整数)を抽出
+                lst = [floor.event_info_dic[idx] for idx in floor.event_info_dic.keys() if floor.event_info_dic[idx].event_type == modules.consts.FLOOR_EVENT_SCNMSG and 2 in floor.event_info_dic[idx].params and floor.event_info_dic[idx].params[2] == modules.consts.SCNMSG_TYPE_GETYN and 0 in floor.event_info_dic[idx].params and -1000 > floor.event_info_dic[idx].params[0]]
+                if len(lst) > 0: # イベントがあれば
+                    getyn_info_lst += [(floor.depth, lst)]
+
+            # 所定のアイテムが含まれている場合は, その座標を返す
+            for depth,info_lst in getyn_info_lst:
+                for info in info_lst:
+                    if not info.is_enabled:
+                        continue # 無効イベント
+
+                    # アイテム番号を取得
+                    item_number = ( info.params[0] + 1000 ) * -1
+
+                    if item_number == number: # 対象のアイテムを取得する場合は, その座標を返す
+                        yield from ( (x,y,depth) for x,y in info.positions )
+            return
+
+        return getyn_item_location_generator(number=number)
+
+    def getTryGetEventLocationByItemNumber(self, number:int)->Iterator[tuple[int,int,int]]:
+        """TRYGETでのアイテム取得イベント座標を返す
+
+        Args:
+            number (int): アイテム番号
+
+        Yields:
+            Iterator[tuple[int,int,int]]: 取得座標
+        """
+        def tryget_item_location_generator(number:int)->Generator[tuple[int,int,int],None,None]:
+
+            tryget_info_lst:list[tuple[int,list[WizardryMazeFloorEventInfo]]]=[]
+            #
+            # 全階層のTRYGETイベントを取得する
+            #
+            for floor_idx in sorted(self._floors.keys()):
+                floor=self._floors[floor_idx]
+                # SCNMSGイベントのTRYGETイベントを抽出
+                lst = [floor.event_info_dic[idx] for idx in floor.event_info_dic.keys() if floor.event_info_dic[idx].event_type == modules.consts.FLOOR_EVENT_SCNMSG and 2 in floor.event_info_dic[idx].params and floor.event_info_dic[idx].params[2] == modules.consts.SCNMSG_TYPE_TRYGET and 0 in floor.event_info_dic[idx].params]
+                if len(lst) > 0: # イベントがあれば
+                    tryget_info_lst += [(floor.depth, lst)]
+
+            # 所定のアイテムが含まれている場合は, その座標を返す
+            for depth,info_lst in tryget_info_lst:
+                for info in info_lst:
+                    if not info.is_enabled:
+                        continue # 無効イベント
+
+                    # アイテム番号を取得
+                    item_number = info.params[0]
+                    if -1000 > item_number:
+                        item_number += 1000
+
+                    if item_number == number: # 対象のアイテムを取得する場合は, その座標を返す
+                        yield from ( (x,y,depth) for x,y in info.positions )
+            return
+
+        return tryget_item_location_generator(number=number)
+
+    def getObtainLocationByItemNumber(self, number:int)->Iterator[tuple[int,int,int]]:
+        """アイテムIDから取得座標を返す
+
+        Args:
+            number (int): アイテムID
+
+        Yields:
+            Iterator[tuple[int,int,int],None,None]: イベント発生座標のタプル(X,Y,Z)を返す
+        """
+        def generate_location(number:int)->Generator[tuple[int,int,int]]:
+
+            yield from self.getGetYNEventLocationByItemNumber(number=number)
+            yield from self.getTryGetEventLocationByItemNumber(number=number)
+            return
+
+        return generate_location(number=number)
+
+    def getItem2PassLocationByItemNumber(self, number:int)->Iterator[tuple[int,int,int]]:
+        """ITM2PASSでの通行判定イベント座標を返す
+
+        Args:
+            number (int): アイテム番号
+
+        Yields:
+            Iterator[tuple[int,int,int]]: 取得座標
+        """
+        def item2pass_location_generator(number:int)->Generator[tuple[int,int,int],None,None]:
+
+            item2pass_info_lst:list[tuple[int,list[WizardryMazeFloorEventInfo]]]=[]
+            #
+            # 全階層のITM2PASSイベントを取得する
+            #
+            for floor_idx in sorted(self._floors.keys()):
+                floor=self._floors[floor_idx]
+                # SCNMSGイベントのTRYGETイベントを抽出
+                lst = [floor.event_info_dic[idx] for idx in floor.event_info_dic.keys() if floor.event_info_dic[idx].event_type == modules.consts.FLOOR_EVENT_SCNMSG and 2 in floor.event_info_dic[idx].params and floor.event_info_dic[idx].params[2] == modules.consts.SCNMSG_TYPE_ITM2PASS and 0 in floor.event_info_dic[idx].params]
+                if len(lst) > 0: # イベントがあれば
+                    item2pass_info_lst += [(floor.depth, lst)]
+
+            # 所定のアイテムが含まれている場合は, その座標を返す
+            for depth,info_lst in item2pass_info_lst:
+                for info in info_lst:
+                    if not info.is_enabled:
+                        continue # 無効イベント
+
+                    # アイテム番号を取得
+                    item_number = info.params[0]
+                    if -1000 > item_number:
+                        item_number += 1000
+
+                    if item_number == number: # 対象のアイテムを取得する場合は, その座標を返す
+                        yield from ( (x,y,depth) for x,y in info.positions )
+            return
+
+        return item2pass_location_generator(number=number)
 
     def getEventString(self, info:WizardryMazeFloorEventInfo)->Optional[str]:
         """イベントの内容を表す文字列を返す
@@ -667,14 +801,16 @@ class scnInfoImpl(scnInfo):
         wephitmd_string = f"{data.wephitmd_value}" if data.wephitmd_value != 0 else f""
         wephpdam_string = f"{data.wephpdam.name} ({data.wephpdam.min}--{data.wephpdam.max})" if data.wephpdam.min > 0 else f""
         swing_count_string = f"{data.swing_count_value}" if data.swing_count_value != 0 else f""
-        critical_hit = f"有" if data.critical_hit else f""
+        critical_hit = f"有" if data.critical_hit and data.obj_type_value == modules.consts.OBJ_TYPE_WEAPON else f"有(武器でないため無効)" if data.critical_hit else f""
         purpose_string = f"{property_dic_to_string(dic=data.purpose_dic)} ({value_to_string(data.wepvstyp_value)})" if data.wepvstyp_value != 0 else f""
+        item_obtain_pos_lst = modules.consts.DELIMITER_COMMA.join([f"{z}階 ({x},{y})" for x,y,z in self.getObtainLocationByItemNumber(number=index)])
+        item2pass_pos_lst = modules.consts.DELIMITER_COMMA.join([f"{z}階 ({x},{y})" for x,y,z in self.getItem2PassLocationByItemNumber(number=index)])
 
         print(f"|{index}|{data.name}|{data.name_unknown}|{item_type_string}|"
               f"{alignment_string}|{cursed_string}|{special_pwr_string}|{change_to_string}|"
               f"{change_percentage_string}|{price_string}|{stock_string}|{spell_power_string}|"
               f"{class_equip_string}|{heal_pts_string}|{prot_string}|{resist_string}|{ac_string}|"
-              f"{wephitmd_string}|{wephpdam_string}|{swing_count_string}|{critical_hit}|{purpose_string}|"
+              f"{wephitmd_string}|{wephpdam_string}|{swing_count_string}|{critical_hit}|{purpose_string}|{item_obtain_pos_lst}|{item2pass_pos_lst}|"
               ,file=fp)
         return
 
@@ -1229,12 +1365,12 @@ class scnInfoImpl(scnInfo):
               f"属性(アラインメント)|呪い|スペシャルパワーの効果|破損後のアイテム(使用後に変化するアイテム)|"
               f"使用に伴うアイテム破損率|価格|商店の初期在庫数|使用時に発動する呪文|"
               f"装備可能職業|リジェネレレーション値|防御特性|抵抗属性|アーマクラス(括弧内は補正値)|"
-              f"命中率補正値|ダメージダイス|最大攻撃回数|クリティカルヒット付与|倍打特性|",file=fp)
+              f"命中率補正値|ダメージダイス|最大攻撃回数|クリティカルヒット付与|倍打特性|取得座標|通行判定座標|",file=fp)
         print(f"|---|---|---|---|"
               f"---|---|---|---|"
               f"---|---|---|---|"
               f"---|---|---|---|---|"
-              f"---|---|---|---|---|",file=fp)
+              f"---|---|---|---|---|---|---|",file=fp)
 
         for idx in sorted(self._items.keys()):
             self._plainOneDumpItem(index=idx, data=self._items[idx], fp=fp)
@@ -1252,6 +1388,9 @@ class scnInfoImpl(scnInfo):
 
         print(f"# シナリオ情報", file=fp)
         print(f"", file=fp)
+        print(f'シナリオ名:"{self.toc.game_name}"', file=fp)
+        print(f"", file=fp)
+
         print(f"## ディスクレイアウト", file=fp)
         print(f"", file=fp)
         print(f"|項目|キャッシュ領域に格納可能なアイテム数(RECPER2B 単位:個)|総要素数(RECPERDK 単位:個)|シナリオ情報中のオフセット(BLOFF 単位:ブロック)|シナリオ情報ファイル中のオフセットアドレス(単位:バイト)|")
