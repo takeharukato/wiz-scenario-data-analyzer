@@ -71,98 +71,55 @@ class scnInfoImpl(scnInfo):
         self._reward2monster={}
         return
 
-    def _readTOC(self, data:Any)->None:
-        """目次情報を読込む
+    def _getMonsterRangeString(self, min:int, max:int)-> str:
+        """モンスターレンジ[min,max]に含まれるモンスターの文字列表現を得る
 
         Args:
-            data (Any): シナリオデータ
+            min (int): 最小モンスター番号
+            max (int): 最大モンスター番号
+
+        Returns:
+            str: 文字列表現
         """
 
-        toc_decoder=TOCDecoder(data=data)
-        toc_decoder.decodeData(data=data, offset=0)
-        self._toc = toc_decoder.toc
-        return
+        res:list[str]=[]
 
-    def _fillFloorInfo(self, depth:int, floor:WizardryMazeFloorDataEntry)->None:
+        if min == max:
+            if min in self._monsters:
+                return f"{self._monsters[min].name} ({min})"
+            else:
+                return modules.consts.UNKNOWN_STRING
 
-        floor.depth = depth
-        #
-        # イベントから座標へのマップ
-        #
-        for x in range(modules.consts.FLOOR_WIDTH):
-            for y in range(modules.consts.FLOOR_HEIGHT):
-                pos=(x,y)
-                if pos in floor.event_map:
-                    event_number=floor.event_map[pos]
-                    if event_number not in floor.event_info_dic:
-                        continue # イベントに対応するイベント情報がない
-                    info = floor.event_info_dic[event_number]
-                    if info.event_type not in modules.consts.FLOOR_EVENT_TO_STRING:
-                        continue # イベント種別不明
-                    if info.event_type in modules.consts.FLOOR_EVENT_NO_NEED_DESC_EVENTS:
-                        continue # 説明不要
-                    if event_number not in floor.event_to_coord:
-                        floor.event_to_coord[event_number] = []
-                    floor.event_to_coord[event_number].append(pos)
-        return
+        for idx in self._monsters:
+            if idx >= min and max >= idx:
+                res += [f"{self._monsters[idx].name} ({idx})"]
 
-    def _readFloorTable(self, data:Any)->None:
+        return modules.consts.DELIMITER_COMMA.join(res)
 
-        decoder=mazeFloorDecoder()
-        nr_floors=self.toc.RECPERDK[modules.consts.ZMAZE]
+    def _getItemRangeString(self, min:int, max:int)-> str:
+        """アイテムレンジ[min,max]に含まれるモンスターの文字列表現を得る
 
-        for idx in range(nr_floors):
-            floor=decoder.decodeOneData(toc=self.toc, data=data, index=idx)
-            if isinstance(floor, WizardryMazeFloorDataEntry):
-                self._fillFloorInfo(depth=idx+1, floor=floor)
-                self._floors[idx]=floor
+        Args:
+            min (int): 最小アイテム番号
+            max (int): 最大アイテム番号
 
-        return
+        Returns:
+            str: 文字列表現
+        """
 
-    def _readMonsterTable(self, data:Any)->None:
-        decoder=monsterDecoder()
-        nr_monsters=self.toc.RECPERDK[modules.consts.ZENEMY]
-        for idx in range(nr_monsters):
-            monster=decoder.decodeOneData(toc=self.toc, data=data, index=idx)
-            if isinstance(monster, WizardryMonsterDataEntry):
-                self._monsters[idx]=monster
+        res:list[str]=[]
 
-        return
+        if min == max:
+            if min in self._items:
+                return f"{self._items[min].name} ({min})"
+            else:
+                return modules.consts.UNKNOWN_STRING
 
-    def _readItemTable(self, data:Any)->None:
-        decoder=itemDecoder()
-        nr_items=self.toc.RECPERDK[modules.consts.ZOBJECT]
-        for idx in range(nr_items):
-            item=decoder.decodeOneData(toc=self.toc, data=data, index=idx)
-            if isinstance(item, WizardryItemDataEntry):
-                self._items[idx]=item
+        for idx in self._items:
+            if idx >= min and max >= idx:
+                res += [f"{self._items[idx].name} ({idx})"]
 
-        return
-
-    def _readRewardTable(self, data:Any)->None:
-        decoder=rewardDecoder()
-        nr_rewards=self.toc.RECPERDK[modules.consts.ZREWARD]
-        for idx in range(nr_rewards):
-            reward=decoder.decodeOneData(toc=self.toc, data=data, index=idx)
-            if isinstance(reward, WizardryRewardDataEntry):
-                self._rewards[idx]=reward
-
-        return
-
-    def _fillRewardToMonster(self)->None:
-        """報酬番号からモンスターへの関係をマップする"""
-
-        for monster_number in self._monsters.keys():
-
-            monster = self._monsters[monster_number]
-            for reward_number in [monster.reward1, monster.reward2]:
-                if reward_number in self._rewards:
-                    if reward_number not in self._rewards:
-                        continue # 無効
-                    if reward_number not in self._reward2monster:
-                        self._reward2monster[reward_number]=set()
-                    self._reward2monster[reward_number].add(monster_number)
-        return
+        return modules.consts.DELIMITER_COMMA.join(res)
 
     def _handleStairEvent(self, name:str, aux0:int, aux1:int, aux2:int, *args:Any)->str:
 
@@ -275,13 +232,168 @@ class scnInfoImpl(scnInfo):
         if min == max:
             monster_name=f"{self._monsters[min].name} ({min})" if min in self._monsters else f"{min}番のモンスター"
         else:
-            min_monster_name=f"{self._monsters[min].name} ({min})" if min in self._monsters else f"{min}番のモンスター"
-            max_monster_name=f"{self._monsters[max].name} ({max})" if max in self._monsters else f"{max}番のモンスター"
+            #min_monster_name=f"{self._monsters[min].name} ({min})" if min in self._monsters else f"{min}番のモンスター"
+            #max_monster_name=f"{self._monsters[max].name} ({max})" if max in self._monsters else f"{max}番のモンスター"
+
             if aux0 > 0:
-                monster_name=f"最大{aux0}回, {min_monster_name}から{max_monster_name}までのいずれかの敵"
+                monster_name=f"最大{aux0}回, {self._getMonsterRangeString(min=min,max=max)} 内のいずれかの敵"
             else:
-                monster_name=f"{min_monster_name}から{max_monster_name}までのいずれかの敵"
+                monster_name=f"{self._getMonsterRangeString(min=min,max=max)} 内のいずれかの敵"
         return f"{name}: {monster_name}との戦闘"
+
+    def _fillFloorInfo(self, depth:int, floor:WizardryMazeFloorDataEntry)->None:
+
+        #
+        # イベントから座標へのマップ
+        #
+        for x in range(modules.consts.FLOOR_WIDTH):
+            for y in range(modules.consts.FLOOR_HEIGHT):
+                pos=(x,y)
+                if pos in floor.event_map:
+                    event_number=floor.event_map[pos]
+                    if event_number not in floor.event_info_dic:
+                        continue # イベント番号に対応するイベント情報がない
+
+                    info = floor.event_info_dic[event_number]
+                    if info.event_type not in modules.consts.FLOOR_EVENT_TO_STRING:
+                        info.broken_reason[modules.consts.FLOOR_EVENT_REASON_INVALID_TYPE]=True
+                        continue # イベント種別不明
+                    if info.event_type in modules.consts.FLOOR_EVENT_NO_NEED_DESC_EVENTS:
+                        continue # 説明不要
+                    if event_number not in floor.event_to_coord:
+                        floor.event_to_coord[event_number] = []
+                    if pos not in floor.event_to_coord[event_number]: # 追加済みの座標でなければ
+                        floor.event_to_coord[event_number].append(pos) # 座標を追加
+        #
+        # イベント情報に発生座標を追加
+        #
+        for entry in ( (number,floor.event_info_dic[number]) for number in sorted(floor.event_info_dic.keys()) ):
+
+            num, info = entry
+
+            if num in floor.event_to_coord:
+                info.positions=floor.event_to_coord[num] # 発生座標を設定
+            else:
+                # イベント未配置
+                info.broken_reason[modules.consts.FLOOR_EVENT_REASON_NOT_ALLOCATED]=True
+
+            if info.event_type in [modules.consts.FLOOR_EVENT_ENCOUNTE]:
+                if 0 in info.params:
+                    aux0=info.params[0]
+                    if aux0 == 0: # 出現回数制限
+                        info.broken_reason[modules.consts.FLOOR_EVENT_REASON_EMERGENCE_LIMIT]=True
+
+                lst=[event_pos for event_pos in info.positions if event_pos in floor.in_room and floor.in_room[event_pos]]
+                if len(lst) == 0: # 玄室内にない
+                    info.broken_reason[modules.consts.FLOOR_EVENT_REASON_NOT_IN_ROOM]=True
+
+        return
+
+    def _fixupMonsterInfo(self)->None:
+
+        #
+        # モンスター出現テーブルを元に出現階層を設定する
+        #
+        for floor in self._floors.values(): # 各フロアについて
+            for info in floor.monster_series: # モンスター出現テーブル中の各モンスター出現系列について
+
+                _table_idx, _series_num, min_num, max_num, _inc_perc, _this_perc = info
+                for mon_num in range(min_num,max_num + 1): # [min_num, max_num]に含まれる番号のモンスターについて
+                    assert mon_num in self._monsters, f"Monster {mon_num} not found in monster emergence table"
+                    monster=self._monsters[mon_num] # モンスター情報を取得
+                    monster.emergence_floor.add(floor.depth) # 出現階層を追加
+
+        #
+        # 後続につくモンスターの情報を設定
+        #
+        for mon_idx in self._monsters.keys(): # 各モンスターについて
+
+            monster = self._monsters[mon_idx]
+            # 後続モンスターのモンスター番号を得る
+            if 0 >= monster.team_percentage:
+                continue # 後続なし
+            if monster.enemy_team not in self._monsters:
+                continue # 対象のモンスターがいない
+            elm=(monster.team_percentage, mon_idx)
+            next_to = self._monsters[monster.enemy_team]
+            next_to.follows.add(elm)
+        #
+        # イベントでの遭遇階層を追加
+        #
+
+        return
+
+    def _fillRewardToMonster(self)->None:
+        """報酬番号からモンスターへの関係をマップする"""
+
+        for monster_number in self._monsters.keys():
+
+            monster = self._monsters[monster_number]
+            for reward_number in [monster.reward1, monster.reward2]:
+                if reward_number in self._rewards:
+                    if reward_number not in self._rewards:
+                        continue # 無効
+                    if reward_number not in self._reward2monster:
+                        self._reward2monster[reward_number]=set()
+                    self._reward2monster[reward_number].add(monster_number)
+        return
+
+    def _readTOC(self, data:Any)->None:
+        """目次情報を読込む
+
+        Args:
+            data (Any): シナリオデータ
+        """
+
+        toc_decoder=TOCDecoder(data=data)
+        toc_decoder.decodeData(data=data, offset=0)
+        self._toc = toc_decoder.toc
+        return
+
+    def _readFloorTable(self, data:Any)->None:
+
+        decoder=mazeFloorDecoder()
+        nr_floors=self.toc.RECPERDK[modules.consts.ZMAZE]
+
+        for idx in range(nr_floors):
+            floor=decoder.decodeOneData(toc=self.toc, data=data, index=idx)
+            if isinstance(floor, WizardryMazeFloorDataEntry):
+                floor.depth = idx + 1
+                self._fillFloorInfo(depth=idx+1, floor=floor)
+                self._floors[idx]=floor
+
+
+        return
+
+    def _readMonsterTable(self, data:Any)->None:
+        decoder=monsterDecoder()
+        nr_monsters=self.toc.RECPERDK[modules.consts.ZENEMY]
+        for idx in range(nr_monsters):
+            monster=decoder.decodeOneData(toc=self.toc, data=data, index=idx)
+            if isinstance(monster, WizardryMonsterDataEntry):
+                self._monsters[idx]=monster
+
+        return
+
+    def _readItemTable(self, data:Any)->None:
+        decoder=itemDecoder()
+        nr_items=self.toc.RECPERDK[modules.consts.ZOBJECT]
+        for idx in range(nr_items):
+            item=decoder.decodeOneData(toc=self.toc, data=data, index=idx)
+            if isinstance(item, WizardryItemDataEntry):
+                self._items[idx]=item
+
+        return
+
+    def _readRewardTable(self, data:Any)->None:
+        decoder=rewardDecoder()
+        nr_rewards=self.toc.RECPERDK[modules.consts.ZREWARD]
+        for idx in range(nr_rewards):
+            reward=decoder.decodeOneData(toc=self.toc, data=data, index=idx)
+            if isinstance(reward, WizardryRewardDataEntry):
+                self._rewards[idx]=reward
+
+        return
 
     def getEventInfo(self, x:int, y:int, z:int)->Optional[WizardryMazeFloorEventInfo]:
         """イベント情報を返す
@@ -309,6 +421,91 @@ class scnInfoImpl(scnInfo):
 
         return floor.event_info_dic[event_number]
 
+    def getGetYNEventLocationByMonsterNumber(self, number:int)->Iterator[tuple[int,int,int]]:
+        """GETYNでのモンスター遭遇イベント座標を返す
+
+        Args:
+            number (int): モンスター番号
+
+        Yields:
+            Iterator[tuple[int,int,int]]: 遭遇座標
+        """
+        def getyn_location_generator(number:int)->Generator[tuple[int,int,int],None,None]:
+
+            getyn_info_lst:list[tuple[int,list[WizardryMazeFloorEventInfo]]]=[]
+            #
+            # 全階層のGETYNイベントを取得する
+            #
+            for floor_idx in sorted(self._floors.keys()):
+                floor=self._floors[floor_idx]
+                # SCNMSGイベントのGETYNイベントでモンスター遭遇があるものを抽出
+                lst = [floor.event_info_dic[idx] for idx in floor.event_info_dic.keys() if floor.event_info_dic[idx].event_type == modules.consts.FLOOR_EVENT_SCNMSG and 2 in floor.event_info_dic[idx].params and floor.event_info_dic[idx].params[2] and 0 in floor.event_info_dic[idx].params and floor.event_info_dic[idx].params[0] > 0]
+                if len(lst) > 0: # イベントがあれば
+                    getyn_info_lst += [(floor.depth, lst)]
+
+            # 強制戦闘イベントの敵の範囲に所定のモンスターが含まれている場合は, その座標を返す
+            for depth,info_lst in getyn_info_lst:
+                for info in info_lst:
+                    if not info.is_enabled:
+                        continue # 無効イベント
+                    if info.params[0] == number: # 対象のモンスターの場合は, その座標を返す
+                        yield from ( (x,y,depth) for x,y in info.positions )
+            return
+        return getyn_location_generator(number=number)
+
+    def getEncounteEventLocationByMonsterNumber(self, number:int)->Iterator[tuple[int,int,int]]:
+        """モンスターIDから強制戦闘イベント座標を返す
+
+        Args:
+            number (int): モンスターID
+
+        Yields:
+            Iterator[tuple[int,int,int],None,None]: イベント発生座標のタプル(X,Y,Z)を返す
+        """
+        def encounte_location_generator(number:int)->Generator[tuple[int,int,int],None,None]:
+
+            encounte_info_lst:list[tuple[int,list[WizardryMazeFloorEventInfo]]]=[]
+            #
+            # 全階層の強制戦闘イベントを取得する
+            #
+            for floor_idx in sorted(self._floors.keys()):
+                floor=self._floors[floor_idx]
+                # 戦闘イベントのリスト
+                lst = [floor.event_info_dic[idx] for idx in floor.event_info_dic.keys() if floor.event_info_dic[idx].event_type == modules.consts.FLOOR_EVENT_ENCOUNTE]
+                if len(lst) > 0: # 戦闘イベントがあれば追加する
+                    encounte_info_lst += [(floor.depth, lst)]
+
+            # 強制戦闘イベントの敵の範囲に所定のモンスターが含まれている場合は, その座標を返す
+            for depth,info_lst in encounte_info_lst:
+                for info in info_lst:
+                    encounters=info.encounte_range
+                    if not encounters:
+                        continue # 不正データ
+                    if not info.is_enabled:
+                        continue # 無効イベント
+                    if encounters[0] != 0 and  number >= encounters[1] and encounters[2] >= number: # 範囲内にある場合
+                        yield from ( (x,y,depth) for x,y in info.positions )
+            return
+
+        return encounte_location_generator(number=number)
+
+    def getEventLocationByMonsterNumber(self, number:int)->Iterator[tuple[int,int,int]]:
+        """モンスターIDからマップ戦闘イベント座標を返す
+
+        Args:
+            number (int): モンスターID
+
+        Yields:
+            Iterator[tuple[int,int,int],None,None]: イベント発生座標のタプル(X,Y,Z)を返す
+        """
+        def generate_location(number:int)->Generator[tuple[int,int,int]]:
+
+            yield from self.getEncounteEventLocationByMonsterNumber(number=number)
+            #yield from self.getGetYNEventLocationByMonsterNumber(number=number)
+            return
+
+        return generate_location(number=number)
+
     def getEventString(self, info:WizardryMazeFloorEventInfo)->Optional[str]:
         """イベントの内容を表す文字列を返す
 
@@ -321,6 +518,7 @@ class scnInfoImpl(scnInfo):
 
         if info.event_type == modules.consts.FLOOR_EVENT_NORMAL:
             return None
+
         if info.event_type in modules.consts.FLOOR_EVENT_TO_STRING:
             name = modules.consts.FLOOR_EVENT_TO_STRING[info.event_type]
         else:
@@ -339,17 +537,17 @@ class scnInfoImpl(scnInfo):
         elif info.event_type == modules.consts.FLOOR_EVENT_TRANSFER:
             return self._handleTransferEvent(name=name, aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
         elif info.event_type == modules.consts.FLOOR_EVENT_OUCHY:
-                return self._handleOuchyEvent(name=name, aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
+            return self._handleOuchyEvent(name=name, aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
         elif info.event_type == modules.consts.FLOOR_EVENT_BUTTONZ:
-                return self._handleButtonEvent(name=name, aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
+            return self._handleButtonEvent(name=name, aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
         elif info.event_type == modules.consts.FLOOR_EVENT_ROCKWATE:
-                return self._handleRockwateEvent(name=name, aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
+            return self._handleRockwateEvent(name=name, aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
         elif info.event_type == modules.consts.FLOOR_EVENT_FIZZLE:
-                return self._handleFizzleEvent(name=name, aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
+            return self._handleFizzleEvent(name=name, aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
         elif info.event_type == modules.consts.FLOOR_EVENT_SCNMSG:
-                return self._handleScreenMessage(name=name, aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
+            return self._handleScreenMessage(name=name, aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
         elif info.event_type == modules.consts.FLOOR_EVENT_ENCOUNTE:
-                return self._handleEncounte(name=name, aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
+            return self._handleEncounte(name=name, aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
 
         return modules.consts.UNKNOWN_STRING
 
@@ -361,6 +559,8 @@ class scnInfoImpl(scnInfo):
         self._readMonsterTable(data=self._scenario) # モンスター情報を読み込む
         self._readItemTable(data=self._scenario) # アイテム情報を読み込む
         self._readRewardTable(data=self._scenario) # 報酬情報を読み込む
+
+        self._fixupMonsterInfo() # モンスター情報を埋める
         return
 
     def _plainOneDumpMonster(self, index:int, data:Any, fp: TextIO)->None:
@@ -382,12 +582,31 @@ class scnInfoImpl(scnInfo):
         unknown_name=data.name_unknown
         unknown_names=data.plural_name_unknown
         pic=data.pic
+        encounte_locs=list(self.getEventLocationByMonsterNumber(number=index))
+
+        emergence_floor_lst:list[str]=[]
+        if len(data.emergence_floor) > 0 or len(encounte_locs) > 0:
+
+            if len(data.emergence_floor) > 0:
+                emergence_floor_lst += [f"{modules.consts.DELIMITER_COMMA.join([str(item) for item in sorted(data.emergence_floor)])}"]
+
+            if len(encounte_locs) > 0:
+                emergence_floor_lst += [f"イベント戦闘:" + modules.consts.DELIMITER_COMMA.join([f"({pos[0]},{pos[1]},{pos[2]})" for pos in encounte_locs])]
+
+        elif len(data.follows) > 0:
+            emergence_floor_lst=["後続のみ"]
+
+        else:
+            emergence_floor_lst=["出現せず"]
+
+        emergence_floor=modules.consts.DELIMITER_COMMA.join(emergence_floor_lst)
+
         nr_member=f"{data.calc1.name} ({data.calc1.min}--{data.calc1.max})"
         hp_dice=f"{data.hprec.name} ({data.hprec.min}--{data.hprec.max})"
         enemy_class=f"{modules.consts.ENEMY_CLASS_DIC[data.enemy_class_value]} ({data.enemy_class_value})" if data.enemy_class_value in modules.consts.ENEMY_CLASS_DIC else f"{modules.consts.UNKNOWN_STRING} ({data.enemy_class_value})"
         ac=f"{data.ac}"
         swing_count=f"{data.max_swing_count}"
-        dmg_dice_table=",".join([data.damage_dices[key].name for key in sorted(data.damage_dices.keys()) if data.damage_dices[key].trial != 0 or data.damage_dices[key].add_val != 0 ])
+        dmg_dice_table=modules.consts.DELIMITER_COMMA.join([data.damage_dices[key].name for key in sorted(data.damage_dices.keys()) if data.damage_dices[key].trial != 0 or data.damage_dices[key].add_val != 0 ])
         exp=f"{data.exp_amount}"
         drain=f"{data.drain_amount}"
         heal_pts=f"{data.heal_pts}"
@@ -408,7 +627,7 @@ class scnInfoImpl(scnInfo):
         special_attack_string = property_dic_to_string(dic=data.special_attack_dic)
         weak_points_string = property_dic_to_string(dic=data.weak_point_dic)
         capability_string = property_dic_to_string(dic=data.capability_dic)
-        print(f"|{index}|{name}|{names}|{unknown_name}|{unknown_names}|{pic}|{nr_member}|{hp_dice}|"
+        print(f"|{index}|{name}|{names}|{unknown_name}|{unknown_names}|{pic}|{emergence_floor}|{nr_member}|{hp_dice}|"
               f"{enemy_class}|{ac}|{swing_count}|{dmg_dice_table}|{exp}|{drain}|{heal_pts}|{reward1}|{reward2}|"
               f"{follows}|{follow_percentage} %|{mage_spell}|{pri_spell}|{uniq}|{breathe}|"
               f"{unaffect_ratio} %|{resist_string}|{special_attack_string}|{weak_points_string}|"
@@ -469,7 +688,7 @@ class scnInfoImpl(scnInfo):
 
         print(f"|出現系列連番|モンスター出現テーブル番号|モンスター出現テーブル内の系列番号|出現モンスター最小値|出現モンスター最大値|系列上昇確率|当該出現テーブル番号内での系列発生確率|", file=fp)
         print(f"|---|---|---|---|---|---|---|", file=fp)
-        idx=1
+
         for idx, info in enumerate(floor.monster_series):
 
             table_idx, series_num, min_num, max_num, inc_perc, this_perc = info
@@ -638,38 +857,12 @@ class scnInfoImpl(scnInfo):
 
                 num, info = entry
 
-                enabled=True
-                reason:list[str]=[]
-                pos_list:list[tuple[int,int]]=[] # イベント発生座標
-                if num in floor.event_to_coord:
-                    pos_list=floor.event_to_coord[num]
-                else:
-                    enabled=False
-                    reason += ["イベント未配置"]
-
-                if info.event_type in [modules.consts.FLOOR_EVENT_ENCOUNTE]:
-                    if 0 in info.params:
-                        aux0=info.params[0]
-                        if aux0 == 0:
-                            enabled=False
-                            reason += ["出現回数制限(残り0回)"]
-
-                    lst=[event_pos for event_pos in pos_list if event_pos in floor.in_room and floor.in_room[event_pos]]
-                    if len(lst) == 0: # 玄室内にない
-                        enabled=False
-                        reason += ["玄室外"]
-
-
-
                 event_string = self.getEventString(info=info)
-                if len(pos_list) == 0:
-                    pos_string="なし"
-                else:
-                    pos_string=','.join([f"({pos[0]},{pos[1]})" for pos in pos_list])
-                if enabled:
+                pos_string=modules.consts.DELIMITER_COMMA.join([f"({pos[0]},{pos[1]})" for pos in info.positions])
+                if info.is_enabled:
                     print(f"|{num}|{pos_string}|{event_string}||", file=fp)
                 else:
-                    print(f"|{num}|{pos_string}|{event_string}| 無効なイベント ({','.join(reason)})|", file=fp)
+                    print(f"|{num}|{pos_string}|{event_string}| 無効なイベント ({info.reason_string})|", file=fp)
         else:
             print(f"", file=fp)
             print(f"イベント無し", file=fp)
@@ -802,6 +995,7 @@ class scnInfoImpl(scnInfo):
     def _plainOneDumpFloor(self, depth:int, floor:WizardryMazeFloorDataEntry, fp: TextIO)->None:
 
         print(f"### {depth}階 フロア情報", file=fp)
+
         self._plainOneDumpFloorLayout(depth=depth, floor=floor, fp=fp)
         self._plainOneDumpFloorRooms(depth=depth, floor=floor, fp=fp)
         self._plainOneDumpFloorEventMap(depth=depth, floor=floor, fp=fp)
@@ -812,9 +1006,9 @@ class scnInfoImpl(scnInfo):
 
     def _plainOneDumpRewardHumanReadable(self, reward_number:int, max_reward_range:int, reward:WizardryRewardDataEntry, fp: TextIO)->None:
 
-        null_prefix="|||||||"
-        null_reward_range_prefix='|'.join(['' for _i in range(max_reward_range)])
-        null_line=null_prefix + null_reward_range_prefix + '|'
+        #null_prefix="|||||||"
+        #null_reward_range_prefix='|'.join(['' for _i in range(max_reward_range)])
+        #null_line=null_prefix + null_reward_range_prefix + '|'
         index_string = f"{reward_number}"
         in_chest_string=f"宝箱あり" if reward.in_chest else f"宝箱なし"
         nr_rewards_string = f"{reward.reward_count_value}"
@@ -825,14 +1019,14 @@ class scnInfoImpl(scnInfo):
             reward_info=reward.rewards[info_index]
 
             if reward_info.percentage == 0:
-                print(f"{null_line}", file=fp)
+                #print(f"{null_line}", file=fp)
                 continue # 無効エントリ
 
             percentage_string = f"{reward_info.percentage:3} %"
             has_item_string = f"アイテム" if reward_info.has_item else f"お金"
 
             if info_index > reward.reward_count_value:
-                print(f"{null_line}", file=fp)
+                #print(f"{null_line}", file=fp)
                 continue # 無効エントリ
 
             if reward_info.has_item: # アイテム報酬の場合
@@ -843,10 +1037,17 @@ class scnInfoImpl(scnInfo):
             reward_lst:list[str]=[]
             actual_rewards=len(range_lst)
             for idx,gold_or_item in enumerate(range_lst):
+
                 if range_lst[idx][0] == 100:
-                    reward_lst += [f"{gold_or_item[1]}--{gold_or_item[2]}"]
+                    if reward_info.has_item:
+                        reward_lst += [f"{self._getItemRangeString(min=gold_or_item[1],max=gold_or_item[2])}"]
+                    else:
+                        reward_lst += [f"{gold_or_item[1]}--{gold_or_item[2]}"]
                 else:
-                    reward_lst += [f"{gold_or_item[1]}--{gold_or_item[2]} ( {range_lst[idx][0]} % )"]
+                    if reward_info.has_item:
+                        reward_lst += [f"{self._getItemRangeString(min=gold_or_item[1],max=gold_or_item[2])} ( {range_lst[idx][0]} % )"]
+                    else:
+                        reward_lst += [f"{gold_or_item[1]}--{gold_or_item[2]} ( {range_lst[idx][0]} % )"]
             each_reward="|".join(reward_lst)
             print(f"|{index_string}|{info_index} / {nr_rewards_string}|{in_chest_string}|{trap_string}|{percentage_string}|{has_item_string}|"
                 f"{each_reward}", end='', file=fp)
@@ -1004,12 +1205,12 @@ class scnInfoImpl(scnInfo):
 
         print("## モンスター一覧表",file=fp)
         print("",file=fp)
-        print(f"|連番|名前|名前複数形|不確定名称|不確定名称複数形|画像ファイルインデクス|出現数|HP|"
+        print(f"|連番|名前|名前複数形|不確定名称|不確定名称複数形|画像ファイルインデクス|出現階層|出現数|HP|"
               f"種別|アーマクラス|最大攻撃回数|各回の攻撃ダイス|経験値|ドレインレベル|リジェネレーション値|ワンダリングモンスター時報酬|玄室モンスター時報酬|"
               f"後続モンスター|後続モンスター出現率|魔術師呪文レベル|僧侶呪文レベル|出現回数制限|ブレス種別|"
               f"呪文無効化率|抵抗|攻撃付与|弱点|"
               f"能力|能力値|",file=fp)
-        print(f"|---|---|---|---|---|---|---|---|"
+        print(f"|---|---|---|---|---|---|---|---|---|"
               f"---|---|---|---|---|---|---|---|---|"
               f"---|---|---|---|---|---|"
               f"---|---|---|---|"
@@ -1108,12 +1309,12 @@ class scnInfoImpl(scnInfo):
         Args:
             fp (TextIO): 表示先ファイルのTextIO.
         """
-
-        self._dumpTOC(fp=fp)
-        self._dumpFloors(fp=fp)
+        # TODO
+        #self._dumpTOC(fp=fp)
+        #self._dumpFloors(fp=fp)
         self._dumpMonsters(fp=fp)
-        self._dumpItems(fp=fp)
-        self._dumpRewards(fp=fp)
+        #self._dumpItems(fp=fp)
+        #self._dumpRewards(fp=fp)
 
         return
 

@@ -12,7 +12,7 @@
 
 from __future__ import annotations # 型定義のみを参照する
 from typing import TYPE_CHECKING   # 型チェック実施判定
-#from typing import Any,Optional
+from typing import Optional
 from typing import Iterator
 
 if TYPE_CHECKING:
@@ -97,6 +97,44 @@ class WizardryMazeFloorEventInfo:
     """イベント種別"""
     params:dict[int,int]
     """イベントパラメタ番号(0-2)からパラメタ値への辞書"""
+
+    broken_reason:dict[int,bool]
+    """無効なイベントの場合の原因(該当箇所がTrueになる, 被該当箇所は登録されない)"""
+
+    positions:list[tuple[int,int]]
+    """発生座標(X,Y)のリスト"""
+
+    @property
+    def is_enabled(self)-> bool:
+        """有効なイベントの場合は, 真
+        """
+        return len(self.broken_reason) == 0
+    @property
+    def reason_string(self)->str:
+        """無効な理由を表す文字列
+        """
+        if len(self.broken_reason) == 0:
+            return modules.consts.OK_STRING
+        return modules.consts.DELIMITER_COMMA.join([modules.consts.FLOOR_EVENT_BROKEN_REASON_DIC[id] for id in sorted(modules.consts.FLOOR_EVENT_BROKEN_REASON_DIC.keys()) if id in self.broken_reason and self.broken_reason[id]])
+
+    @property
+    def encounte_range(self)->Optional[tuple[int,int,int]]:
+        """遭遇モンスターレンジを返す
+
+        Returns:
+            Optional[tuple[int, int, int]]: (遭遇回数, 最小モンスター番号, 最大モンスター番号)のタプル(戦闘イベントでない場合はNoneを返す)
+        """
+        if self.event_type != modules.consts.FLOOR_EVENT_ENCOUNTE:
+            return None
+
+        if 0 not in self.params or 1 not in self.params or 2 not in self.params:
+            return None # 不正データ
+
+        min = max = self.params[2]
+        if self.params[1] > 1:
+            max = self.params[2] + self.params[1] - 1
+
+        return self.params[0],min,max
 
 @dataclass
 class WizardryMazeMonsterTableEntry:
@@ -309,6 +347,11 @@ class WizardryMonsterDataEntry:
     capability_dic:dict[int,str]
     """能力"""
 
+    follows:set[tuple[int,int]]
+    """後続につくモンスターの番号と確率のタプルの集合"""
+    emergence_floor:set[int]
+    """出現フロア"""
+
 @dataclass
 class WizardryItemDataEntry:
     """アイテム情報"""
@@ -384,14 +427,12 @@ class WizardryRewardInfo:
     def gold_range_tuple(self)->Iterator[tuple[float, int, int]]:
         """総獲得Gold値の範囲のイテレータを返す
 
-
+        Returns:
+            tuple[int, int,int]: 獲得確率, 獲得最小値, 獲得最大値
         報酬情報一つ当たりの取得金額 =
             報酬情報の報酬額ダイス1(TRIES D AVEAMT + MINADD のダイスで決定)
           * 報酬情報の報酬乗数値(MULTX)
           * 報酬情報の報酬額ダイス2(TRIES2 D AVEAMT2 + MINADD2 のダイスで決定)
-
-        Returns:
-            tuple[int, int,int]: 獲得確率, 獲得最小値, 獲得最大値
         """
 
         if self.has_item: # アイテム取得の場合
@@ -413,12 +454,13 @@ class WizardryRewardInfo:
     def item_range_tuple(self)->Iterator[tuple[float, int, int]]:
         """獲得アイテムの範囲のイテレータを返す
 
+        Returns:
+            tuple[float, int,int]: 獲得確率, 獲得アイテム番号最小値, 獲得アイテム番号最大値
+
         取得するアイテムのアイテム番号 = アイテム番号最小値(MININDX) +
         アイテム出現レンジ基数(CHARIII) * アイテム出現値乗数(MFACTOR)
         + アイテム番号を算出する際に使用するダイス(ダイスの面数:RANGE) の値(1 D RANGE + 1 )
 
-        Returns:
-            tuple[float, int,int]: 獲得確率, 獲得アイテム番号最小値, 獲得アイテム番号最大値
         """
 
         def item_range_generator():
@@ -643,4 +685,4 @@ class WizardryRewardDataEntry:
             if self.trap_type_value & (1 << shift): # 対象のビットが立っていたら
                 candidate_traps += modules.consts.REWARD_TRAP_DIC[shift] # 罠の候補を加える
 
-        return ','.join(candidate_traps)
+        return modules.consts.DELIMITER_COMMA.join(candidate_traps)

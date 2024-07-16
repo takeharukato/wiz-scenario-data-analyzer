@@ -195,7 +195,9 @@ class monsterDecoder(dataEntryDecoder):
                                      sppc_value=0,
                                      special_attack_dic={},
                                      weak_point_dic={},
-                                     capability_dic={})
+                                     capability_dic={},
+                                     follows=set(),
+                                     emergence_floor=set())
 
         for key in decode_dict.keys():
             match key:

@@ -696,7 +696,7 @@ class mazeFloorDecoder(dataEntryDecoder):
             #
             # パラメタを設定する
             #
-            event_param=WizardryMazeFloorEventInfo(event_type=event_type_dic[event_number], params={})
+            event_param=WizardryMazeFloorEventInfo(event_type=event_type_dic[event_number], params={}, broken_reason={},positions=[])
             for aux_number in range(modules.consts.FLOOR_NR_EVENT_PARAMS): # AUX0からAUX2について
                 array_element=f"AUX{aux_number}_{event_number}" # データ格納先を算出
                 assert array_element in decode_dict, f"{array_element} not found"

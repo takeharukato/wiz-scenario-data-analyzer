@@ -146,7 +146,7 @@ def property_dic_to_string(dic:dict[int,str])->str:
     Returns:
         str: キー値昇順で値を','で区切った文字列
     """
-    return ','.join([dic[key] for key in sorted(dic.keys())])
+    return modules.consts.DELIMITER_COMMA.join([dic[key] for key in sorted(dic.keys())])
 
 def calcDataEntryOffset(toc:WizardrySCNTOC, category: str, item_len:int, index: int)->int:
     """シナリオ情報先頭からのオフセット位置(単位:バイト)を算出する
