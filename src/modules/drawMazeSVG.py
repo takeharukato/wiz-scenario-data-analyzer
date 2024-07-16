@@ -41,7 +41,7 @@ OFFSET_SIZE=2
 # 1cm単位でセルを切る
 CELL_SIZE=1
 # 格子の幅
-COORD_STROKE_WIDTH=1
+COORD_STROKE_WIDTH=.5
 # ドアの壁部分の幅
 DOOR_WALL_STROKE_WIDTH=3
 # 壁の幅
@@ -113,6 +113,11 @@ TEXT_SCALE_FACTOR=0.4
 LINE_TYPE_COORD=0 # 格子
 LINE_TYPE_WALL=1  # 壁
 LINE_TYPE_DOOR=2  # ドア
+#
+# 線分描画カテゴリ
+#
+LINE_STYLE_SOLID=1 # 実線
+LINE_STYLE_DASH=2  # 破線
 
 # 壁描画の種別一覧
 LINE_TYPES=(LINE_TYPE_COORD,LINE_TYPE_WALL,LINE_TYPE_DOOR)
@@ -173,7 +178,7 @@ class drawMazeSVG:
         # 描画領域の最下端にY軸のy=0がくるように変換する
         return x, height - 1 - y
 
-    def addLine(self, x:int, y:int, dir:int, line_type:int=LINE_TYPE_COORD)->None:
+    def addLine(self, x:int, y:int, dir:int, line_type:int=LINE_TYPE_COORD, line_style:int=LINE_STYLE_SOLID)->None:
         """壁, ドア, マップ格子で使用する線分描画処理
 
         Args:
@@ -237,12 +242,43 @@ class drawMazeSVG:
             ex = dx     # 左下の座標まで垂直線を引く
             ey = dy + 1
 
-        # 線分を描画する
-        line = self._dwg.line(start=((OFFSET_SIZE + sx)*cm, (OFFSET_SIZE + sy) * cm),  # type: ignore
-                              end=((OFFSET_SIZE + ex)*cm, (OFFSET_SIZE + ey) * cm))
+        if line_style == LINE_STYLE_DASH:
+            line_unit=CELL_SIZE / 8
+            if dir in [DRAW_MAZE_DIR_NORTH,DRAW_MAZE_DIR_SOUTH]:
+                # 水平線
+                last_x=sx
+                count=0
+                while ex > last_x:
+                    count += 1
+                    next_x=min(ex,last_x + line_unit)
+                    if count % 2:
+                        # 線分を描画する
+                        line = self._dwg.line(start=((OFFSET_SIZE + last_x)*cm, (OFFSET_SIZE + sy) * cm),  # type: ignore
+                                        end=((OFFSET_SIZE + next_x)*cm, (OFFSET_SIZE + ey) * cm))
+                        # 描画した線分を反映
+                        lines.add(line) # type: ignore
+                    last_x = next_x
+            else:
+                # 垂直線
+                last_y=sy
+                count=0
+                while ey > last_y:
+                    count += 1
+                    next_y=min(ey,last_y + line_unit)
+                    if count % 2:
+                        # 線分を描画する
+                        line = self._dwg.line(start=((OFFSET_SIZE + sx)*cm, (OFFSET_SIZE + last_y) * cm),  # type: ignore
+                                        end=((OFFSET_SIZE + ex)*cm, (OFFSET_SIZE + next_y) * cm))
+                        # 描画した線分を反映
+                        lines.add(line) # type: ignore
+                    last_y = next_y
 
-        # 描画した線分を反映
-        lines.add(line) # type: ignore
+        else:
+            # 線分を描画する
+            line = self._dwg.line(start=((OFFSET_SIZE + sx)*cm, (OFFSET_SIZE + sy) * cm),  # type: ignore
+                              end=((OFFSET_SIZE + ex)*cm, (OFFSET_SIZE + ey) * cm))
+            # 描画した線分を反映
+            lines.add(line) # type: ignore
 
         return
 
@@ -464,7 +500,7 @@ class drawMazeSVG:
         for x in range(width): # X座標について
             for y in range(height): # Y座標について
                 for dir in [DRAW_MAZE_DIR_NORTH,DRAW_MAZE_DIR_EAST,DRAW_MAZE_DIR_SOUTH,DRAW_MAZE_DIR_WEST]: # 全ての向きについて
-                    self.addLine(x=x, y=y, dir=dir, line_type=LINE_TYPE_COORD) # 格子描画幅で壁を書き込む
+                    self.addLine(x=x, y=y, dir=dir, line_type=LINE_TYPE_COORD, line_style=LINE_STYLE_DASH) # 格子描画幅で壁を書き込む
 
         return
 
