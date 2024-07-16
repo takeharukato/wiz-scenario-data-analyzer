@@ -439,7 +439,7 @@ class scnInfoImpl(scnInfo):
             for floor_idx in sorted(self._floors.keys()):
                 floor=self._floors[floor_idx]
                 # SCNMSGイベントのGETYNイベントでモンスター遭遇があるものを抽出
-                lst = [floor.event_info_dic[idx] for idx in floor.event_info_dic.keys() if floor.event_info_dic[idx].event_type == modules.consts.FLOOR_EVENT_SCNMSG and 2 in floor.event_info_dic[idx].params and floor.event_info_dic[idx].params[2] and 0 in floor.event_info_dic[idx].params and floor.event_info_dic[idx].params[0] > 0]
+                lst = [floor.event_info_dic[idx] for idx in floor.event_info_dic.keys() if floor.event_info_dic[idx].event_type == modules.consts.FLOOR_EVENT_SCNMSG and 2 in floor.event_info_dic[idx].params and floor.event_info_dic[idx].params[2] == modules.consts.SCNMSG_TYPE_GETYN and 0 in floor.event_info_dic[idx].params and floor.event_info_dic[idx].params[0] > 0]
                 if len(lst) > 0: # イベントがあれば
                     getyn_info_lst += [(floor.depth, lst)]
 
@@ -501,7 +501,7 @@ class scnInfoImpl(scnInfo):
         def generate_location(number:int)->Generator[tuple[int,int,int]]:
 
             yield from self.getEncounteEventLocationByMonsterNumber(number=number)
-            #yield from self.getGetYNEventLocationByMonsterNumber(number=number)
+            yield from self.getGetYNEventLocationByMonsterNumber(number=number)
             return
 
         return generate_location(number=number)
@@ -591,7 +591,7 @@ class scnInfoImpl(scnInfo):
                 emergence_floor_lst += [f"{modules.consts.DELIMITER_COMMA.join([str(item) for item in sorted(data.emergence_floor)])}"]
 
             if len(encounte_locs) > 0:
-                emergence_floor_lst += [f"イベント戦闘:" + modules.consts.DELIMITER_COMMA.join([f"({pos[0]},{pos[1]},{pos[2]})" for pos in encounte_locs])]
+                emergence_floor_lst += [f"イベント戦闘:" + modules.consts.DELIMITER_COMMA.join([f"{pos[2]:2} 階 ({pos[0]},{pos[1]})" for pos in encounte_locs])]
 
         elif len(data.follows) > 0:
             emergence_floor_lst=["後続のみ"]
@@ -1309,12 +1309,12 @@ class scnInfoImpl(scnInfo):
         Args:
             fp (TextIO): 表示先ファイルのTextIO.
         """
-        # TODO
-        #self._dumpTOC(fp=fp)
-        #self._dumpFloors(fp=fp)
+
+        self._dumpTOC(fp=fp)
+        self._dumpFloors(fp=fp)
         self._dumpMonsters(fp=fp)
-        #self._dumpItems(fp=fp)
-        #self._dumpRewards(fp=fp)
+        self._dumpItems(fp=fp)
+        self._dumpRewards(fp=fp)
 
         return
 
