@@ -245,17 +245,17 @@ class scnInfoImpl(scnInfo):
         min = max = aux2
         if aux1 > 1:
             max = aux2 + aux1 - 1
+
+        nr_count_string=""
+        if aux0 > 0:
+            nr_count_string=f"最大{aux0}回, "
+
         if min == max:
             monster_name=f"{self._monsters[min].name} ({min})" if min in self._monsters else f"{min}番のモンスター"
         else:
-            #min_monster_name=f"{self._monsters[min].name} ({min})" if min in self._monsters else f"{min}番のモンスター"
-            #max_monster_name=f"{self._monsters[max].name} ({max})" if max in self._monsters else f"{max}番のモンスター"
+            monster_name=f"{self._getMonsterRangeString(min=min,max=max)} 内のいずれかの敵"
 
-            if aux0 > 0:
-                monster_name=f"最大{aux0}回, {self._getMonsterRangeString(min=min,max=max)} 内のいずれかの敵"
-            else:
-                monster_name=f"{self._getMonsterRangeString(min=min,max=max)} 内のいずれかの敵"
-        return f"{name}: {monster_name}との戦闘"
+        return f"{name}: {nr_count_string}{monster_name}との戦闘"
 
     def _fillFloorInfo(self, depth:int, floor:WizardryMazeFloorDataEntry)->None:
 
@@ -1438,9 +1438,7 @@ class scnInfoImpl(scnInfo):
             fp (TextIO): 出力先.
         """
 
-        print(f"# シナリオ情報", file=fp)
-        print(f"", file=fp)
-        print(f'シナリオ名:"{self.toc.game_name}"', file=fp)
+        print(f'# シナリオ情報 (シナリオ名:"{self.toc.game_name}")', file=fp)
         print(f"", file=fp)
 
         print(f"## ディスクレイアウト", file=fp)
