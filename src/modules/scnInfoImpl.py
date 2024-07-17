@@ -1539,6 +1539,25 @@ class scnInfoImpl(scnInfo):
                     convertSVGtoRaster(infile=svg_file, outfile=f"{basename}.{modules.consts.DEFAULT_RASTER_IMAGE_EXT}", format=modules.consts.RASTER_IMAGE_TYPE_PNG)
 
         return
+    def _dumpCemetary(self, fp:TextIO)->None:
+
+        print(f"", file=fp)
+        print(f"### CEMETARY", file=fp)
+        print(f"", file=fp)
+
+        basename_prefix = modules.consts.CHARIMG_FILENAME_PREFIX_DIC[modules.consts.CHARIMG_TYPE_CEMETARY]
+        ext = f"{modules.consts.DEFAULT_RASTER_IMAGE_EXT}" # TODO ファイル形式を選択可能にする
+
+        cemetary_lines=6
+        cemetary_per_line=4
+        cemetary_start_idx=11
+        for line in range(cemetary_lines):
+            for col in range(cemetary_per_line):
+                idx=line*cemetary_per_line + col
+                file_name=f"{basename_prefix}-{idx+cemetary_start_idx}.{ext}"
+                print(f"![文字コード-{modules.consts.CHARIMG_FILENAME_PREFIX_DIC[modules.consts.CHARIMG_TYPE_CEMETARY]}-{idx+cemetary_start_idx}]({file_name})",end='',file=fp)
+            print(f"", file=fp)
+        return
 
     def _dumpCharSet(self, fp:TextIO)->None:
         """文字コード表を表示する
@@ -1586,6 +1605,8 @@ class scnInfoImpl(scnInfo):
                     print(f"{ch_str}|![文字コード-{modules.consts.CHARIMG_FILENAME_PREFIX_DIC[char_set_type]}-{idx}]({file_name})|", end='', file=fp)
                 print(f"", file=fp)
             pass
+
+        self._dumpCemetary(fp=fp)
 
         print(f"", file=fp)
 

@@ -62,14 +62,17 @@ class drawCharImgSVG:
 
         return
 
-    def drawBitMap(self, char_img:WizardryCharImgDataEntry) -> None:
+    def drawBitMap(self, char_img:WizardryCharImgDataEntry, off_x: int=0, off_y:int=0) -> None:
         """キャラクタビットマップを描画する
 
         Args:
             char_img (WizardryCharImgDataEntry): キャラクタビットマップ情報
         """
 
-        # バックグラウンド要素のグループを定義
+        offset_x = off_x * modules.consts.CHARIMG_WIDTH
+        offset_y = off_x * modules.consts.CHARIMG_HEIGHT
+
+        # 要素のグループを定義
         output_bitmap = self._dwg.add(self._dwg.g(id='charImg')) # type: ignore
         for row in range(modules.consts.CHARIMG_HEIGHT):
             if row not in char_img.bitmap:
@@ -81,8 +84,8 @@ class drawCharImgSVG:
                     color=FOREGROUND_COLOR
                 else:
                     color=BACKGROUND_COLOR
-                rectangle = self._dwg.rect(insert=(col*LEN_PER_PIXEL + OFFSET_SIZE, # type: ignore
-                                                   row*LEN_PER_PIXEL + OFFSET_SIZE),
+                rectangle = self._dwg.rect(insert=(col*LEN_PER_PIXEL + OFFSET_SIZE + offset_x, # type: ignore
+                                                   row*LEN_PER_PIXEL + OFFSET_SIZE + offset_y),
                                         size=((LEN_PER_PIXEL), (LEN_PER_PIXEL)),
                                         fill=color)
                 # 描画内容を反映する
