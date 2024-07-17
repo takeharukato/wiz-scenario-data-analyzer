@@ -69,6 +69,8 @@ DIR_VALID=(DIR_NORTH,DIR_EAST,DIR_SOUTH,DIR_WEST)
 
 DELIMITER_COMMA=","
 DELIMITER_SPC=" "
+# バックスラッシュ以外のマークダウンエスケープ対象文字
+MARKDOWN_ESCAPE_CHARS=['#','+',"-","*","_","`",".","!","{","}","[","]","(",")"]
 #
 # シナリオ情報の目次
 #

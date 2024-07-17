@@ -702,3 +702,61 @@ class WizardryMessageData:
 
     messages:dict[int,WizardryMessageDataEntry]
     """メッセージ番号からメッセージへの辞書"""
+
+    msg_to_pos:dict[int,tuple[int,int,int]]
+    """メッセージ番号から発生座標への辞書"""
+    pos_to_msg:dict[tuple[int,int,int],int]
+    """発生座標からメッセージ番号への辞書"""
+    def numberInMessages(self, number:int)->tuple[bool,int,int]:
+        """メッセージ番号に対応するメッセージが存在することを確認する
+
+        Args:
+            number (int): メッセージ番号
+
+        Returns:
+            tuple[bool, int, int]: (メッセージの妥当性の真偽値, メッセージ番号, オフセット行)を返す
+        """
+
+        if number in self.messages:
+            return True,number,0 # メッセージの先頭から表示する場合
+
+        #
+        # メッセージファイル内にない場合
+        #
+        max_num = max(self.messages.keys())
+        max_lines = max_num + len(self.messages[max_num].lines)
+        if number >= max_lines:
+            return False,0,0
+
+        #
+        # メッセージの途中から表示する場合
+        #
+        candidate=number
+        while candidate >= 0 and candidate not in self.messages:
+            candidate -= 1
+            if candidate in self.messages:
+                this_msg=self.messages[candidate]
+                offset = number - candidate
+                assert len(this_msg.lines) > offset, f"Invalid index {offset} len=({len(this_msg.lines)})"
+                return True, candidate, offset
+
+        return False,0,0
+
+    def getOneLineMessage(self, number:int)->str:
+        """メッセージを空白で区切って一行で返す
+
+        Args:
+            number (int): メッセージ番号
+
+        Returns:
+            str: メッセージ文字列
+        """
+        if len(self.messages) == 0:
+            return modules.consts.UNKNOWN_STRING # 該当するメッセージがない
+        does_exist,idx,offset = self.numberInMessages(number=number)
+        if not does_exist:
+            return modules.consts.UNKNOWN_STRING # 該当するメッセージがない
+
+        assert idx in self.messages, f"Invalid index:{idx}"
+        # メッセージを返す
+        return modules.consts.DELIMITER_SPC.join(self.messages[idx].lines[offset:])

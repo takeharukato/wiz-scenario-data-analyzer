@@ -42,17 +42,17 @@ from modules.itemDecoder import itemDecoder
 from modules.rewardDecoder import rewardDecoder
 from modules.msgDecoderImpl import messageDecoder
 from modules.drawMazeSVG import drawMazeSVG
-from modules.utils import property_dic_to_string,value_to_string,convertSVGtoRaster
+from modules.utils import property_dic_to_string,value_to_string,convertSVGtoRaster,escapeMarkdownChars
 import modules.consts
 
 class scnInfoImpl(scnInfo):
 
-    _scenario:Any
+    _scenario_data:Any
     """シナリオ情報ファイルのメモリイメージ"""
-    _message:Any
+    _message_data:Any
     """メッセージ情報ファイルのメモリイメージ"""
 
-    _msg_data:WizardryMessageData
+    _maze_messages:WizardryMessageData
     """メッセージ情報"""
 
     _toc:WizardrySCNTOC
@@ -71,15 +71,15 @@ class scnInfoImpl(scnInfo):
 
     def __init__(self, scenario:Any, message:Any) -> None:
 
-        self._scenario=scenario
-        self._message=message
+        self._scenario_data=scenario
+        self._message_data=message
 
         self._floors={}
         self._monsters={}
         self._items={}
         self._rewards={}
         self._reward2monster={}
-        self._msg_data=WizardryMessageData(messages={})
+        self._maze_messages=WizardryMessageData(messages={},msg_to_pos={},pos_to_msg={})
         return
 
     def _getMonsterRangeString(self, min:int, max:int)-> str:
@@ -183,7 +183,12 @@ class scnInfoImpl(scnInfo):
 
     def _handleScreenMessage(self, name:str, aux0:int, aux1:int, aux2:int, *args:Any)->str:
 
-        common=f"メッセージ番号{aux1:3}番"
+        _enabled,number,offset=self._maze_messages.numberInMessages(number=aux1)
+        msg_string=self._maze_messages.getOneLineMessage(number=aux1)
+        if offset == 0:
+            common=f"メッセージ番号{number:3}番 ( {escapeMarkdownChars(in_str=msg_string)} )"
+        else:
+            common=f"メッセージ番号{number:3}番 {offset+1}行目以降 ( {escapeMarkdownChars(in_str=msg_string)} )"
 
         if -1000 >= aux0:
             aux0 += 1000
@@ -191,49 +196,49 @@ class scnInfoImpl(scnInfo):
         if aux2 == modules.consts.SCNMSG_TYPE_TRYGET:
             item_name=f"{self._items[aux0].name} ({aux0})" if aux0 in self._items else f"{aux0}番のアイテム"
 
-            return f"{common}のメッセージを表示し, {item_name} を取得"
+            return f"{common}を表示し, {item_name} を取得"
 
         if aux2 == modules.consts.SCNMSG_TYPE_WHOWADE:
-            return f"{common}のメッセージを表示し, 泉に入るメンバを選択"
+            return f"{common}を表示し, 泉に入るメンバを選択"
 
         if aux2 == modules.consts.SCNMSG_TYPE_GETYN:
 
             if aux0 >= 0:
                 monster_name=f"{self._monsters[aux0].name} ({aux0})" if aux0 in self._monsters else f"{aux0}番のモンスター"
-                return f"{common}のメッセージを表示し, 「さがしますか(Y/N)?」を表示して, 'Y'を押下した場合, {monster_name}との戦闘を実施"
+                return f"{common}を表示し, 「さがしますか(Y/N)?」を表示して, 'Y'を押下した場合, {monster_name}との戦闘を実施"
             else:
                 aux0 *= -1
                 item_name=f"{self._items[aux0].name} ({aux0})" if aux0 in self._items else f"{aux0}番のアイテム"
-                return f"{common}のメッセージを表示し, 「さがしますか(Y/N)?」を表示して, 'Y'を押下した場合, {item_name}を取得"
+                return f"{common}を表示し, 「さがしますか(Y/N)?」を表示して, 'Y'を押下した場合, {item_name}を取得"
 
         if aux2 == modules.consts.SCNMSG_TYPE_ITM2PASS:
             item_name=f"{self._items[aux0].name} ({aux0})" if aux0 in self._items else f"{aux0}番のアイテム"
-            return f"{item_name}を所持していない場合, {common}のメッセージを表示して, ひとつ前の座標に戻る"
+            return f"{item_name}を所持していない場合, {common}を表示して, ひとつ前の座標に戻る"
 
         if aux2 == modules.consts.SCNMSG_TYPE_CHKALIGN:
-            return f"パーティの属性(アラインメント)によって, {common}のメッセージを表示して, ひとつ前の座標に戻る"
+            return f"パーティの属性(アラインメント)によって, {common}を表示して, ひとつ前の座標に戻る"
 
         if aux2 == modules.consts.SCNMSG_TYPE_CHKAUX0:
             if aux0 == 99:
-                return f"{common}のメッセージを表示し, MILWAの効果を50ターン延長"
+                return f"{common}を表示し, MILWAの効果を50ターン延長"
             elif aux0 == -99:
-                return f"{common}のメッセージを表示し, MILWAの効果を打ち消す"
+                return f"{common}を表示し, MILWAの効果を打ち消す"
             else:
-                return f"{common}のメッセージを表示し, 迷宮からでるまで, {aux0}の値だけパーティのACの数値を下げる(防御力を上げる)"
+                return f"{common}を表示し, 迷宮からでるまで, {aux0}の値だけパーティのACの数値を下げる(防御力を上げる)"
 
         if aux2 == modules.consts.SCNMSG_TYPE_BCK2SHOP:
-            return f"{common}のメッセージを表示し, 城に戻る"
+            return f"{common}を表示し, 城に戻る"
 
         if aux2 == modules.consts.SCNMSG_TYPE_LOOKOUT:
-            return f"{common}のメッセージを表示し, 半径{aux0}の範囲に, モンスターを配置する"
+            return f"{common}を表示し, 半径{aux0}の範囲に, モンスターを配置する"
 
         if aux2 == modules.consts.SCNMSG_TYPE_RIDDLES:
-            f"{common}のメッセージを表示して, 謎かけを行い, 回答番号{aux0}で指定された答え(を複合した結果)と異なっていた場合, ひとつ前の座標に戻る"
+            f"{common}を表示して, 謎かけを行い, 回答番号{aux0}で指定された答え(を複合した結果)と異なっていた場合, ひとつ前の座標に戻る"
 
         if aux2 == modules.consts.SCNMSG_TYPE_FEEIS:
-            f"{common}のメッセージを表示して, お金を要求する. 所有金額が要求金額に満たない場合や支払いを拒否した場合, ひとつ前の座標に戻る"
+            f"{common}を表示して, お金を要求する. 所有金額が要求金額に満たない場合や支払いを拒否した場合, ひとつ前の座標に戻る"
 
-        return f"{common}のメッセージを表示"
+        return f"{common}を表示"
 
     def _handleEncounte(self, name:str, aux0:int, aux1:int, aux2:int, *args:Any)->str:
 
@@ -298,6 +303,19 @@ class scnInfoImpl(scnInfo):
                 if len(lst) == 0: # 玄室内にない
                     info.broken_reason[modules.consts.FLOOR_EVENT_REASON_NOT_IN_ROOM]=True
 
+        #
+        # メッセージ情報への反映
+        #
+        for info in ( entry for entry in floor.event_info_dic.values() if entry.event_type == modules.consts.FLOOR_EVENT_SCNMSG ):
+            # 各メッセージ情報について
+            if info.is_enabled:
+                for floor_pos in info.positions:
+                    pos = (floor_pos[0],floor_pos[1],depth)
+                    number=info.params[1]
+                    # メッセージ番号を補正する
+                    _valid,fixed_number,_offset=self._maze_messages.numberInMessages(number=number)
+                    self._maze_messages.pos_to_msg[pos] = fixed_number
+                    self._maze_messages.msg_to_pos[fixed_number] = pos
         return
 
     def _fixupMonsterInfo(self)->None:
@@ -372,7 +390,6 @@ class scnInfoImpl(scnInfo):
                 floor.depth = idx + 1
                 self._fillFloorInfo(depth=idx+1, floor=floor)
                 self._floors[idx]=floor
-
 
         return
 
@@ -704,20 +721,20 @@ class scnInfoImpl(scnInfo):
         """
 
         decoder = messageDecoder()
-        self._msg_data = decoder.decodeMessageFile(data=data)
+        self._maze_messages = decoder.decodeMessageFile(data=data)
         return
 
     def readContents(self)->None:
         """シナリオ情報を読み込む
         """
 
-        self._readMessages(data=self._message) # メッセージ情報を読み込む
+        self._readMessages(data=self._message_data) # メッセージ情報を読み込む
 
-        self._readTOC(data=self._scenario) # 目次情報を読み込む
-        self._readFloorTable(data=self._scenario) # 迷宮フロア情報を読み込む
-        self._readMonsterTable(data=self._scenario) # モンスター情報を読み込む
-        self._readItemTable(data=self._scenario) # アイテム情報を読み込む
-        self._readRewardTable(data=self._scenario) # 報酬情報を読み込む
+        self._readTOC(data=self._scenario_data) # 目次情報を読み込む
+        self._readFloorTable(data=self._scenario_data) # 迷宮フロア情報を読み込む
+        self._readMonsterTable(data=self._scenario_data) # モンスター情報を読み込む
+        self._readItemTable(data=self._scenario_data) # アイテム情報を読み込む
+        self._readRewardTable(data=self._scenario_data) # 報酬情報を読み込む
 
         self._fixupMonsterInfo() # モンスター情報を埋める
         return

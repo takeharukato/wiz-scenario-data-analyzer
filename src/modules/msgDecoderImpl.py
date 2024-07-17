@@ -105,7 +105,7 @@ class messageDecoder(msgDecoder):
 
         msg_data_size = len(data) # ファイル長
 
-        res = WizardryMessageData(messages={})
+        res = WizardryMessageData(messages={},msg_to_pos={},pos_to_msg={})
 
         line_num = 0 # 行番号を初期化
         data_offset = self._line_number_to_offset(line_num=line_num)

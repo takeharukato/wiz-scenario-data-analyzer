@@ -208,3 +208,20 @@ def convertSVGtoRaster(infile:str, outfile:str, format:str=modules.consts.DEFAUL
     renderPM.drawToFile(drawing, outfile, fmt=modules.consts.RASTER_IMAGE_TYPE_DIC[upper_format])
 
     return
+
+def escapeMarkdownChars(in_str:str)->str:
+    """マークダウンの特殊文字をエスケープする
+
+    Args:
+        in_str (str): 文字列
+
+    Returns:
+        str: 変換後の文字列
+    """
+    # バックスラッシュを変換
+    res=in_str.replace('\\', '\\\\')
+
+    for ch in modules.consts.MARKDOWN_ESCAPE_CHARS:
+        res=res.replace(ch, f"\\{ch}") # エスケープ
+
+    return res
