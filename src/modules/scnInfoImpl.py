@@ -1582,7 +1582,7 @@ class scnInfoImpl(scnInfo):
 
         self._drawCharSet() # 文字イメージを出力する
 
-        char_per_row=8
+        char_per_row=4
         nr_rows = modules.consts.CHARIMG_PER_CHARSET // char_per_row
 
         print(f"", file=fp)
