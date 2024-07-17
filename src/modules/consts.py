@@ -52,6 +52,8 @@ DEFAULT_SCENARIO_DATA_FILE="SCENARIO.DATA"
 DEFAULT_MSG_FILE="SCENARIO.MESGS"
 # データ解析結果不明
 UNKNOWN_STRING="不明"
+# 未定義
+UNDEFINED_STRING="未定義"
 # 正常なイベントなど
 OK_STRING="正常"
 # ダイス情報の種類( nDt + a 形式)
@@ -368,6 +370,8 @@ CHARIMG_FILENAME_PREFIX_DIC:dict[int,str]={
     CHARIMG_TYPE_NORMAL:"charset-normal",
     CHARIMG_TYPE_CEMETARY:"charset-cemetary",
 }
+
+CHARIMG_CH_CODE_START=32 # 空白文字から開始
 
 # 文字セット種別からシナリオ情報先頭からのオフセット位置へのマップ
 CHARIMG_TYPE_TO_BLK_OFFSET:dict[int,int]={

@@ -30,8 +30,10 @@ from svgwrite import cm # type: ignore
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-OFFSET_SIZE=0
-LEN_PER_PIXEL=1
+
+LEN_PER_PIXEL=2
+OFFSET_MARGIN=0
+OFFSET_SIZE=OFFSET_MARGIN*LEN_PER_PIXEL
 
 BACKGROUND_COLOR='black'
 FOREGROUND_COLOR='white'
@@ -105,8 +107,8 @@ class drawCharImgSVG:
 
         # 四角で塗りつぶす
         rectangle = self._dwg.rect(insert=(0, 0), # type: ignore
-                                   size=((modules.consts.CHARIMG_WIDTH + OFFSET_SIZE*2),
-                                         (modules.consts.CHARIMG_HEIGHT + OFFSET_SIZE*2)),
+                                   size=((modules.consts.CHARIMG_WIDTH*LEN_PER_PIXEL + OFFSET_SIZE*2),
+                                         (modules.consts.CHARIMG_HEIGHT*LEN_PER_PIXEL + OFFSET_SIZE*2)),
                                    fill=BACKGROUND_COLOR)
         # 描画内容を反映する
         back_ground.add(rectangle) # type: ignore

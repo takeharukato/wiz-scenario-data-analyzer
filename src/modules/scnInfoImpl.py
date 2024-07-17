@@ -1504,7 +1504,6 @@ class scnInfoImpl(scnInfo):
         print(f"|---|---|---|---|---|---|", file=fp)
         for idx,name in enumerate(modules.consts.DBG_WIZ_SPELL_NAMES):
             print(f"|{idx}|{name}|{self.toc.SPELLHSH[idx]}({hex(self.toc.SPELLHSH[idx])})|{self.toc.SPELLGRP[idx]}|{modules.consts.DBG_WIZ_SPELL_TYPES[self.toc.SPELL012[idx]]}({self.toc.SPELL012[idx]})|", file=fp)
-        print(f"", file=fp)
 
         return
     def _drawCharSet(self)->None:
@@ -1541,6 +1540,57 @@ class scnInfoImpl(scnInfo):
 
         return
 
+    def _dumpCharSet(self, fp:TextIO)->None:
+        """文字コード表を表示する
+
+        Args:
+            fp (TextIO): 出力先
+        """
+
+        self._drawCharSet() # 文字イメージを出力する
+
+        char_per_row=8
+        nr_rows = modules.consts.CHARIMG_PER_CHARSET // char_per_row
+
+        print(f"", file=fp)
+        print(f"## キャラクタセットイメージ", file=fp)
+
+
+        for char_set_type in modules.consts.CHARIMG_TYPE_VALID:
+
+            if char_set_type not in modules.consts.CHARIMG_FILENAME_PREFIX_DIC:
+                continue
+
+            basename_prefix = modules.consts.CHARIMG_FILENAME_PREFIX_DIC[char_set_type]
+            ext = f"{modules.consts.DEFAULT_RASTER_IMAGE_EXT}" # TODO ファイル形式を選択可能にする
+            print(f"", file=fp)
+            if char_set_type == modules.consts.CHARIMG_TYPE_NORMAL:
+                print(f"### 通常キャラクタセットイメージ表", file=fp)
+            else:
+                print(f"### 全滅時(CEMETARY)キャラクタセットイメージ表", file=fp)
+
+            print(f"", file=fp)
+
+            title='|' + '|'.join([f"文字|文字イメージ" for _i in range(char_per_row)]) + '|'
+            sep='|' + '|'.join([f"---|---" for _i in range(char_per_row)]) + '|'
+
+            print(f"{title}", file=fp)
+            print(f"{sep}", file=fp)
+
+            for row in range(nr_rows):
+                print(f"|", end='', file=fp)
+                for col in range(char_per_row):
+                    idx = row*char_per_row + col
+                    file_name=f"{basename_prefix}-{idx}.{ext}"
+                    ch_str = escapeMarkdownChars(self._char_sets.index_to_char(index=idx))
+                    print(f"{ch_str}|![文字コード-{modules.consts.CHARIMG_FILENAME_PREFIX_DIC[char_set_type]}-{idx}]({file_name})|", end='', file=fp)
+                print(f"", file=fp)
+            pass
+
+        print(f"", file=fp)
+
+        return
+
     def plainDump(self, fp:TextIO)->None:
         """テキスト形式で表示する
 
@@ -1549,7 +1599,7 @@ class scnInfoImpl(scnInfo):
         """
 
         self._dumpTOC(fp=fp)
-        self._drawCharSet()
+        self._dumpCharSet(fp=fp)
         self._dumpFloors(fp=fp)
         self._dumpMonsters(fp=fp)
         self._dumpItems(fp=fp)

@@ -775,3 +775,25 @@ class WizardryCharImgData:
     """通常文字"""
     cemetary_bitmap:dict[int,WizardryCharImgDataEntry]
     """全滅時文字"""
+    def index_to_char(self, index:int)->str:
+        """インデクス番号から文字を返す
+
+        Args:
+            index (int): インデクス番号
+
+        Returns:
+            str: 文字を表す文字列
+        """
+        if 0 > index or index >= modules.consts.CHARIMG_PER_CHARSET:
+            return modules.consts.UNDEFINED_STRING # 未定義
+
+        char_code = index + modules.consts.CHARIMG_CH_CODE_START # 空白文字から開始
+        return chr(char_code) # 文字を返す
+    def char_to_index(self, char:str)->int:
+        """文字からインデクスを返す"""
+        if len(char) != 0:
+            return 0 # 0を返す
+        char_code = ord(char)
+        if char_code >= (modules.consts.CHARIMG_CH_CODE_START + modules.consts.CHARIMG_PER_CHARSET):
+            return 0 # 0を返す
+        return char_code - modules.consts.CHARIMG_CH_CODE_START
