@@ -139,7 +139,7 @@ DRAW_MAZE_DIR_TO_DEGREE:dict[int,int]={
 
 class drawMazeSVG:
 
-    _dwg:svgwrite.Drawing
+    _dwg:svgwrite.Drawing # type: ignore
     """描画領域"""
     _outfile_path:str
     """描画ファイルのパス名"""
@@ -152,7 +152,10 @@ class drawMazeSVG:
             draw_coordinate (bool, optional): 格子を描画する. Defaults to True.
         """
         # ドローイング領域を作成
-        self._dwg = svgwrite.Drawing(filename=outfile, size = (f"{modules.consts.FLOOR_WIDTH+OFFSET_SIZE*2}cm", f"{modules.consts.FLOOR_HEIGHT+OFFSET_SIZE*2}cm"), debug=True)
+        self._dwg = svgwrite.Drawing(filename=outfile, # type: ignore
+                                    size = (f"{modules.consts.FLOOR_WIDTH+OFFSET_SIZE*2}cm",
+                                            f"{modules.consts.FLOOR_HEIGHT+OFFSET_SIZE*2}cm"),
+                                    debug=True)
 
         self.fill_background()     # 背景を塗りつぶす
         self.fill_position_mark()  # 座標を書き込む
@@ -565,7 +568,7 @@ class drawMazeSVG:
         """ファイルに保存する
         """
 
-        self._dwg.save() # ファイルに保存
+        self._dwg.save() # type: ignore 画像を保存する
         return
 
     @property

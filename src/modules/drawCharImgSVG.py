@@ -30,19 +30,18 @@ from svgwrite import cm # type: ignore
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-
-LEN_PER_PIXEL=2
-OFFSET_MARGIN=0
-OFFSET_SIZE=OFFSET_MARGIN*LEN_PER_PIXEL
-
-BACKGROUND_COLOR='black'
-FOREGROUND_COLOR='white'
 from modules.datadef import WizardryCharImgDataEntry
 import modules.consts
 
+OFFSET_MARGIN=0
+OFFSET_SIZE=OFFSET_MARGIN*modules.consts.CHARIMG_LEN_PER_PIXEL
+
+BACKGROUND_COLOR='black'
+FOREGROUND_COLOR='white'
+
 class drawCharImgSVG:
 
-    _dwg:svgwrite.Drawing
+    _dwg:svgwrite.Drawing # type: ignore
     """描画領域"""
     _outfile_path:str
     """描画ファイルのパス名"""
@@ -54,9 +53,9 @@ class drawCharImgSVG:
             outfile (str): 出力先ファイルへのパス
         """
         # ドローイング領域を作成
-        self._dwg = svgwrite.Drawing(filename=outfile,
-                                     size = (LEN_PER_PIXEL * modules.consts.CHARIMG_WIDTH + OFFSET_SIZE * 2,
-                                            LEN_PER_PIXEL * modules.consts.CHARIMG_HEIGHT + OFFSET_SIZE * 2), debug=True)
+        self._dwg = svgwrite.Drawing(filename=outfile, # type: ignore
+                                     size = (modules.consts.CHARIMG_LEN_PER_PIXEL * modules.consts.CHARIMG_WIDTH + OFFSET_SIZE * 2,
+                                            modules.consts.CHARIMG_LEN_PER_PIXEL * modules.consts.CHARIMG_HEIGHT + OFFSET_SIZE * 2), debug=True)
         self.fill_background()     # 背景を塗りつぶす
         self._outfile_path = outfile # パスを記憶する
 
@@ -84,21 +83,21 @@ class drawCharImgSVG:
                     color=FOREGROUND_COLOR
                 else:
                     color=BACKGROUND_COLOR
-                rectangle = self._dwg.rect(insert=(col*LEN_PER_PIXEL + OFFSET_SIZE + offset_x, # type: ignore
-                                                   row*LEN_PER_PIXEL + OFFSET_SIZE + offset_y),
-                                        size=((LEN_PER_PIXEL), (LEN_PER_PIXEL)),
+                rectangle = self._dwg.rect(insert=(col*modules.consts.CHARIMG_LEN_PER_PIXEL + OFFSET_SIZE + offset_x, # type: ignore
+                                                   row*modules.consts.CHARIMG_LEN_PER_PIXEL + OFFSET_SIZE + offset_y),
+                                        size=((modules.consts.CHARIMG_LEN_PER_PIXEL), (modules.consts.CHARIMG_LEN_PER_PIXEL)),
                                         fill=color)
                 # 描画内容を反映する
                 output_bitmap.add(rectangle) # type: ignore
 
-        self._dwg.save() # 画像を保存する
+        self._dwg.save() # type: ignore 画像を保存する
 
         return
 
     def save(self)->None:
         """画像を保存する
         """
-        self._dwg.save()
+        self._dwg.save() # type: ignore 画像を保存する
         return
 
     def fill_background(self)->None:
@@ -110,8 +109,8 @@ class drawCharImgSVG:
 
         # 四角で塗りつぶす
         rectangle = self._dwg.rect(insert=(0, 0), # type: ignore
-                                   size=((modules.consts.CHARIMG_WIDTH*LEN_PER_PIXEL + OFFSET_SIZE*2),
-                                         (modules.consts.CHARIMG_HEIGHT*LEN_PER_PIXEL + OFFSET_SIZE*2)),
+                                   size=((modules.consts.CHARIMG_WIDTH*modules.consts.CHARIMG_LEN_PER_PIXEL + OFFSET_SIZE*2),
+                                         (modules.consts.CHARIMG_HEIGHT*modules.consts.CHARIMG_LEN_PER_PIXEL + OFFSET_SIZE*2)),
                                    fill=BACKGROUND_COLOR)
         # 描画内容を反映する
         back_ground.add(rectangle) # type: ignore

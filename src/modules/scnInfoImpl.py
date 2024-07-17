@@ -28,6 +28,8 @@ import tempfile
 #
 # サードパーティーモジュールの読込み
 #
+# TODO 別クラスにする
+from PIL import Image # type: ignore
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
@@ -1542,21 +1544,33 @@ class scnInfoImpl(scnInfo):
     def _dumpCemetary(self, fp:TextIO)->None:
 
         print(f"", file=fp)
-        print(f"### CEMETARY", file=fp)
+        print(f"### CEMETARYの画像イメージ", file=fp)
         print(f"", file=fp)
+
+        output_file=f"wizardry-cemetary.{modules.consts.DEFAULT_RASTER_IMAGE_EXT}" # TODO ファイル形式を選択可能にする
 
         basename_prefix = modules.consts.CHARIMG_FILENAME_PREFIX_DIC[modules.consts.CHARIMG_TYPE_CEMETARY]
         ext = f"{modules.consts.DEFAULT_RASTER_IMAGE_EXT}" # TODO ファイル形式を選択可能にする
 
-        cemetary_lines=6
-        cemetary_per_line=4
-        cemetary_start_idx=11
+        dst = Image.new('RGB', (modules.consts.CHARIMG_CEMETARY_WIDTH * modules.consts.CHARIMG_WIDTH*modules.consts.CHARIMG_LEN_PER_PIXEL,
+                                modules.consts.CHARIMG_CEMETARY_HEIGHT * modules.consts.CHARIMG_HEIGHT*modules.consts.CHARIMG_LEN_PER_PIXEL))
+
+        cemetary_lines=modules.consts.CHARIMG_CEMETARY_HEIGHT
+        cemetary_per_line=modules.consts.CHARIMG_CEMETARY_WIDTH
+        cemetary_start_idx=modules.consts.CHARIMG_CEMETARY_START_IDX
         for line in range(cemetary_lines):
             for col in range(cemetary_per_line):
                 idx=line*cemetary_per_line + col
                 file_name=f"{basename_prefix}-{idx+cemetary_start_idx}.{ext}"
-                print(f"![文字コード-{modules.consts.CHARIMG_FILENAME_PREFIX_DIC[modules.consts.CHARIMG_TYPE_CEMETARY]}-{idx+cemetary_start_idx}]({file_name})",end='',file=fp)
-            print(f"", file=fp)
+                image=Image.open(file_name)
+                x=col*modules.consts.CHARIMG_WIDTH*modules.consts.CHARIMG_LEN_PER_PIXEL
+                y=line*modules.consts.CHARIMG_HEIGHT*modules.consts.CHARIMG_LEN_PER_PIXEL
+                #print(f"![文字コード-{modules.consts.CHARIMG_FILENAME_PREFIX_DIC[modules.consts.CHARIMG_TYPE_CEMETARY]}-{idx+cemetary_start_idx}]({file_name})",end='',file=fp)
+                dst.paste(image,(x, y))
+                x+=1
+            #print(f"", file=fp)
+        dst.save(output_file) # 保存する
+        print(f"![CEMETARY画像イメージ]({output_file})",file=fp)
         return
 
     def _dumpCharSet(self, fp:TextIO)->None:

@@ -28,7 +28,7 @@ import struct
 # サードパーティーモジュールの読込み
 #
 from svglib.svglib import svg2rlg # type: ignore
-from reportlab.graphics import renderPM
+from reportlab.graphics import renderPM # type: ignore
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
@@ -195,7 +195,7 @@ def convertSVGtoRaster(infile:str, outfile:str, format:str=modules.consts.DEFAUL
     """
 
     # ラスタイメージに変換するためのドロワーを取得
-    drawing = svg2rlg(infile)
+    drawing = svg2rlg(infile) # type: ignore
     if not drawing: # 入力ファイルを開けなかった場合
         return  # 何もせず抜ける
 
@@ -205,7 +205,9 @@ def convertSVGtoRaster(infile:str, outfile:str, format:str=modules.consts.DEFAUL
         return
 
     # 指定された形式にファイルを変換する
-    renderPM.drawToFile(drawing, outfile, fmt=modules.consts.RASTER_IMAGE_TYPE_DIC[upper_format])
+    renderPM.drawToFile(drawing, # type: ignore
+                        outfile,
+                        fmt=modules.consts.RASTER_IMAGE_TYPE_DIC[upper_format])
 
     return
 
