@@ -1547,7 +1547,7 @@ class scnInfoImpl(scnInfo):
         print(f"### CEMETARYの画像イメージ", file=fp)
         print(f"", file=fp)
 
-        output_file=f"wizardry-cemetary.{modules.consts.DEFAULT_RASTER_IMAGE_EXT}" # TODO ファイル形式を選択可能にする
+        output_file=f"cemetary-image.{modules.consts.DEFAULT_RASTER_IMAGE_EXT}" # TODO ファイル形式を選択可能にする
 
         basename_prefix = modules.consts.CHARIMG_FILENAME_PREFIX_DIC[modules.consts.CHARIMG_TYPE_CEMETARY]
         ext = f"{modules.consts.DEFAULT_RASTER_IMAGE_EXT}" # TODO ファイル形式を選択可能にする
