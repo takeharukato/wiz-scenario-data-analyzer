@@ -33,7 +33,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from modules.datadef import WizardrySCNTOC, WizardryMazeFloorDataEntry, WizardryMonsterDataEntry
 from modules.datadef import WizardryItemDataEntry, WizardryRewardDataEntry, WizardryRewardInfo, WizardryMazeFloorEventInfo
-from modules.datadef import WizardryMessageData
+from modules.datadef import WizardryMessageData, WizardryCharImgData
 from modules.scnInfo import scnInfo
 from modules.TOCDecoder import TOCDecoder
 from modules.mazeFloorDecoder import mazeFloorDecoder
@@ -41,7 +41,9 @@ from modules.monsterDecoder import monsterDecoder
 from modules.itemDecoder import itemDecoder
 from modules.rewardDecoder import rewardDecoder
 from modules.msgDecoderImpl import messageDecoder
+from modules.charImgDecoder import charImgDecoder
 from modules.drawMazeSVG import drawMazeSVG
+from modules.drawCharImgSVG import drawCharImgSVG
 from modules.utils import property_dic_to_string,value_to_string,convertSVGtoRaster,escapeMarkdownChars
 import modules.consts
 
@@ -57,6 +59,10 @@ class scnInfoImpl(scnInfo):
 
     _toc:WizardrySCNTOC
     """目次情報"""
+
+    _char_sets:WizardryCharImgData
+    """文字イメージビットマップ情報"""
+
     _floors:dict[int, WizardryMazeFloorDataEntry]
     """迷宮フロア情報"""
     _monsters:dict[int,WizardryMonsterDataEntry]
@@ -79,6 +85,7 @@ class scnInfoImpl(scnInfo):
         self._items={}
         self._rewards={}
         self._reward2monster={}
+        self._char_sets = WizardryCharImgData(normal_bitmap={},cemetary_bitmap={})
         self._maze_messages=WizardryMessageData(messages={},msg_to_pos={},pos_to_msg={})
         return
 
@@ -378,7 +385,7 @@ class scnInfoImpl(scnInfo):
         return
 
     def _readTOC(self, data:Any)->None:
-        """目次情報を読込む
+        """目次情報/キャラクタセット情報を読込む
 
         Args:
             data (Any): シナリオデータ
@@ -387,6 +394,15 @@ class scnInfoImpl(scnInfo):
         toc_decoder=TOCDecoder(data=data)
         toc_decoder.decodeData(data=data, offset=0)
         self._toc = toc_decoder.toc
+
+        #
+        # 文字情報を読み込む
+        #
+        char_img_decoder=charImgDecoder()
+        res = char_img_decoder.decodeOneData(toc=self.toc,data=data,index=0) # indexは未使用
+        if isinstance(res, WizardryCharImgData):
+            self._char_sets = res
+
         return
 
     def _readFloorTable(self, data:Any)->None:
@@ -1491,6 +1507,39 @@ class scnInfoImpl(scnInfo):
         print(f"", file=fp)
 
         return
+    def _drawCharSet(self)->None:
+        """文字セットを出力する
+        """
+
+        with tempfile.TemporaryDirectory() as dir_name:
+
+            for char_set_type in modules.consts.CHARIMG_TYPE_VALID:
+
+                if char_set_type not in modules.consts.CHARIMG_FILENAME_PREFIX_DIC:
+                    continue
+
+                basename_prefix = modules.consts.CHARIMG_FILENAME_PREFIX_DIC[char_set_type]
+
+                for ch_num in range(modules.consts.CHARIMG_PER_CHARSET): # 各文字について
+
+                    basename = f"{basename_prefix}-{ch_num}"
+
+                    # SVGファイルを作成
+                    svg_file=os.path.join(dir_name,f"{basename}.svg")
+
+                    # 描画オブジェクトを生成
+                    drawer=drawCharImgSVG(outfile=svg_file)
+                    if char_set_type == modules.consts.CHARIMG_TYPE_NORMAL:
+                        drawer.drawBitMap(char_img=self._char_sets.normal_bitmap[ch_num])
+                    elif char_set_type == modules.consts.CHARIMG_TYPE_CEMETARY:
+                        drawer.drawBitMap(char_img=self._char_sets.cemetary_bitmap[ch_num])
+
+                    drawer.save() # 画像を保存する
+
+                    # PNGに変換
+                    convertSVGtoRaster(infile=svg_file, outfile=f"{basename}.{modules.consts.DEFAULT_RASTER_IMAGE_EXT}", format=modules.consts.RASTER_IMAGE_TYPE_PNG)
+
+        return
 
     def plainDump(self, fp:TextIO)->None:
         """テキスト形式で表示する
@@ -1500,6 +1549,7 @@ class scnInfoImpl(scnInfo):
         """
 
         self._dumpTOC(fp=fp)
+        self._drawCharSet()
         self._dumpFloors(fp=fp)
         self._dumpMonsters(fp=fp)
         self._dumpItems(fp=fp)

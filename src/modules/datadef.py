@@ -760,3 +760,18 @@ class WizardryMessageData:
         assert idx in self.messages, f"Invalid index:{idx}"
         # メッセージを返す
         return modules.consts.DELIMITER_SPC.join(self.messages[idx].lines[offset:])
+
+@dataclass
+class WizardryCharImgDataEntry:
+    """高解像度表示モード用文字データ"""
+    bitmap:dict[int,int]
+    """ビットマップ(7x8ドット)"""
+
+@dataclass
+class WizardryCharImgData:
+    """高解像度表示モード用文字データ"""
+
+    normal_bitmap:dict[int,WizardryCharImgDataEntry]
+    """通常文字"""
+    cemetary_bitmap:dict[int,WizardryCharImgDataEntry]
+    """全滅時文字"""

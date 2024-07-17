@@ -354,6 +354,26 @@ REWARD_TRAP_DIC:dict[int,list[str]]={
     5:["プリーストブラスター"],
     6:["警報"],
 }
+
+#
+# 文字イメージ
+#
+CHARIMG_WIDTH=7 # 幅7ビット
+CHARIMG_HEIGHT=8 # 高さ8ビット
+CHARIMG_PER_CHARSET=64 # 64種類
+CHARIMG_TYPE_NORMAL=0   # 通常の文字セット
+CHARIMG_TYPE_CEMETARY=1 # 全滅表示時の文字セット
+CHARIMG_TYPE_VALID=(CHARIMG_TYPE_NORMAL,CHARIMG_TYPE_CEMETARY)
+CHARIMG_FILENAME_PREFIX_DIC:dict[int,str]={
+    CHARIMG_TYPE_NORMAL:"charset-normal",
+    CHARIMG_TYPE_CEMETARY:"charset-cemetary",
+}
+
+# 文字セット種別からシナリオ情報先頭からのオフセット位置へのマップ
+CHARIMG_TYPE_TO_BLK_OFFSET:dict[int,int]={
+    CHARIMG_TYPE_NORMAL:1, # シナリオ情報オフセットブロック 1
+    CHARIMG_TYPE_CEMETARY:2, # シナリオ情報オフセットブロック 2
+}
 # 呪文用途(デバッグ用)
 # (* 呪文種別(対象者選択時に使用): GENERIC(0 一般), PERSON(1 単体), GROUP(2 グループ) *)
 # TSPEL012 = (GENERIC, PERSON, GROUP);

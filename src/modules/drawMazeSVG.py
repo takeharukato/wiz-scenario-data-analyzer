@@ -136,6 +136,7 @@ DRAW_MAZE_DIR_TO_DEGREE:dict[int,int]={
     DRAW_MAZE_DIR_SOUTH:180, #  下 (180度)
     DRAW_MAZE_DIR_WEST:270   #  下 (270度)
 }
+
 class drawMazeSVG:
 
     _dwg:svgwrite.Drawing
