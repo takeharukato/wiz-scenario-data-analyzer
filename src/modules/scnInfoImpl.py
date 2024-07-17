@@ -193,15 +193,15 @@ class scnInfoImpl(scnInfo):
         if -1000 >= aux0:
             aux0 += 1000
 
-        if aux2 == modules.consts.SCNMSG_TYPE_TRYGET:
+        if aux2 == modules.consts.SCRNMSG_TYPE_TRYGET:
             item_name=f"{self._items[aux0].name} ({aux0})" if aux0 in self._items else f"{aux0}番のアイテム"
 
             return f"{common}を表示し, {item_name} を取得"
 
-        if aux2 == modules.consts.SCNMSG_TYPE_WHOWADE:
+        if aux2 == modules.consts.SCRNMSG_TYPE_WHOWADE:
             return f"{common}を表示し, 泉に入るメンバを選択"
 
-        if aux2 == modules.consts.SCNMSG_TYPE_GETYN:
+        if aux2 == modules.consts.SCRNMSG_TYPE_GETYN:
 
             if aux0 >= 0:
                 monster_name=f"{self._monsters[aux0].name} ({aux0})" if aux0 in self._monsters else f"{aux0}番のモンスター"
@@ -211,14 +211,14 @@ class scnInfoImpl(scnInfo):
                 item_name=f"{self._items[aux0].name} ({aux0})" if aux0 in self._items else f"{aux0}番のアイテム"
                 return f"{common}を表示し, 「さがしますか(Y/N)?」を表示して, 'Y'を押下した場合, {item_name}を取得"
 
-        if aux2 == modules.consts.SCNMSG_TYPE_ITM2PASS:
+        if aux2 == modules.consts.SCRNMSG_TYPE_ITM2PASS:
             item_name=f"{self._items[aux0].name} ({aux0})" if aux0 in self._items else f"{aux0}番のアイテム"
             return f"{item_name}を所持していない場合, {common}を表示して, ひとつ前の座標に戻る"
 
-        if aux2 == modules.consts.SCNMSG_TYPE_CHKALIGN:
+        if aux2 == modules.consts.SCRNMSG_TYPE_CHKALIGN:
             return f"パーティの属性(アラインメント)によって, {common}を表示して, ひとつ前の座標に戻る"
 
-        if aux2 == modules.consts.SCNMSG_TYPE_CHKAUX0:
+        if aux2 == modules.consts.SCRNMSG_TYPE_CHKAUX0:
             if aux0 == 99:
                 return f"{common}を表示し, MILWAの効果を50ターン延長"
             elif aux0 == -99:
@@ -226,16 +226,16 @@ class scnInfoImpl(scnInfo):
             else:
                 return f"{common}を表示し, 迷宮からでるまで, {aux0}の値だけパーティのACの数値を下げる(防御力を上げる)"
 
-        if aux2 == modules.consts.SCNMSG_TYPE_BCK2SHOP:
+        if aux2 == modules.consts.SCRNMSG_TYPE_BCK2SHOP:
             return f"{common}を表示し, 城に戻る"
 
-        if aux2 == modules.consts.SCNMSG_TYPE_LOOKOUT:
+        if aux2 == modules.consts.SCRNMSG_TYPE_LOOKOUT:
             return f"{common}を表示し, 半径{aux0}の範囲に, モンスターを配置する"
 
-        if aux2 == modules.consts.SCNMSG_TYPE_RIDDLES:
+        if aux2 == modules.consts.SCRNMSG_TYPE_RIDDLES:
             f"{common}を表示して, 謎かけを行い, 回答番号{aux0}で指定された答え(を複合した結果)と異なっていた場合, ひとつ前の座標に戻る"
 
-        if aux2 == modules.consts.SCNMSG_TYPE_FEEIS:
+        if aux2 == modules.consts.SCRNMSG_TYPE_FEEIS:
             f"{common}を表示して, お金を要求する. 所有金額が要求金額に満たない場合や支払いを拒否した場合, ひとつ前の座標に戻る"
 
         return f"{common}を表示"
@@ -293,6 +293,16 @@ class scnInfoImpl(scnInfo):
                 # イベント未配置
                 info.broken_reason[modules.consts.FLOOR_EVENT_REASON_NOT_ALLOCATED]=True
 
+            if info.event_type == modules.consts.FLOOR_EVENT_SCRNMSG:
+
+                if info.params[2] in modules.consts.FLOOR_EVENT_DISABLED_AUX2_VALUES:
+                    # 無効イベント
+                    info.broken_reason[modules.consts.FLOOR_EVENT_REASON_AUX2_DISABLED_EVENT]=True
+
+                if info.params[2] in modules.consts.SCRNMSG_CANCELABLE_MSG_TYPE and info.params[0] in modules.consts.SCRNMSG_DISABLED_AUX0_VALUES:
+                    # 無効メッセージイベント
+                    info.broken_reason[modules.consts.FLOOR_EVENT_REASON_DISABLED_SCRNMSG]=True
+
             if info.event_type in [modules.consts.FLOOR_EVENT_ENCOUNTE]:
                 if 0 in info.params:
                     aux0=info.params[0]
@@ -306,7 +316,7 @@ class scnInfoImpl(scnInfo):
         #
         # メッセージ情報への反映
         #
-        for info in ( entry for entry in floor.event_info_dic.values() if entry.event_type == modules.consts.FLOOR_EVENT_SCNMSG ):
+        for info in ( entry for entry in floor.event_info_dic.values() if entry.event_type == modules.consts.FLOOR_EVENT_SCRNMSG ):
             # 各メッセージ情報について
             if info.is_enabled:
                 for floor_pos in info.positions:
@@ -467,7 +477,7 @@ class scnInfoImpl(scnInfo):
             for floor_idx in sorted(self._floors.keys()):
                 floor=self._floors[floor_idx]
                 # SCNMSGイベントのGETYNイベントでモンスター遭遇があるもの(AUX0が正の整数)を抽出
-                lst = [floor.event_info_dic[idx] for idx in floor.event_info_dic.keys() if floor.event_info_dic[idx].event_type == modules.consts.FLOOR_EVENT_SCNMSG and 2 in floor.event_info_dic[idx].params and floor.event_info_dic[idx].params[2] == modules.consts.SCNMSG_TYPE_GETYN and 0 in floor.event_info_dic[idx].params and floor.event_info_dic[idx].params[0] > 0]
+                lst = [floor.event_info_dic[idx] for idx in floor.event_info_dic.keys() if floor.event_info_dic[idx].event_type == modules.consts.FLOOR_EVENT_SCRNMSG and 2 in floor.event_info_dic[idx].params and floor.event_info_dic[idx].params[2] == modules.consts.SCRNMSG_TYPE_GETYN and 0 in floor.event_info_dic[idx].params and floor.event_info_dic[idx].params[0] > 0]
                 if len(lst) > 0: # イベントがあれば
                     getyn_info_lst += [(floor.depth, lst)]
 
@@ -554,7 +564,7 @@ class scnInfoImpl(scnInfo):
             for floor_idx in sorted(self._floors.keys()):
                 floor=self._floors[floor_idx]
                 # SCNMSGイベントのGETYNイベントでアイテム取得があるもの(AUX0が-1000より小さい負の整数)を抽出
-                lst = [floor.event_info_dic[idx] for idx in floor.event_info_dic.keys() if floor.event_info_dic[idx].event_type == modules.consts.FLOOR_EVENT_SCNMSG and 2 in floor.event_info_dic[idx].params and floor.event_info_dic[idx].params[2] == modules.consts.SCNMSG_TYPE_GETYN and 0 in floor.event_info_dic[idx].params and -1000 > floor.event_info_dic[idx].params[0]]
+                lst = [floor.event_info_dic[idx] for idx in floor.event_info_dic.keys() if floor.event_info_dic[idx].event_type == modules.consts.FLOOR_EVENT_SCRNMSG and 2 in floor.event_info_dic[idx].params and floor.event_info_dic[idx].params[2] == modules.consts.SCRNMSG_TYPE_GETYN and 0 in floor.event_info_dic[idx].params and -1000 > floor.event_info_dic[idx].params[0]]
                 if len(lst) > 0: # イベントがあれば
                     getyn_info_lst += [(floor.depth, lst)]
 
@@ -591,7 +601,7 @@ class scnInfoImpl(scnInfo):
             for floor_idx in sorted(self._floors.keys()):
                 floor=self._floors[floor_idx]
                 # SCNMSGイベントのTRYGETイベントを抽出
-                lst = [floor.event_info_dic[idx] for idx in floor.event_info_dic.keys() if floor.event_info_dic[idx].event_type == modules.consts.FLOOR_EVENT_SCNMSG and 2 in floor.event_info_dic[idx].params and floor.event_info_dic[idx].params[2] == modules.consts.SCNMSG_TYPE_TRYGET and 0 in floor.event_info_dic[idx].params]
+                lst = [floor.event_info_dic[idx] for idx in floor.event_info_dic.keys() if floor.event_info_dic[idx].event_type == modules.consts.FLOOR_EVENT_SCRNMSG and 2 in floor.event_info_dic[idx].params and floor.event_info_dic[idx].params[2] == modules.consts.SCRNMSG_TYPE_TRYGET and 0 in floor.event_info_dic[idx].params]
                 if len(lst) > 0: # イベントがあれば
                     tryget_info_lst += [(floor.depth, lst)]
 
@@ -647,7 +657,7 @@ class scnInfoImpl(scnInfo):
             for floor_idx in sorted(self._floors.keys()):
                 floor=self._floors[floor_idx]
                 # SCNMSGイベントのTRYGETイベントを抽出
-                lst = [floor.event_info_dic[idx] for idx in floor.event_info_dic.keys() if floor.event_info_dic[idx].event_type == modules.consts.FLOOR_EVENT_SCNMSG and 2 in floor.event_info_dic[idx].params and floor.event_info_dic[idx].params[2] == modules.consts.SCNMSG_TYPE_ITM2PASS and 0 in floor.event_info_dic[idx].params]
+                lst = [floor.event_info_dic[idx] for idx in floor.event_info_dic.keys() if floor.event_info_dic[idx].event_type == modules.consts.FLOOR_EVENT_SCRNMSG and 2 in floor.event_info_dic[idx].params and floor.event_info_dic[idx].params[2] == modules.consts.SCRNMSG_TYPE_ITM2PASS and 0 in floor.event_info_dic[idx].params]
                 if len(lst) > 0: # イベントがあれば
                     item2pass_info_lst += [(floor.depth, lst)]
 
@@ -706,7 +716,7 @@ class scnInfoImpl(scnInfo):
             return self._handleRockwateEvent(name=name, aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
         elif info.event_type == modules.consts.FLOOR_EVENT_FIZZLE:
             return self._handleFizzleEvent(name=name, aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
-        elif info.event_type == modules.consts.FLOOR_EVENT_SCNMSG:
+        elif info.event_type == modules.consts.FLOOR_EVENT_SCRNMSG:
             return self._handleScreenMessage(name=name, aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
         elif info.event_type == modules.consts.FLOOR_EVENT_ENCOUNTE:
             return self._handleEncounte(name=name, aux0=info.params[0],aux1=info.params[1],aux2=info.params[2])
