@@ -48,12 +48,17 @@ BLK_SIZ=512
 WIZ_CACHE_SIZE=BLK_SIZ * 2
 # シナリオデータファイル名
 DEFAULT_SCENARIO_DATA_FILE="SCENARIO.DATA"
+# メッセージファイル名
+DEFAULT_MSG_FILE="SCENARIO.MESGS"
 # データ解析結果不明
 UNKNOWN_STRING="不明"
 # 正常なイベントなど
 OK_STRING="正常"
 # ダイス情報の種類( nDt + a 形式)
 DICE_DATA_ELEMENT_NR=3
+
+# ブロックあたりのメッセージ数
+MSG_PER_BLK=12
 
 # 方角
 DIR_NORTH=0

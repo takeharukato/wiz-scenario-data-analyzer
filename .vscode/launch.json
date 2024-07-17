@@ -12,6 +12,7 @@
             "console": "integratedTerminal",
             "args" : [
                 "SCENARIO.DATA",
+                "SCENARIO.MESGS"
             ]
         }
     ]

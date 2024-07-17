@@ -66,6 +66,10 @@ class ReadScenario:
     #
     infile = None
 
+    ## メッセージファイル名
+    #
+    msg_file = None
+
     ## 出力ファイル名
     #
     outfile = None
@@ -98,6 +102,7 @@ class ReadScenario:
         # 他のクラス変数の初期化
         #
         self.infile = self.__args.infile   # type: ignore 入力ファイル名の設定
+        self.msg_file = self.__args.msg_file # type: ignore メッセージファイル名の設定
         #self.outfile = self.__args.outfile # type: ignore 出力ファイル名の設定
 
         #
@@ -130,7 +135,10 @@ class ReadScenario:
         #  第1位置引数に入力ファイルを指定
         cmdline.add_argument('infile', help='入力ファイル')
 
-        #  第2位置引数に入力ファイルを指定
+        #  第2位置引数にメッセージファイルを指定
+        cmdline.add_argument('msg_file', help='入力ファイル')
+
+        #  第3位置引数に入力ファイルを指定
         # cmdline.add_argument('outfile', help='出力ファイル')
 
         #
@@ -166,15 +174,29 @@ class ReadScenario:
             infile (Optional[str], optional): 入力ファイル. Defaults to None("SCENARIO.DATA"を読み込む).
             outfile (Optional[str], optional): 出力ファイル. Defaults to None.
         """
+
+        msg_data=None
+
         this_infile=infile
         if not this_infile:
             this_infile=modules.consts.DEFAULT_SCENARIO_DATA_FILE
 
+        this_msg_file=self.msg_file
+        if not this_msg_file:
+            this_msg_file=modules.consts.DEFAULT_MSG_FILE
+
+        with open(this_msg_file, 'rb') as fr:
+            msg_data=fr.read()
+
+        if not msg_data: # メッセージデータの読み取りに失敗した
+            return
+
         with open(this_infile, 'rb') as fr:
             scenario=fr.read()
             # TODO: FactoryMethodを適用
-            self._scnInfo=scnInfoImpl(scenario=scenario)
+            self._scnInfo=scnInfoImpl(scenario=scenario,message=msg_data)
             self._scnInfo.readContents()
+
         return
 
     def plainDump(self)->None:

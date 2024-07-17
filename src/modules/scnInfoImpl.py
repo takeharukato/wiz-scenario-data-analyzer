@@ -33,12 +33,14 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from modules.datadef import WizardrySCNTOC, WizardryMazeFloorDataEntry, WizardryMonsterDataEntry
 from modules.datadef import WizardryItemDataEntry, WizardryRewardDataEntry, WizardryRewardInfo, WizardryMazeFloorEventInfo
+from modules.datadef import WizardryMessageData
 from modules.scnInfo import scnInfo
 from modules.TOCDecoder import TOCDecoder
 from modules.mazeFloorDecoder import mazeFloorDecoder
 from modules.monsterDecoder import monsterDecoder
 from modules.itemDecoder import itemDecoder
 from modules.rewardDecoder import rewardDecoder
+from modules.msgDecoderImpl import messageDecoder
 from modules.drawMazeSVG import drawMazeSVG
 from modules.utils import property_dic_to_string,value_to_string,convertSVGtoRaster
 import modules.consts
@@ -47,6 +49,12 @@ class scnInfoImpl(scnInfo):
 
     _scenario:Any
     """シナリオ情報ファイルのメモリイメージ"""
+    _message:Any
+    """メッセージ情報ファイルのメモリイメージ"""
+
+    _msg_data:WizardryMessageData
+    """メッセージ情報"""
+
     _toc:WizardrySCNTOC
     """目次情報"""
     _floors:dict[int, WizardryMazeFloorDataEntry]
@@ -61,14 +69,17 @@ class scnInfoImpl(scnInfo):
     _reward2monster:dict[int,set[int]]
     """報酬番号からモンスター番号の集合への辞書"""
 
-    def __init__(self, scenario:Any) -> None:
+    def __init__(self, scenario:Any, message:Any) -> None:
 
         self._scenario=scenario
+        self._message=message
+
         self._floors={}
         self._monsters={}
         self._items={}
         self._rewards={}
         self._reward2monster={}
+        self._msg_data=WizardryMessageData(messages={})
         return
 
     def _getMonsterRangeString(self, min:int, max:int)-> str:
@@ -685,9 +696,23 @@ class scnInfoImpl(scnInfo):
 
         return modules.consts.UNKNOWN_STRING
 
+    def _readMessages(self, data:Any)->None:
+        """メッセージ情報を読み込む
+
+        Args:
+            data (Any): メッセージ情報のイメージ
+        """
+
+        decoder = messageDecoder()
+        self._msg_data = decoder.decodeMessageFile(data=data)
+        return
+
     def readContents(self)->None:
         """シナリオ情報を読み込む
         """
+
+        self._readMessages(data=self._message) # メッセージ情報を読み込む
+
         self._readTOC(data=self._scenario) # 目次情報を読み込む
         self._readFloorTable(data=self._scenario) # 迷宮フロア情報を読み込む
         self._readMonsterTable(data=self._scenario) # モンスター情報を読み込む

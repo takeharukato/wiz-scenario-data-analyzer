@@ -31,11 +31,12 @@ from modules.datadef import WizardrySCNTOC
 class scnInfo(ABC):
 
     @abstractmethod
-    def __init__(self, scenario:Any) -> None:
+    def __init__(self, scenario:Any, message:Any) -> None:
         """シナリオ情報を初期化する
 
         Args:
             scenario (Any): シナリオ情報のメモリイメージ
+            message  (Any): メッセージ情報のメモリイメージ
         """
         return
 

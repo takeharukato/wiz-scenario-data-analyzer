@@ -686,3 +686,19 @@ class WizardryRewardDataEntry:
                 candidate_traps += modules.consts.REWARD_TRAP_DIC[shift] # 罠の候補を加える
 
         return modules.consts.DELIMITER_COMMA.join(candidate_traps)
+
+@dataclass
+class WizardryMessageDataEntry:
+    """メッセージデータエントリ"""
+
+    num:int
+    """メッセージ開始番号"""
+    lines:list[str]
+    """メッセージの内容"""
+
+@dataclass
+class WizardryMessageData:
+    """メッセージデータ"""
+
+    messages:dict[int,WizardryMessageDataEntry]
+    """メッセージ番号からメッセージへの辞書"""
