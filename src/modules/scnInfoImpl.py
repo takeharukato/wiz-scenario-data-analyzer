@@ -1525,22 +1525,37 @@ class scnInfoImpl(scnInfo):
 
                     basename = f"{basename_prefix}-{ch_num}"
 
-                    # SVGファイルを作成
-                    svg_file=os.path.join(dir_name,f"{basename}.svg")
-
                     # 描画オブジェクトを生成
-                    drawer=drawCharImgSVG(outfile=svg_file)
-                    if char_set_type == modules.consts.CHARIMG_TYPE_NORMAL:
-                        drawer.drawBitMap(char_img=self._char_sets.normal_bitmap[ch_num])
-                    elif char_set_type == modules.consts.CHARIMG_TYPE_CEMETARY:
-                        drawer.drawBitMap(char_img=self._char_sets.cemetary_bitmap[ch_num])
+                    for frame in [False,True]:
 
-                    drawer.save() # 画像を保存する
+                        # SVGファイルを作成
+                        if frame: # フレームがある場合
+                            frame_len = 1
+                            filename_type=f"{basename}-frame"
+                        else:
+                            frame_len = 0
+                            filename_type=f"{basename}"
 
-                    # PNGに変換
-                    convertSVGtoRaster(infile=svg_file, outfile=f"{basename}.{modules.consts.DEFAULT_RASTER_IMAGE_EXT}", format=modules.consts.RASTER_IMAGE_TYPE_PNG)
+                        # SVGファイル名
+                        svg_file=os.path.join(dir_name,f"{filename_type}.svg")
+
+                        # 文字のSVG画像ファイルを生成
+                        drawer=drawCharImgSVG(outfile=svg_file, frame_len=frame_len)
+
+                        if char_set_type == modules.consts.CHARIMG_TYPE_NORMAL:
+                            drawer.drawBitMap(char_img=self._char_sets.normal_bitmap[ch_num])
+                        elif char_set_type == modules.consts.CHARIMG_TYPE_CEMETARY:
+                            drawer.drawBitMap(char_img=self._char_sets.cemetary_bitmap[ch_num])
+
+                        drawer.save() # 画像を保存する
+
+                        # PNGに変換
+                        convertSVGtoRaster(infile=svg_file,
+                                           outfile=f"{filename_type}.{modules.consts.DEFAULT_RASTER_IMAGE_EXT}",
+                                           format=modules.consts.RASTER_IMAGE_TYPE_PNG)
 
         return
+
     def _dumpCemetary(self, fp:TextIO)->None:
 
         print(f"", file=fp)
@@ -1614,7 +1629,7 @@ class scnInfoImpl(scnInfo):
                 print(f"|", end='', file=fp)
                 for col in range(char_per_row):
                     idx = row*char_per_row + col
-                    file_name=f"{basename_prefix}-{idx}.{ext}"
+                    file_name=f"{basename_prefix}-{idx}-frame.{ext}"
                     ch_str = escapeMarkdownChars(self._char_sets.index_to_char(index=idx))
                     print(f"{ch_str}|![文字コード-{modules.consts.CHARIMG_FILENAME_PREFIX_DIC[char_set_type]}-{idx}]({file_name})|", end='', file=fp)
                 print(f"", file=fp)

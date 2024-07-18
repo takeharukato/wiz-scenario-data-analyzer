@@ -789,8 +789,16 @@ class WizardryCharImgData:
 
         char_code = index + modules.consts.CHARIMG_CH_CODE_START # 空白文字から開始
         return chr(char_code) # 文字を返す
+
     def char_to_index(self, char:str)->int:
-        """文字からインデクスを返す"""
+        """文字からキャラクタセット配列のインデックスを返す
+
+        Args:
+            char (str): 文字を表す文字列
+
+        Returns:
+            int: インデクス
+        """
         if len(char) != 0:
             return 0 # 0を返す
         char_code = ord(char)

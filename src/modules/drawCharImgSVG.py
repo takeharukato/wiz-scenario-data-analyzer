@@ -45,17 +45,22 @@ class drawCharImgSVG:
     """描画領域"""
     _outfile_path:str
     """描画ファイルのパス名"""
-
-    def __init__(self, outfile:str) -> None:
+    _margin_len:int
+    """フレーム幅"""
+    def __init__(self, outfile:str, frame_len:int=0) -> None:
         """描画処理オブジェクトの初期化
 
         Args:
             outfile (str): 出力先ファイルへのパス
         """
+
+        # 背景余白の幅
+        self._margin_len = frame_len*modules.consts.CHARIMG_LEN_PER_PIXEL
+
         # ドローイング領域を作成
         self._dwg = svgwrite.Drawing(filename=outfile, # type: ignore
-                                     size = (modules.consts.CHARIMG_LEN_PER_PIXEL * modules.consts.CHARIMG_WIDTH + OFFSET_SIZE * 2,
-                                            modules.consts.CHARIMG_LEN_PER_PIXEL * modules.consts.CHARIMG_HEIGHT + OFFSET_SIZE * 2), debug=True)
+                                     size = (self._margin_len * 2 + modules.consts.CHARIMG_LEN_PER_PIXEL * modules.consts.CHARIMG_WIDTH + OFFSET_SIZE * 2,
+                                            self._margin_len * 2 + modules.consts.CHARIMG_LEN_PER_PIXEL * modules.consts.CHARIMG_HEIGHT + OFFSET_SIZE * 2), debug=True)
         self.fill_background()     # 背景を塗りつぶす
         self._outfile_path = outfile # パスを記憶する
 
@@ -67,12 +72,28 @@ class drawCharImgSVG:
         Args:
             char_img (WizardryCharImgDataEntry): キャラクタビットマップ情報
         """
-
+        # 配置位置
         offset_x = off_x * modules.consts.CHARIMG_WIDTH
         offset_y = off_x * modules.consts.CHARIMG_HEIGHT
+        # 背景余白の幅
+        this_margin = self._margin_len
 
         # 要素のグループを定義
         output_bitmap = self._dwg.add(self._dwg.g(id='charImg')) # type: ignore
+
+        #
+        # 余白
+        #
+        if this_margin > 0:
+            frame_sx = modules.consts.CHARIMG_LEN_PER_PIXEL*modules.consts.CHARIMG_WIDTH + OFFSET_SIZE + offset_x
+            frame_sy = modules.consts.CHARIMG_LEN_PER_PIXEL*modules.consts.CHARIMG_HEIGHT + OFFSET_SIZE + offset_y
+
+            back_ground_rectangle = self._dwg.rect( # type: ignore
+                insert=(frame_sx, frame_sy),
+                size=((modules.consts.CHARIMG_LEN_PER_PIXEL + this_margin*2), (modules.consts.CHARIMG_LEN_PER_PIXEL + this_margin*2)),
+                fill=BACKGROUND_COLOR)
+            output_bitmap.add(back_ground_rectangle) # type: ignore
+
         for row in range(modules.consts.CHARIMG_HEIGHT):
             if row not in char_img.bitmap:
                 continue # 読み飛ばす
@@ -83,8 +104,9 @@ class drawCharImgSVG:
                     color=FOREGROUND_COLOR
                 else:
                     color=BACKGROUND_COLOR
-                rectangle = self._dwg.rect(insert=(col*modules.consts.CHARIMG_LEN_PER_PIXEL + OFFSET_SIZE + offset_x, # type: ignore
-                                                   row*modules.consts.CHARIMG_LEN_PER_PIXEL + OFFSET_SIZE + offset_y),
+                sx = this_margin + col*modules.consts.CHARIMG_LEN_PER_PIXEL + OFFSET_SIZE + offset_x
+                sy = this_margin + row*modules.consts.CHARIMG_LEN_PER_PIXEL + OFFSET_SIZE + offset_y
+                rectangle = self._dwg.rect(insert=(sx,sy), # type: ignore
                                         size=((modules.consts.CHARIMG_LEN_PER_PIXEL), (modules.consts.CHARIMG_LEN_PER_PIXEL)),
                                         fill=color)
                 # 描画内容を反映する
@@ -109,8 +131,8 @@ class drawCharImgSVG:
 
         # 四角で塗りつぶす
         rectangle = self._dwg.rect(insert=(0, 0), # type: ignore
-                                   size=((modules.consts.CHARIMG_WIDTH*modules.consts.CHARIMG_LEN_PER_PIXEL + OFFSET_SIZE*2),
-                                         (modules.consts.CHARIMG_HEIGHT*modules.consts.CHARIMG_LEN_PER_PIXEL + OFFSET_SIZE*2)),
+                                   size=(self._margin_len * 2 + (modules.consts.CHARIMG_WIDTH*modules.consts.CHARIMG_LEN_PER_PIXEL + OFFSET_SIZE*2),
+                                         self._margin_len * 2 + (modules.consts.CHARIMG_HEIGHT*modules.consts.CHARIMG_LEN_PER_PIXEL + OFFSET_SIZE*2)),
                                    fill=BACKGROUND_COLOR)
         # 描画内容を反映する
         back_ground.add(rectangle) # type: ignore
