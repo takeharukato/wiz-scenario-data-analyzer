@@ -368,7 +368,16 @@ CHARIMG_TYPE_NORMAL=0   # 通常の文字セット
 CHARIMG_TYPE_CEMETARY=1 # 全滅表示時の文字セット
 CHARIMG_CEMETARY_WIDTH=4 # CEMETARY横幅
 CHARIMG_CEMETARY_HEIGHT=6 # CEMETARY高さ
-CHARIMG_CEMETARY_START_IDX=11 # CEMETARY開始文字インデックス
+
+# CEMETARY表示文字インデクス
+CHARIMG_CEMETARY_CHAR_INDEXES=[
+                        11,12,13,14,
+                        15,16,17,18,
+                        19,20,21,22,
+                        23,24,25,26,
+                        27,28,29,30,
+                        31,56,57,58
+                    ]
 CHARIMG_TYPE_VALID=(CHARIMG_TYPE_NORMAL,CHARIMG_TYPE_CEMETARY)
 CHARIMG_FILENAME_PREFIX_DIC:dict[int,str]={
     CHARIMG_TYPE_NORMAL:"charset-normal",

@@ -1556,7 +1556,7 @@ class scnInfoImpl(scnInfo):
 
         return
 
-    def _dumpCemetary(self, fp:TextIO)->None:
+    def _drawCemetary(self, fp:TextIO)->None:
 
         print(f"", file=fp)
         print(f"### CEMETARYの画像イメージ", file=fp)
@@ -1572,11 +1572,13 @@ class scnInfoImpl(scnInfo):
 
         cemetary_lines=modules.consts.CHARIMG_CEMETARY_HEIGHT
         cemetary_per_line=modules.consts.CHARIMG_CEMETARY_WIDTH
-        cemetary_start_idx=modules.consts.CHARIMG_CEMETARY_START_IDX
+
         for line in range(cemetary_lines):
             for col in range(cemetary_per_line):
                 idx=line*cemetary_per_line + col
-                file_name=f"{basename_prefix}-{idx+cemetary_start_idx}.{ext}"
+                assert len(modules.consts.CHARIMG_CEMETARY_CHAR_INDEXES) > idx, f"Invalid index"
+                char_index=modules.consts.CHARIMG_CEMETARY_CHAR_INDEXES[idx]
+                file_name=f"{basename_prefix}-{char_index}.{ext}"
                 image=Image.open(file_name)
                 x=col*modules.consts.CHARIMG_WIDTH*modules.consts.CHARIMG_LEN_PER_PIXEL
                 y=line*modules.consts.CHARIMG_HEIGHT*modules.consts.CHARIMG_LEN_PER_PIXEL
@@ -1635,7 +1637,7 @@ class scnInfoImpl(scnInfo):
                 print(f"", file=fp)
             pass
 
-        self._dumpCemetary(fp=fp)
+        self._drawCemetary(fp=fp)
 
         print(f"", file=fp)
 
