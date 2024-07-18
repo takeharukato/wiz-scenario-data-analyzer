@@ -47,6 +47,7 @@ from modules.charImgDecoder import charImgDecoder
 from modules.picDecoder import picDecoder
 from modules.drawMazeSVG import drawMazeSVG
 from modules.drawCharImgSVG import drawCharImgSVG
+from modules.drawPicImgSVG import drawPicImgSVG
 from modules.utils import property_dic_to_string,value_to_string,convertSVGtoRaster,escapeMarkdownChars
 import modules.consts
 
@@ -90,6 +91,7 @@ class scnInfoImpl(scnInfo):
         self._items={}
         self._rewards={}
         self._reward2monster={}
+        self._pics = {}
         self._char_sets = WizardryCharImgData(normal_bitmap={},cemetary_bitmap={})
         self._maze_messages=WizardryMessageData(messages={},msg_to_pos={},pos_to_msg={})
         return
@@ -1526,6 +1528,7 @@ class scnInfoImpl(scnInfo):
             print(f"|{idx}|{name}|{self.toc.SPELLHSH[idx]}({hex(self.toc.SPELLHSH[idx])})|{self.toc.SPELLGRP[idx]}|{modules.consts.DBG_WIZ_SPELL_TYPES[self.toc.SPELL012[idx]]}({self.toc.SPELL012[idx]})|", file=fp)
 
         return
+
     def _drawCharSet(self)->None:
         """文字セットを出力する
         """
@@ -1661,6 +1664,51 @@ class scnInfoImpl(scnInfo):
 
         return
 
+    def _drawPics(self)->None:
+        """モンスター/宝箱画像を出力する
+        """
+
+        with tempfile.TemporaryDirectory() as dir_name:
+
+            for num in self._pics.keys():
+
+                pic = self._pics[num]
+                basename = f"pic-{num}"
+
+                # SVGファイル名
+                svg_file=os.path.join(dir_name,f"{basename}.svg")
+
+                # 文字のSVG画像ファイルを生成
+                drawer=drawPicImgSVG(outfile=svg_file)
+                drawer.drawBitMap(pic=pic) # 画像を生成
+                drawer.save() # 画像を保存する
+
+                # PNGに変換
+                convertSVGtoRaster(infile=svg_file,
+                                    outfile=f"{basename}.{modules.consts.DEFAULT_RASTER_IMAGE_EXT}",
+                                    format=modules.consts.RASTER_IMAGE_TYPE_PNG)
+
+        return
+
+    def _dumpPics(self, fp:TextIO)->None:
+        """モンスター画像/宝箱画像の一覧を表示する
+
+        Args:
+            fp (TextIO): 表示先ファイルのTextIO.
+        """
+        self._drawPics() # 画像ファイルを出力する
+
+        print(f"", file=fp)
+        print(f"## モンスター/宝箱画像", file=fp)
+        print(f"", file=fp)
+        print(f"|モンスター番号|画像|")
+        print(f"|---|---|", file=fp)
+        for idx in self._pics:
+            outfile=f"pic-{idx}.{modules.consts.DEFAULT_RASTER_IMAGE_EXT}"
+            print(f"|{idx}|![{idx}番モンスター/宝箱画像]({outfile})|", file=fp)
+
+        return
+
     def plainDump(self, fp:TextIO)->None:
         """テキスト形式で表示する
 
@@ -1674,7 +1722,7 @@ class scnInfoImpl(scnInfo):
         self._dumpMonsters(fp=fp)
         self._dumpItems(fp=fp)
         self._dumpRewards(fp=fp)
-
+        self._dumpPics(fp=fp)
         return
 
     def getWallInfo(self, x:int, y:int, z:int, dir:int)->int:

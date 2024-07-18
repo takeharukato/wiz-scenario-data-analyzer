@@ -28,7 +28,6 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from modules.dataEntryDecoder import dataEntryDecoder
 from modules.datadef import WizardrySCNTOC, WizardryPicDataEntry
-#from modules.utils import getDecodeDict,word_to_use_string,word_to_dic,calcDataEntryOffset
 import modules.consts
 
 """画像データのPascal定義
@@ -38,25 +37,198 @@ import modules.consts
 1行70ピクセルの情報を10バイトで, 表現
 1画像あたり50行(500バイト)
 """
-PIC_HEIGHT=50
-PIC_WIDTH=70
 PIC_BYTE_PER_LINE=10
+PIXEL_PER_BYTE=7
 PIC_START_X=1
 
 APPLE_BIT_PTN1=0b1010101
 APPLE_BIT_PTN2=0b0101010
 APPLE_COLOR_DECISION_BIT=0x80
+COLOR_PAIR1=[modules.consts.PIC_COLOR_PURPLE,modules.consts.PIC_COLOR_GREEN]
+COLOR_PAIR2=[modules.consts.PIC_COLOR_BLUE,modules.consts.PIC_COLOR_ORANGE]
+COLORED_PIXEL=[modules.consts.PIC_COLOR_BLUE,modules.consts.PIC_COLOR_GREEN,
+            modules.consts.PIC_COLOR_ORANGE, modules.consts.PIC_COLOR_PURPLE]
 class picDecoder(dataEntryDecoder):
     """画像イメージデコーダ"""
-    def _decideColor(self, x:int, y:int, val:int)->list[int]:
 
-        scrn_x = x + PIC_START_X
-        color_select = APPLE_COLOR_DECISION_BIT & val
-        return []
+    def _dumpColorInfo(self, bitmap:dict[tuple[int,int],int])->None:
+        """解析したピクセルを文字表示する
+
+        Args:
+            bitmap (dict[tuple[int,int],int]): ビットマップの座標から色情報への辞書
+        """
+        for line in range(modules.consts.PIC_HEIGHT): # 各行について
+            for x in range(modules.consts.PIC_WIDTH): # 70ピクセル単位で展開
+                pos = (x,line)
+                assert pos in bitmap, f"No info for ({x},{line})"
+                color=bitmap[pos]
+                if color == modules.consts.PIC_COLOR_BLACK:
+                    color_str='  '
+                else:
+                    color_str=modules.consts.PIC_COLOR_NAME[color]
+                print(f"{color_str}",end='')
+            print("")
+
+        return
+
+    def _byteToPixel(self, bitmap_x:int, val:int)->list[int]:
+
+        # コード上, グラフィック画面のX=1から画像を表示するため,
+        # ビットマップ上のX座標に1加算し, ビデオメモリ上でのピクセルのX座標に
+        # 変換する
+        scrn_x = bitmap_x + PIC_START_X
+
+        #
+        # AppleIIのビデオメモリ
+        #
+        # AppleIIは, 1バイトのデータをビデオメモリに書き込むことで, 連続した
+        # 7ピクセルのON/OFF(発光の有無)を制御する
+        #
+        # 書き込みデータ(ビデオメモリに書込む1バイトのデータ)の構成
+        #
+        # - 0から6ビット目
+        #   0ビットから6ビット目までの画面上の各ビットのON/OFFで左から右へピクセルの
+        #   発光のON/OFFを決定する
+        #
+        #   - ビットが0の場合
+        #
+        #     発光しない(黒色になる)
+        #
+        #   - ビットが1の場合
+        #
+        #     a. 直前(画面左側)のピクセルのビットが立っていた(発光していた)
+        #        場合は, 対象ピクセルを白として発光する(補色により白に見える)
+        #
+        #     b. 直前(画面左側)のピクセルのビットが立っていない場合
+        #        書き込みデータ7ビット目のカラー選択ビットと対象ビットによって
+        #        発光されるビデオメモリ上のピクセルのX座標の値によって, 発光色を
+        #        決定する
+        #
+        # - 7ビット目
+        #   カラー選択ビット
+        #
+        #   最上位ビットは, カラー選択ビットとなっており,
+        #   直前のピクセルのビットが立っていない場合, バイトの最上位ビットと
+        #   対象ビットによって発光されるビデオメモリ上のピクセルのX座標の値によって,
+        #   発光色を選択する
+        #
+        #   本来は, 信号の位相に依存する発色となるため, 以下は正確な色表現ではないが,
+        #   おおよそ, 以下のように色を決定する
+        #
+        #   1. ビデオメモリ上のピクセルのX座標が偶数の場合,
+        #
+        #      a. ビデオメモリ上のピクセルのX座標が偶数の場合, かつ, カラー選択ビットが立っていたら
+        #         青色を発光する
+        #
+        #      b. ビデオメモリ上のピクセルのX座標が偶数の場合, かつ, カラー選択ビットが立っていたら
+        #         紫を発光する
+        #
+        #   2. ビデオメモリ上のピクセルのX座標が奇数の場合
+        #
+        #      i. ビデオメモリ上のピクセルのX座標が奇数の場合, かつ, カラー選択ビットが立っていたら
+        #         橙色を発光する
+        #
+        #     ii. ビデオメモリ上のピクセルのX座標が奇数の場合, かつ, カラー選択ビットが立っていたら
+        #         緑を発光する
+        #
+
+        color_select = APPLE_COLOR_DECISION_BIT & val # カラー選択ビット
+
+        res:list[int] = [] # 返却するピクセルの色情報(7ビット分)
+        for bit in range(7): # 最上位ビットを除く0から6ビット目まで
+
+            mask = 1 << bit
+
+            if val & mask: # ビットが立っている場合,
+
+                if scrn_x % 2 == 0: # ビデオメモリ上の偶数ピクセルの場合
+                    if color_select: # カラー選択ビットが立っていたら
+                        candidate = modules.consts.PIC_COLOR_BLUE # 青
+                    else:
+                        candidate = modules.consts.PIC_COLOR_PURPLE # 紫
+                else:
+                    if color_select: # カラー選択ビットが立っていたら
+                        candidate = modules.consts.PIC_COLOR_ORANGE # 橙
+                    else:
+                        candidate = modules.consts.PIC_COLOR_GREEN # 緑
+
+            else: # ビットが0の場合は黒に設定する
+                candidate = modules.consts.PIC_COLOR_BLACK # 黒に設定する
+
+            res.append(candidate)
+
+        return res
+
+    def _updateColorImage(self, info:WizardryPicDataEntry)->None:
+
+        for y in range(modules.consts.PIC_HEIGHT):
+            for x in range(modules.consts.PIC_WIDTH):
+                pos=(x,y)
+                assert pos in info.bitmap_info,f"{pos} not found"
+                bitmap_entry = info.bitmap_info[pos]
+                if x > 0:
+                    prev_pos=(x-1, y)
+                    assert prev_pos in info.bitmap_info,f"{prev_pos} not found"
+                    prev_entry = info.bitmap_info[prev_pos]
+
+                    # 連続した2ビットを白色として扱う
+                    if ( bitmap_entry in COLOR_PAIR1 and prev_entry in COLOR_PAIR1 ) or \
+                        ( bitmap_entry in COLOR_PAIR2 and prev_entry in COLOR_PAIR2 ):
+                        info.color_info[pos]=modules.consts.PIC_COLOR_WHITE
+                        info.color_info[prev_pos]=modules.consts.PIC_COLOR_WHITE
+                    elif prev_entry in COLORED_PIXEL and bitmap_entry == modules.consts.PIC_COLOR_BLACK:
+                        # 前のビットが色のあるビットで次のビットが黒の場合前のビットの色にする
+                        info.color_info[pos]=prev_entry
+                        info.color_info[prev_pos]=prev_entry
+                    elif prev_entry == modules.consts.PIC_COLOR_BLACK and bitmap_entry in COLORED_PIXEL:
+                        # 前のビットが黒で次のビットが色つき場合後ろのビットの色にする
+                        info.color_info[pos]=bitmap_entry
+                        info.color_info[prev_pos]=bitmap_entry
+                    #
+                    # 連続した補色を処理する
+                    #
+                    #if info.color_info[prev_pos] in COLOR_PAIR1 and pos in info.color_info and info.color_info[pos] in COLOR_PAIR1:
+                    #    info.color_info[prev_pos]=modules.consts.PIC_COLOR_WHITE
+                    #    info.color_info[pos]=modules.consts.PIC_COLOR_WHITE
+                    #elif info.color_info[prev_pos] in COLOR_PAIR2 and pos in info.color_info and info.color_info[pos] in COLOR_PAIR2:
+                    #    info.color_info[prev_pos]=modules.consts.PIC_COLOR_WHITE
+                    #    info.color_info[pos]=modules.consts.PIC_COLOR_WHITE
+                    else:
+                        info.color_info[pos]=modules.consts.PIC_COLOR_BLACK
+                        info.color_info[prev_pos]=modules.consts.PIC_COLOR_BLACK
+                else:
+                    info.color_info[pos]=bitmap_entry
+        return
+
+    def _updateBitmapImage(self, info:WizardryPicDataEntry)->None:
+
+        index = 0
+        for line in range(modules.consts.PIC_HEIGHT): # 各行について
+
+            for bitmap_byte in range(PIC_BYTE_PER_LINE): # 10バイト単位で展開
+
+                bitmap_x = bitmap_byte * PIXEL_PER_BYTE  # bitmap内でのX座標
+
+                res = self._byteToPixel(bitmap_x=bitmap_x, val=info.raw_data[index])
+                index += 1
+                #
+                # ビットマップ情報を更新する
+                #
+                for offset,val in enumerate(res):
+                    pos = (bitmap_x + offset, line)
+                    info.bitmap_info[pos]=val
+            pass
+        return
 
     def _decodeOneImage(self, index:int, info:WizardryPicDataEntry)->None:
 
-
+        self._updateBitmapImage(info=info) # ビットマップ情報を更新する
+        # デバッグ用
+        #self._dumpColorInfo(bitmap=info.bitmap_info)
+        self._updateColorImage(info=info)  # 描画情報を更新する
+        # デバッグ用
+        #self._dumpColorInfo(bitmap=info.color_info)
+        pass
         return
 
     def decodeOneData(self, toc:WizardrySCNTOC, data: Any, index: int)->Optional[Any]:
@@ -71,7 +243,7 @@ class picDecoder(dataEntryDecoder):
             Optional[Any]: キャラクタセット情報
         """
 
-        res = WizardryPicDataEntry(raw_data=[],color_info={})
+        res = WizardryPicDataEntry(raw_data=[], bitmap_info={}, color_info={})
 
         # 対象画像の開始オフセット位置(単位:ブロック)を得る
         blk_offset = toc.BLOFF[modules.consts.ZSPCCHRS] + index
@@ -84,8 +256,8 @@ class picDecoder(dataEntryDecoder):
             byte_val = struct.unpack_from('B', data, start_offset + data_offset)
             val = int(byte_val[0])
             res.raw_data.append(val)
-        if index == 7: # TODO
-            self._decodeOneImage(index=index, info=res)
-        pass
 
-        return None
+        # 画像イメージをデコードする
+        self._decodeOneImage(index=index, info=res)
+
+        return res

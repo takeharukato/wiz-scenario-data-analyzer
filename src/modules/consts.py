@@ -78,6 +78,10 @@ PIC_COLOR_NAME:dict[int,str]={
     PIC_COLOR_ORANGE:"燈",
     PIC_COLOR_WHITE:"白",
 }
+# モンスター/宝箱画像のサイズ
+PIC_WIDTH=70
+PIC_HEIGHT=50
+PIC_LEN_PER_PIXEL=2
 # 方角
 DIR_NORTH=0
 DIR_EAST=1

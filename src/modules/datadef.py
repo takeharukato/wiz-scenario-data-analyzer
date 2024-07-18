@@ -811,4 +811,7 @@ class WizardryPicDataEntry:
 
     raw_data:list[int]
     """生データ"""
+    bitmap_info:dict[tuple[int,int],int]
+    """書き込みデータ"""
     color_info:dict[tuple[int,int],int]
+    """描画用データ"""
