@@ -805,3 +805,10 @@ class WizardryCharImgData:
         if char_code >= (modules.consts.CHARIMG_CH_CODE_START + modules.consts.CHARIMG_PER_CHARSET):
             return 0 # 0を返す
         return char_code - modules.consts.CHARIMG_CH_CODE_START
+
+@dataclass
+class WizardryPicDataEntry:
+
+    raw_data:list[int]
+    """生データ"""
+    color_info:dict[tuple[int,int],int]

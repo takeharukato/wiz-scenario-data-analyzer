@@ -35,7 +35,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from modules.datadef import WizardrySCNTOC, WizardryMazeFloorDataEntry, WizardryMonsterDataEntry
 from modules.datadef import WizardryItemDataEntry, WizardryRewardDataEntry, WizardryRewardInfo, WizardryMazeFloorEventInfo
-from modules.datadef import WizardryMessageData, WizardryCharImgData
+from modules.datadef import WizardryMessageData, WizardryCharImgData, WizardryPicDataEntry
 from modules.scnInfo import scnInfo
 from modules.TOCDecoder import TOCDecoder
 from modules.mazeFloorDecoder import mazeFloorDecoder
@@ -44,6 +44,7 @@ from modules.itemDecoder import itemDecoder
 from modules.rewardDecoder import rewardDecoder
 from modules.msgDecoderImpl import messageDecoder
 from modules.charImgDecoder import charImgDecoder
+from modules.picDecoder import picDecoder
 from modules.drawMazeSVG import drawMazeSVG
 from modules.drawCharImgSVG import drawCharImgSVG
 from modules.utils import property_dic_to_string,value_to_string,convertSVGtoRaster,escapeMarkdownChars
@@ -73,6 +74,8 @@ class scnInfoImpl(scnInfo):
     """アイテム情報"""
     _rewards:dict[int,WizardryRewardDataEntry]
     """報酬情報"""
+    _pics:dict[int,WizardryPicDataEntry]
+    """画像イメージ情報"""
 
     _reward2monster:dict[int,set[int]]
     """報酬番号からモンスター番号の集合への辞書"""
@@ -451,6 +454,17 @@ class scnInfoImpl(scnInfo):
 
         return
 
+    def _readPicTable(self, data: Any)->None:
+
+        decoder=picDecoder()
+        nr_pics=self.toc.RECPERDK[modules.consts.ZSPCCHRS]
+        for idx in range(nr_pics):
+            pic=decoder.decodeOneData(toc=self.toc, data=data, index=idx)
+            if isinstance(pic, WizardryPicDataEntry):
+                self._pics[idx]=pic
+
+        return
+
     def getEventInfo(self, x:int, y:int, z:int)->Optional[WizardryMazeFloorEventInfo]:
         """イベント情報を返す
 
@@ -759,6 +773,10 @@ class scnInfoImpl(scnInfo):
         self._readMessages(data=self._message_data) # メッセージ情報を読み込む
 
         self._readTOC(data=self._scenario_data) # 目次情報を読み込む
+
+        # TODO 後ろに持っていく
+        self._readPicTable(data=self._scenario_data) # 画像情報を読み込む
+
         self._readFloorTable(data=self._scenario_data) # 迷宮フロア情報を読み込む
         self._readMonsterTable(data=self._scenario_data) # モンスター情報を読み込む
         self._readItemTable(data=self._scenario_data) # アイテム情報を読み込む
