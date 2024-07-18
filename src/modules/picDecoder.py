@@ -37,17 +37,26 @@ import modules.consts
 1行70ピクセルの情報を10バイトで, 表現
 1画像あたり50行(500バイト)
 """
-PIC_BYTE_PER_LINE=10
-PIXEL_PER_BYTE=7
-PIC_START_X=1
 
+# 画像イメージ1行当たりのバイト数 (1行70ピクセル)
+PIC_BYTE_PER_LINE=(modules.consts.PIC_WIDTH // modules.consts.PIXEL_PER_BYTE)
+
+# 色1のピクセル (色選択ビット0のとき, 緑, 色選択ビット1のとき, 橙 のピクセル (X=0ピクセルからX=6ピクセルまで))
 APPLE_BIT_PTN1=0b1010101
+# 色2のピクセル (色選択ビット0のとき, 紫, 色選択ビット1のとき, 青 (X=0ピクセルからX=6ピクセルまで))
 APPLE_BIT_PTN2=0b0101010
+# 色選択ビット
 APPLE_COLOR_DECISION_BIT=0x80
-COLOR_PAIR1=[modules.consts.PIC_COLOR_PURPLE,modules.consts.PIC_COLOR_GREEN]
-COLOR_PAIR2=[modules.consts.PIC_COLOR_BLUE,modules.consts.PIC_COLOR_ORANGE]
-COLORED_PIXEL=[modules.consts.PIC_COLOR_BLUE,modules.consts.PIC_COLOR_GREEN,
-            modules.consts.PIC_COLOR_ORANGE, modules.consts.PIC_COLOR_PURPLE]
+
+# 色選択ビット0のときの表示色 (緑,紫)
+COLOR_PAIR1=(modules.consts.PIC_COLOR_GREEN,modules.consts.PIC_COLOR_PURPLE)
+# 色選択ビット1のときの表示色 (橙,青)
+COLOR_PAIR2=(modules.consts.PIC_COLOR_ORANGE,modules.consts.PIC_COLOR_BLUE)
+
+# ビデオRAM上に書き込む色(白は, 紫と緑(色選択ビット0のとき), 青と橙(色選択ビットが1のとき)の組み合わせで表示)
+COLORED_PIXEL=(modules.consts.PIC_COLOR_BLUE,modules.consts.PIC_COLOR_GREEN,
+            modules.consts.PIC_COLOR_ORANGE, modules.consts.PIC_COLOR_PURPLE)
+
 class picDecoder(dataEntryDecoder):
     """画像イメージデコーダ"""
 
@@ -76,7 +85,7 @@ class picDecoder(dataEntryDecoder):
         # コード上, グラフィック画面のX=1から画像を表示するため,
         # ビットマップ上のX座標に1加算し, ビデオメモリ上でのピクセルのX座標に
         # 変換する
-        scrn_x_offset = bitmap_x + PIC_START_X
+        scrn_x_offset = bitmap_x + modules.consts.PIC_START_X
 
         #
         # AppleIIのビデオメモリ
@@ -179,22 +188,13 @@ class picDecoder(dataEntryDecoder):
                         info.color_info[pos]=modules.consts.PIC_COLOR_WHITE
                         info.color_info[prev_pos]=modules.consts.PIC_COLOR_WHITE
                     elif prev_entry in COLORED_PIXEL and bitmap_entry == modules.consts.PIC_COLOR_BLACK:
-                        # 前のビットが色のあるビットで次のビットが黒の場合前のビットの色にする
+                        # 前のビットが色のあるビットで, かつ, 次のビットが黒の場合, 前のビットの色にする
                         info.color_info[pos]=prev_entry
                         info.color_info[prev_pos]=prev_entry
                     elif prev_entry == modules.consts.PIC_COLOR_BLACK and bitmap_entry in COLORED_PIXEL:
-                        # 前のビットが黒で次のビットが色つき場合後ろのビットの色にする
+                        # 前のビットが黒で, かつ, 次のビットが色のあるビットの場合, 後ろのビットの色にする
                         info.color_info[pos]=bitmap_entry
                         info.color_info[prev_pos]=bitmap_entry
-                    #
-                    # 連続した補色を処理する
-                    #
-                    #if info.color_info[prev_pos] in COLOR_PAIR1 and pos in info.color_info and info.color_info[pos] in COLOR_PAIR1:
-                    #    info.color_info[prev_pos]=modules.consts.PIC_COLOR_WHITE
-                    #    info.color_info[pos]=modules.consts.PIC_COLOR_WHITE
-                    #elif info.color_info[prev_pos] in COLOR_PAIR2 and pos in info.color_info and info.color_info[pos] in COLOR_PAIR2:
-                    #    info.color_info[prev_pos]=modules.consts.PIC_COLOR_WHITE
-                    #    info.color_info[pos]=modules.consts.PIC_COLOR_WHITE
                     else:
                         info.color_info[pos]=modules.consts.PIC_COLOR_BLACK
                         info.color_info[prev_pos]=modules.consts.PIC_COLOR_BLACK
@@ -209,7 +209,7 @@ class picDecoder(dataEntryDecoder):
 
             for bitmap_byte in range(PIC_BYTE_PER_LINE): # 10バイト単位で展開
 
-                bitmap_x = bitmap_byte * PIXEL_PER_BYTE  # bitmap内でのX座標
+                bitmap_x = bitmap_byte * modules.consts.PIXEL_PER_BYTE  # bitmap内でのX座標
 
                 res = self._byteToPixel(bitmap_x=bitmap_x, val=info.raw_data[index])
                 index += 1
@@ -219,7 +219,7 @@ class picDecoder(dataEntryDecoder):
                 for offset,val in enumerate(res):
                     pos = (bitmap_x + offset, line)
                     info.bitmap_info[pos]=val
-            pass
+
         return
 
     def _decodeOneImage(self, index:int, info:WizardryPicDataEntry)->None:
@@ -227,6 +227,7 @@ class picDecoder(dataEntryDecoder):
         self._updateBitmapImage(info=info) # ビットマップ情報を更新する
         # デバッグ用
         #self._dumpColorInfo(bitmap=info.bitmap_info)
+
         self._updateColorImage(info=info)  # 描画情報を更新する
         # デバッグ用
         #self._dumpColorInfo(bitmap=info.color_info)

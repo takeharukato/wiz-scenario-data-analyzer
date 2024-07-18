@@ -1431,7 +1431,7 @@ class scnInfoImpl(scnInfo):
 
         print("## モンスター一覧表",file=fp)
         print("",file=fp)
-        print(f"|連番|名前|名前複数形|不確定名称|不確定名称複数形|画像ファイルインデクス|出現階層|出現数|HP|"
+        print(f"|連番|名前|名前複数形|不確定名称|不確定名称複数形|画像ファイルインデクス番号|出現階層|出現数|HP|"
               f"種別|アーマクラス|最大攻撃回数|各回の攻撃ダイス|経験値|ドレインレベル|リジェネレーション値|ワンダリングモンスター時報酬|玄室モンスター時報酬|"
               f"後続モンスター|後続モンスター出現率|魔術師呪文レベル|僧侶呪文レベル|出現回数制限|ブレス種別|"
               f"呪文無効化率|抵抗|攻撃付与|弱点|"
@@ -1701,11 +1701,13 @@ class scnInfoImpl(scnInfo):
         print(f"", file=fp)
         print(f"## モンスター/宝箱画像", file=fp)
         print(f"", file=fp)
-        print(f"|モンスター番号|画像|")
-        print(f"|---|---|", file=fp)
+        print(f"|画像ファイルインデクス番号|画像|モンスター名|")
+        print(f"|---|---|---|", file=fp)
         for idx in self._pics:
+            mon_names = modules.consts.DELIMITER_COMMA.join([ f"{self._monsters[num].name} ({num})" for num in sorted(self._monsters.keys()) if self._monsters[num].pic == idx ])
+
             outfile=f"pic-{idx}.{modules.consts.DEFAULT_RASTER_IMAGE_EXT}"
-            print(f"|{idx}|![{idx}番モンスター/宝箱画像]({outfile})|", file=fp)
+            print(f"|{idx}|![{idx}番モンスター/宝箱画像]({outfile})|{mon_names}|", file=fp)
 
         return
 

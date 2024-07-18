@@ -78,10 +78,21 @@ PIC_COLOR_NAME:dict[int,str]={
     PIC_COLOR_ORANGE:"燈",
     PIC_COLOR_WHITE:"白",
 }
+
 # モンスター/宝箱画像のサイズ
+# 幅 70 ピクセル x 高さ 50 ピクセル
 PIC_WIDTH=70
 PIC_HEIGHT=50
+
+# モンスター/宝箱画像データ1バイト当たりのピクセル数( 0-6ピクセル )
+# 一つ当たり7ピクセル
+PIXEL_PER_BYTE=7
+
+# AppleII 1ピクセルを表現するピクセル数
 PIC_LEN_PER_PIXEL=2
+# AppleII版 WizardryのENEMYPIC手続きでの描画開始X座標
+PIC_START_X=1
+
 # 方角
 DIR_NORTH=0
 DIR_EAST=1
