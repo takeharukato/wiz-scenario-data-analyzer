@@ -394,6 +394,15 @@ CHARIMG_CEMETARY_CHAR_INDEXES=[
                         27,28,29,30,
                         31,56,57,58
                     ]
+# デバッグ用(未使用)
+DBG_CHARIMG_CEMETARY_CHAR_INDEXES=[
+                        11,12,13,14,
+                        15,16,17,18,
+                        19,20,21,22,
+                        23,24,25,26,
+                        27,28,29,30,
+                        31,32,33,34
+                    ]
 CHARIMG_TYPE_VALID=(CHARIMG_TYPE_NORMAL, CHARIMG_TYPE_CEMETARY)
 CHARIMG_FILENAME_PREFIX_DIC:dict[int,str]={
     CHARIMG_TYPE_NORMAL:"charset-normal",
