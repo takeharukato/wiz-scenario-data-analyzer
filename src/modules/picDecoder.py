@@ -76,7 +76,7 @@ class picDecoder(dataEntryDecoder):
         # コード上, グラフィック画面のX=1から画像を表示するため,
         # ビットマップ上のX座標に1加算し, ビデオメモリ上でのピクセルのX座標に
         # 変換する
-        scrn_x = bitmap_x + PIC_START_X
+        scrn_x_offset = bitmap_x + PIC_START_X
 
         #
         # AppleIIのビデオメモリ
@@ -140,6 +140,8 @@ class picDecoder(dataEntryDecoder):
             mask = 1 << bit
 
             if val & mask: # ビットが立っている場合,
+
+                scrn_x = scrn_x_offset + bit # ビデオメモリ上の対象ピクセルのX座標を算出
 
                 if scrn_x % 2 == 0: # ビデオメモリ上の偶数ピクセルの場合
                     if color_select: # カラー選択ビットが立っていたら
