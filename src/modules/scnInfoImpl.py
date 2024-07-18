@@ -856,7 +856,7 @@ class scnInfoImpl(scnInfo):
             alignment_string=f"無属性 ( {data.alignment_string} ({value_to_string(data.alignment_value)}) )"
         else:
             alignment_string=f"{data.alignment_string} ({value_to_string(data.alignment_value)})"
-        cursed_string=f"呪" if data.cursed else ""
+        cursed_string=f"呪いあり" if data.cursed else ""
         special_pwr_string=f"{modules.consts.ITEM_SPECIAL_DIC[data.special_value]} ({data.special_value})" if data.special_value in modules.consts.ITEM_SPECIAL_DIC else f"{modules.consts.UNKNOWN_STRING} ({data.special_value})" if data.special_value > 0 else f""
         change_to_string=f"{self._items[data.change_to_value].name} ({data.change_to_value})" if data.change_percentage > 0 and data.change_to_value in self._items else f""
         change_percentage_string=f"{data.change_percentage}"
