@@ -36,6 +36,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from modules.datadef import WizardrySCNTOC, WizardryMazeFloorDataEntry, WizardryMonsterDataEntry
 from modules.datadef import WizardryItemDataEntry, WizardryRewardDataEntry, WizardryRewardInfo, WizardryMazeFloorEventInfo
 from modules.datadef import WizardryMessageData, WizardryCharImgData, WizardryPicDataEntry, WizardryExpTblDataEntry
+from modules.datadef import WizardrySpellTblDataEntry
 from modules.scnInfo import scnInfo
 from modules.TOCDecoder import TOCDecoder
 from modules.mazeFloorDecoder import mazeFloorDecoder
@@ -44,6 +45,7 @@ from modules.itemDecoder import itemDecoder
 from modules.rewardDecoder import rewardDecoder
 from modules.msgDecoderImpl import messageDecoder
 from modules.charImgDecoder import charImgDecoder
+from modules.spellNameDecoder import spellNameDecoder
 from modules.picDecoder import picDecoder
 from modules.expTblDecoder import expTblDecoder
 from modules.drawMazeSVG import drawMazeSVG
@@ -67,6 +69,8 @@ class scnInfoImpl(scnInfo):
 
     _char_sets:WizardryCharImgData
     """文字イメージビットマップ情報"""
+    _spell_names:WizardrySpellTblDataEntry
+    """呪文名情報"""
 
     _floors:dict[int, WizardryMazeFloorDataEntry]
     """迷宮フロア情報"""
@@ -96,8 +100,12 @@ class scnInfoImpl(scnInfo):
         self._reward2monster={}
         self._pics = {}
         self._exp_tables = {}
+
         self._char_sets = WizardryCharImgData(normal_bitmap={},cemetary_bitmap={})
+        self._spell_names = WizardrySpellTblDataEntry(tables={})
+
         self._maze_messages=WizardryMessageData(messages={},msg_to_pos={},pos_to_msg={})
+
         return
 
     def _getMonsterRangeString(self, min:int, max:int)-> str:
@@ -396,7 +404,7 @@ class scnInfoImpl(scnInfo):
         return
 
     def _readTOC(self, data:Any)->None:
-        """目次情報/キャラクタセット情報を読込む
+        """目次情報/キャラクタセット情報/呪文名情報を読込む
 
         Args:
             data (Any): シナリオデータ
@@ -413,6 +421,14 @@ class scnInfoImpl(scnInfo):
         res = char_img_decoder.decodeOneData(toc=self.toc,data=data,index=0) # indexは未使用
         if isinstance(res, WizardryCharImgData):
             self._char_sets = res
+
+        #
+        # 呪文名情報を読み込む
+        #
+        spell_name_decoder=spellNameDecoder()
+        res = spell_name_decoder.decodeOneData(toc=self.toc,data=data,index=0) # indexは未使用
+        if isinstance(res, WizardrySpellTblDataEntry):
+            self._spell_names = res
 
         return
 
@@ -1246,9 +1262,6 @@ class scnInfoImpl(scnInfo):
 
     def _plainOneDumpRewardHumanReadable(self, reward_number:int, max_reward_range:int, reward:WizardryRewardDataEntry, fp: TextIO)->None:
 
-        #null_prefix="|||||||"
-        #null_reward_range_prefix='|'.join(['' for _i in range(max_reward_range)])
-        #null_line=null_prefix + null_reward_range_prefix + '|'
         index_string = f"{reward_number}"
         in_chest_string=f"宝箱あり" if reward.in_chest else f"宝箱なし"
         nr_rewards_string = f"{reward.reward_count_value}"
@@ -1259,14 +1272,12 @@ class scnInfoImpl(scnInfo):
             reward_info=reward.rewards[info_index]
 
             if reward_info.percentage == 0:
-                #print(f"{null_line}", file=fp)
                 continue # 無効エントリ
 
             percentage_string = f"{reward_info.percentage:3} %"
             has_item_string = f"アイテム" if reward_info.has_item else f"お金"
 
             if info_index > reward.reward_count_value:
-                #print(f"{null_line}", file=fp)
                 continue # 無効エントリ
 
             if reward_info.has_item: # アイテム報酬の場合
@@ -1541,6 +1552,9 @@ class scnInfoImpl(scnInfo):
         for idx,name in enumerate(modules.consts.DBG_WIZ_SPELL_NAMES):
             print(f"|{idx}|{name}|{self.toc.SPELLHSH[idx]}({hex(self.toc.SPELLHSH[idx])})|{self.toc.SPELLGRP[idx]}|{modules.consts.DBG_WIZ_SPELL_TYPES[self.toc.SPELL012[idx]]}({self.toc.SPELL012[idx]})|", file=fp)
 
+        self._dumpCharSet(fp=fp)      # シナリオ情報先頭から1ブロック目(通常文字),2ブロック目(全滅時文字)にある文字情報を出力
+        self._dumpSpellTables(fp=fp)  # シナリオ情報先頭から4ブロック目(魔術師呪文),5ブロック目(僧侶呪文)にある呪文名表を出力
+
         return
 
     def _drawCharSet(self)->None:
@@ -1674,8 +1688,6 @@ class scnInfoImpl(scnInfo):
 
         self._drawCemetary(fp=fp)
 
-        print(f"", file=fp)
-
         return
 
     def _drawPics(self)->None:
@@ -1767,6 +1779,36 @@ class scnInfoImpl(scnInfo):
         print(f"|次のレベルに上がるための必要経験値|", file=fp)
         return
 
+    def _dumpSpellTables(self, fp:TextIO)->None:
+
+        print(f"", file=fp)
+        print("## 呪文名情報",file=fp)
+
+        for spell_type in self._spell_names.tables.keys():
+
+            table = self._spell_names.tables[spell_type]
+
+            print(f"", file=fp)
+            print(f"### {spell_type}の呪文名表",file=fp)
+            print(f"", file=fp)
+
+            print(f"|連番|呪文レベル|名前|レベルの開始点|", file=fp)
+            print(f"|---|---|---|---|", file=fp)
+
+            index = 1
+            for level in sorted(table.keys()):
+                table_entries = table[level]
+                for sub_idx, entry in enumerate(table_entries):
+                    start_level_string = f"レベル{level}呪文の開始" \
+                        if entry.has_delimiter else \
+                            f"レベル{level}呪文の開始(最初のエントリ)" if sub_idx == 0 else ""
+                    print(f"|{index}|{level}|{entry.name}|{start_level_string}|", file=fp)
+                    index += 1
+
+        print(f"", file=fp)
+
+        return
+
     def plainDump(self, fp:TextIO)->None:
         """テキスト形式で表示する
 
@@ -1774,7 +1816,6 @@ class scnInfoImpl(scnInfo):
             fp (TextIO): 表示先ファイルのTextIO.
         """
         self._dumpTOC(fp=fp)
-        self._dumpCharSet(fp=fp)
         self._dumpFloors(fp=fp)
         self._dumpMonsters(fp=fp)
         self._dumpItems(fp=fp)

@@ -835,3 +835,21 @@ class WizardryExpTblDataEntry:
 
     exp_table:dict[int,WizardryExpTblClassEntry]
     """職業番号から経験値テーブルへの辞書"""
+
+@dataclass
+class WizardrySpellNameTblEntry:
+    """呪文名情報"""
+
+    has_delimiter:bool
+    """呪文レベルの区切りの場合は真"""
+    name:str
+    """呪文名"""
+    spell_level:int
+    """呪文レベル"""
+
+@dataclass
+class WizardrySpellTblDataEntry:
+    """呪文名情報"""
+
+    tables:dict[str,dict[int,list[WizardrySpellNameTblEntry]]]
+    """呪文種別から呪文名情報への辞書"""

@@ -105,7 +105,7 @@ class expTblDecoder(dataEntryDecoder):
         return res
 
     def decodeOneData(self, toc:WizardrySCNTOC, data: Any, index: int)->Optional[Any]:
-        """シナリオデータファイル中のアイテムデータを解析する
+        """シナリオデータファイル中の経験値表データを解析する
 
         Args:
             toc (WizardrySCNTOC): 目次情報
