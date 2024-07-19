@@ -64,7 +64,7 @@ class ReadScenario:
 
     ## 入力ファイル名
     #
-    infile = None
+    scenario_file = None
 
     ## メッセージファイル名
     #
@@ -101,7 +101,7 @@ class ReadScenario:
         #
         # 他のクラス変数の初期化
         #
-        self.infile = self.__args.infile   # type: ignore 入力ファイル名の設定
+        self.scenario_file = self.__args.scenario_file   # type: ignore 入力ファイル名の設定
         self.msg_file = self.__args.msg_file # type: ignore メッセージファイル名の設定
         #self.outfile = self.__args.outfile # type: ignore 出力ファイル名の設定
 
@@ -133,10 +133,10 @@ class ReadScenario:
         #
 
         #  第1位置引数に入力ファイルを指定
-        cmdline.add_argument('infile', help='入力ファイル')
+        cmdline.add_argument('scenario_file', help='シナリオファイル')
 
         #  第2位置引数にメッセージファイルを指定
-        cmdline.add_argument('msg_file', help='入力ファイル')
+        cmdline.add_argument('msg_file', help='メッセージファイル')
 
         #  第3位置引数に入力ファイルを指定
         # cmdline.add_argument('outfile', help='出力ファイル')
@@ -167,17 +167,16 @@ class ReadScenario:
         self.is_debug = False # デバッグモードを無効にする
         return
 
-    def doConvert(self, infile:Optional[str]=None, outfile:Optional[str]=None)->None:
+    def doConvert(self, outfile:Optional[str]=None)->None:
         """シナリオ情報を変換する
 
         Args:
-            infile (Optional[str], optional): 入力ファイル. Defaults to None("SCENARIO.DATA"を読み込む).
             outfile (Optional[str], optional): 出力ファイル. Defaults to None.
         """
 
         msg_data=None
 
-        this_infile=infile
+        this_infile=self.scenario_file
         if not this_infile:
             this_infile=modules.consts.DEFAULT_SCENARIO_DATA_FILE
 
