@@ -33,6 +33,7 @@ from modules.calcMisc import simple_round
 @dataclass
 class WizardrySCNTOC:
     """目次情報"""
+
     game_name:str
     """シナリオ名"""
     RECPER2B:dict[str,int]
@@ -58,6 +59,8 @@ class WizardrySCNTOC:
 
 @dataclass
 class dice_type:
+    """ダイス型"""
+
     trial:int
     """ダイスを振る回数(nDt+aのn)"""
     factor:int
@@ -109,6 +112,7 @@ class WizardryMazeFloorEventInfo:
         """有効なイベントの場合は, 真
         """
         return len(self.broken_reason) == 0
+
     @property
     def reason_string(self)->str:
         """無効な理由を表す文字列
@@ -355,6 +359,7 @@ class WizardryMonsterDataEntry:
 @dataclass
 class WizardryItemDataEntry:
     """アイテム情報"""
+
     name:str
     """名称"""
     name_unknown:str
@@ -808,6 +813,7 @@ class WizardryCharImgData:
 
 @dataclass
 class WizardryPicDataEntry:
+    """モンスター/宝箱画像"""
 
     raw_data:list[int]
     """生データ"""
@@ -815,3 +821,17 @@ class WizardryPicDataEntry:
     """書き込みデータ"""
     color_info:dict[tuple[int,int],int]
     """描画用データ"""
+
+@dataclass
+class WizardryExpTblClassEntry:
+    """職業ごとの経験値表情報"""
+
+    exp_table:dict[int,int]
+    """次のレベルまでの経験値"""
+
+@dataclass
+class WizardryExpTblDataEntry:
+    """経験値表情報"""
+
+    exp_table:dict[int,WizardryExpTblClassEntry]
+    """職業番号から経験値テーブルへの辞書"""

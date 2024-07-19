@@ -89,7 +89,6 @@ WizardryItemDataEntryDef:dict[str,Any]={
 
 class itemDecoder(dataEntryDecoder):
 
-
     def _dict2ItemDataEntry(self, toc:WizardrySCNTOC, decode_dict:dict[str,Any])->WizardryItemDataEntry:
         """unpackしたアイテム情報をpythonのオブジェクトに変換
 

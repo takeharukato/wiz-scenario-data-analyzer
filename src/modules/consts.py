@@ -109,8 +109,13 @@ DIR_VALID=(DIR_NORTH,DIR_EAST,DIR_SOUTH,DIR_WEST)
 
 DELIMITER_COMMA=","
 DELIMITER_SPC=" "
+
 # バックスラッシュ以外のマークダウンエスケープ対象文字
 MARKDOWN_ESCAPE_CHARS=['#','+',"-","*","_","`",".","!","{","}","[","]","(",")"]
+
+# TWIZLONGの構成要素名
+TWIZLONG_PARAMS=('LOW','MID','HIGH')
+
 #
 # シナリオ情報の目次
 #
@@ -273,6 +278,7 @@ CHAR_CLASS_DIC:dict[int,str]={
     6:"君主",
     7:"忍者",
 }
+NR_CLASS=len(CHAR_CLASS_DIC)
 # キャラクタの属性
 CHAR_ALIGNMENT_DIC:dict[int,str]={
     0:"無属性",
@@ -438,6 +444,10 @@ CHARIMG_TYPE_TO_BLK_OFFSET:dict[int,int]={
     CHARIMG_TYPE_NORMAL:1, # シナリオ情報オフセットブロック 1
     CHARIMG_TYPE_CEMETARY:2, # シナリオ情報オフセットブロック 2
 }
+
+# 経験値表の格納エントリ数
+EXP_TBL_ELEMENT_NR=13
+
 # 呪文用途(デバッグ用)
 # (* 呪文種別(対象者選択時に使用): GENERIC(0 一般), PERSON(1 単体), GROUP(2 グループ) *)
 # TSPEL012 = (GENERIC, PERSON, GROUP);

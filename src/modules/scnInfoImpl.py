@@ -35,7 +35,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from modules.datadef import WizardrySCNTOC, WizardryMazeFloorDataEntry, WizardryMonsterDataEntry
 from modules.datadef import WizardryItemDataEntry, WizardryRewardDataEntry, WizardryRewardInfo, WizardryMazeFloorEventInfo
-from modules.datadef import WizardryMessageData, WizardryCharImgData, WizardryPicDataEntry
+from modules.datadef import WizardryMessageData, WizardryCharImgData, WizardryPicDataEntry, WizardryExpTblDataEntry
 from modules.scnInfo import scnInfo
 from modules.TOCDecoder import TOCDecoder
 from modules.mazeFloorDecoder import mazeFloorDecoder
@@ -45,6 +45,7 @@ from modules.rewardDecoder import rewardDecoder
 from modules.msgDecoderImpl import messageDecoder
 from modules.charImgDecoder import charImgDecoder
 from modules.picDecoder import picDecoder
+from modules.expTblDecoder import expTblDecoder
 from modules.drawMazeSVG import drawMazeSVG
 from modules.drawCharImgSVG import drawCharImgSVG
 from modules.drawPicImgSVG import drawPicImgSVG
@@ -77,6 +78,8 @@ class scnInfoImpl(scnInfo):
     """報酬情報"""
     _pics:dict[int,WizardryPicDataEntry]
     """画像イメージ情報"""
+    _exp_tables:dict[int,WizardryExpTblDataEntry]
+    """職業ごとの経験値表"""
 
     _reward2monster:dict[int,set[int]]
     """報酬番号からモンスター番号の集合への辞書"""
@@ -92,6 +95,7 @@ class scnInfoImpl(scnInfo):
         self._rewards={}
         self._reward2monster={}
         self._pics = {}
+        self._exp_tables = {}
         self._char_sets = WizardryCharImgData(normal_bitmap={},cemetary_bitmap={})
         self._maze_messages=WizardryMessageData(messages={},msg_to_pos={},pos_to_msg={})
         return
@@ -467,6 +471,17 @@ class scnInfoImpl(scnInfo):
 
         return
 
+    def _readExpTable(self, data: Any)->None:
+
+        decoder=expTblDecoder()
+        nr_exps=self.toc.RECPERDK[modules.consts.ZEXP]
+        for idx in range(nr_exps):
+            exp_table=decoder.decodeOneData(toc=self.toc, data=data, index=idx)
+            if isinstance(exp_table, WizardryExpTblDataEntry):
+                self._exp_tables[idx]=exp_table
+
+        return
+
     def getEventInfo(self, x:int, y:int, z:int)->Optional[WizardryMazeFloorEventInfo]:
         """イベント情報を返す
 
@@ -775,16 +790,15 @@ class scnInfoImpl(scnInfo):
         self._readMessages(data=self._message_data) # メッセージ情報を読み込む
 
         self._readTOC(data=self._scenario_data) # 目次情報を読み込む
-
-        # TODO 後ろに持っていく
-        self._readPicTable(data=self._scenario_data) # 画像情報を読み込む
-
         self._readFloorTable(data=self._scenario_data) # 迷宮フロア情報を読み込む
         self._readMonsterTable(data=self._scenario_data) # モンスター情報を読み込む
         self._readItemTable(data=self._scenario_data) # アイテム情報を読み込む
         self._readRewardTable(data=self._scenario_data) # 報酬情報を読み込む
+        self._readPicTable(data=self._scenario_data) # 画像情報を読み込む
+        self._readExpTable(data=self._scenario_data) # 経験値表情報を読み込む
 
         self._fixupMonsterInfo() # モンスター情報を埋める
+
         return
 
     def _plainOneDumpMonster(self, index:int, data:Any, fp: TextIO)->None:
@@ -1722,13 +1736,43 @@ class scnInfoImpl(scnInfo):
 
         return
 
+    def _dumpExpTables(self, fp:TextIO)->None:
+
+        print(f"", file=fp)
+        print("## 経験値表情報",file=fp)
+        print(f"", file=fp)
+
+        assert len(self._exp_tables) == 1, f"Exp table len is not 1"
+        title_line =  '|'.join([ f"{modules.consts.CHAR_CLASS_DIC[cls_idx]}" for cls_idx in sorted(modules.consts.CHAR_CLASS_DIC.keys()) ])
+        print(f"|到達レベル|{title_line}|備考|", file=fp)
+        sep_line =  '|'.join([ f"---" for _cls_idx in sorted(modules.consts.CHAR_CLASS_DIC.keys()) ])
+        print(f"|---|{sep_line}|---|", file=fp)
+
+        for level in range(1,modules.consts.EXP_TBL_ELEMENT_NR):
+
+            print(f"|{level+1}", end='', file=fp)
+            for cls_idx in sorted(modules.consts.CHAR_CLASS_DIC.keys()):
+
+                assert cls_idx in self._exp_tables[0].exp_table, f"Exp table not found for {modules.consts.CHAR_CLASS_DIC[cls_idx]} ({cls_idx})"
+                exp_table_ent=self._exp_tables[0].exp_table[cls_idx]
+                print(f"|{exp_table_ent.exp_table[level]}", end='', file=fp)
+            print(f"|レベル{level+1:2}に到達するための累積経験値|", file=fp)
+
+        print(f"|レベル13以降", end='', file=fp)
+        for cls_idx in sorted(modules.consts.CHAR_CLASS_DIC.keys()):
+
+            assert cls_idx in self._exp_tables[0].exp_table, f"Exp table not found for {modules.consts.CHAR_CLASS_DIC[cls_idx]} ({cls_idx})"
+            exp_table_ent=self._exp_tables[0].exp_table[cls_idx]
+            print(f"|{exp_table_ent.exp_table[0]}", end='', file=fp)
+        print(f"|次のレベルに上がるための必要経験値|", file=fp)
+        return
+
     def plainDump(self, fp:TextIO)->None:
         """テキスト形式で表示する
 
         Args:
             fp (TextIO): 表示先ファイルのTextIO.
         """
-
         self._dumpTOC(fp=fp)
         self._dumpCharSet(fp=fp)
         self._dumpFloors(fp=fp)
@@ -1736,6 +1780,8 @@ class scnInfoImpl(scnInfo):
         self._dumpItems(fp=fp)
         self._dumpRewards(fp=fp)
         self._dumpPics(fp=fp)
+        self._dumpExpTables(fp)
+
         return
 
     def getWallInfo(self, x:int, y:int, z:int, dir:int)->int:
