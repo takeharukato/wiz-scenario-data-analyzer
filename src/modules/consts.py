@@ -91,7 +91,7 @@ PIXEL_PER_BYTE=7
 # AppleII 1ピクセルを表現するピクセル数
 PIC_LEN_PER_PIXEL=2
 # AppleII版 WizardryのENEMYPIC手続きでの描画開始X座標
-PIC_START_X=1
+PIC_START_X=7
 
 # 方角
 DIR_NORTH=0
