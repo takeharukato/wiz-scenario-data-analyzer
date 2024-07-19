@@ -92,7 +92,14 @@ PIXEL_PER_BYTE=7
 PIC_LEN_PER_PIXEL=2
 # AppleII版 WizardryのENEMYPIC手続きでの描画開始X座標
 PIC_START_X=7
-
+# 宝箱
+PIC_NUM_CHEST=18
+# 金額報酬
+PIC_NUM_GOLD=19
+PIC_NUM_CHEST_DIC:dict[int,str]={
+    PIC_NUM_CHEST:"宝箱",
+    PIC_NUM_GOLD:"報酬",
+}
 # 方角
 DIR_NORTH=0
 DIR_EAST=1

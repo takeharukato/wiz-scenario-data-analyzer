@@ -1701,13 +1701,24 @@ class scnInfoImpl(scnInfo):
         print(f"", file=fp)
         print(f"## モンスター/宝箱画像", file=fp)
         print(f"", file=fp)
-        print(f"|画像ファイルインデクス番号|画像|モンスター名|")
+        print(f"|画像ファイルインデクス番号|画像|モンスター名/宝箱・Gold種別|")
         print(f"|---|---|---|", file=fp)
         for idx in self._pics:
+            chest_names=""
+            if idx in modules.consts.PIC_NUM_CHEST_DIC:
+                chest_names = f"{modules.consts.PIC_NUM_CHEST_DIC[idx]}"
+
             mon_names = modules.consts.DELIMITER_COMMA.join([ f"{self._monsters[num].name} ({num})" for num in sorted(self._monsters.keys()) if self._monsters[num].pic == idx ])
+            if idx in modules.consts.PIC_NUM_CHEST_DIC:
+                if len([ num for num in sorted(self._monsters.keys()) if self._monsters[num].pic == idx ]) > 0:
+                    names = modules.consts.DELIMITER_COMMA.join([chest_names,mon_names])
+                else:
+                    names = chest_names
+            else:
+                names = mon_names
 
             outfile=f"pic-{idx}.{modules.consts.DEFAULT_RASTER_IMAGE_EXT}"
-            print(f"|{idx}|![{idx}番モンスター/宝箱画像]({outfile})|{mon_names}|", file=fp)
+            print(f"|{idx}|![{idx}番モンスター/宝箱画像]({outfile})|{names}|", file=fp)
 
         return
 
