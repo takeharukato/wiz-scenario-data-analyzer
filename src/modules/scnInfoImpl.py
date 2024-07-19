@@ -1701,7 +1701,7 @@ class scnInfoImpl(scnInfo):
         print(f"", file=fp)
         print(f"## モンスター/宝箱画像", file=fp)
         print(f"", file=fp)
-        print(f"|画像ファイルインデクス番号|画像|モンスター名/宝箱・Gold種別|")
+        print(f"|画像ファイルインデクス番号|画像|モンスター名/画像種別(宝箱/報酬)|")
         print(f"|---|---|---|", file=fp)
         for idx in self._pics:
             chest_names=""
