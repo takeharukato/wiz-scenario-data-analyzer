@@ -103,7 +103,7 @@ class ReadScenario:
         #
         self.scenario_file = self.__args.scenario_file   # type: ignore 入力ファイル名の設定
         self.msg_file = self.__args.msg_file # type: ignore メッセージファイル名の設定
-        #self.outfile = self.__args.outfile # type: ignore 出力ファイル名の設定
+        self.outfile = self.__args.outfile # type: ignore 出力ファイル名の設定
 
         #
         # デバッグ出力の有効化
@@ -152,6 +152,8 @@ class ReadScenario:
         cmdline.add_argument('-d', '--debug', help='デバッグ表示を有効化',
                             action='store_true', dest='debug')
 
+        # 出力先ファイル名
+        cmdline.add_argument('-o', '--outfile', help=f'出力ファイル名(デフォルト:標準出力)', type=str, action='store', dest='outfile')
         self.__args = cmdline.parse_args() # コマンドラインを解析
 
     ## デバッグモードを有効にしデバッグレベルのログを残す
@@ -190,6 +192,7 @@ class ReadScenario:
         if not msg_data: # メッセージデータの読み取りに失敗した
             return
 
+        # シナリオ情報の解析
         with open(this_infile, 'rb') as fr:
             scenario=fr.read()
             # TODO: FactoryMethodを適用
@@ -200,9 +203,14 @@ class ReadScenario:
 
     def plainDump(self)->None:
 
-        if not self._scnInfo:
+        if not self._scnInfo: # シナリオ情報を読み込んでいない
             return
-        self._scnInfo.plainDump(fp=sys.stdout)
+        this_outfile=self.outfile
+        if this_outfile:
+            with open(this_outfile, 'w') as fw:
+                self._scnInfo.plainDump(fp=fw)
+        else:
+            self._scnInfo.plainDump(fp=sys.stdout)
         return
 
 ## メイン処理
