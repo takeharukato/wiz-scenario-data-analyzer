@@ -62,4 +62,4 @@ CiderPressを使用して, マスターディスクイメージまたはデュ�
 
 ![obtained-files](figures/fig-obtain-files.png)
 
-本ツールでは, 上記のうち, シナリオ情報ファイル(`SCENARIO.DATA`), メッセージ情報ファイル(`SCENARIO.MESGS`)を使用する。
+本ツールでは, 上記のうち, シナリオ情報ファイル(`SCENARIO.DATA`), メッセージ情報ファイル(`SCENARIO.MESGS`)とを使用する。
