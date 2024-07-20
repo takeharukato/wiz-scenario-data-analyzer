@@ -173,7 +173,7 @@ stats.*
 classes_*.png
 packages_*.png
 
-SCENARIO.DATA
+
 output.md
 tools/mazeinfo-layout.py
 docs/memo.md
@@ -182,4 +182,8 @@ docs/svg-test.py
 *.png
 docs/arrow-marker.py
 docs/chute.py
+demo/
+output/
+.vscode/
+SCENARIO.DATA
 SCENARIO.MESGS
