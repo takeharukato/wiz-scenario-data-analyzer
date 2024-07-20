@@ -44,7 +44,7 @@ CiderPressを起動し, 前述の手順で取得したマスターディスク�
 
 CiderPressを使用して, マスターディスクイメージまたはデュプリケイトディスクイメージからシナリオ情報ファイル(`SCENARIO.DATA`)とメッセージ情報ファイル(`SCENARIO.MESGS`)とを取得する。
 
-前述の手順で, CiderPressを使用して, マスターディスクイメージまたはデュプリケイトディスクイメージを開き, 表示されたウィンドウ内の`SCENARIO.DATA`の項目を選択したうえで, 右クリックする。
+前述の手順で, CiderPressを使用して, マスターディスクイメージまたはデュプリケイトディスクイメージを開き, 表示されたウィンドウ内の`SCENARIO.DATA`の項目を選択したうえで, 右クリックして, `Extract`の項目を選択する。
 
 ![extract-file-menu](figures/fig-obtain-extract-files.png)
 
