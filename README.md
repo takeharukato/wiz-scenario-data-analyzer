@@ -1,6 +1,6 @@
 # wiz-scenario-data-analyzer
 
-Apple2版Wizardryのシナリオ情報を解析する。
+AppleII版Wizardryのシナリオ情報を解析する。
 
 ## 使用法
 
