@@ -71,7 +71,6 @@ scenario.py [-h] [-v] [-d] [-o 出力先ファイル]
 本リポジトリを展開したディレクトリ下に, Wizardryのシナリオ情報ファイル(`SCENARIO.DATA`)とメッセージ情報ファイル(`SCENARIO.MESGS`)を事前に配置したうえで, 出力先ディレクトリ`output`を作成, `output`ディレクトリ中に`output.md`というファイル名で, 解析結果を出力する場合の実行例を以下に示す(`$`はプロンプトを表す)。
 
 ```:shell
-mkdir output
 $ mkdir output
 $ cd output/
 $ ../src/scenario.py ../SCENARIO.DATA ../SCENARIO.MESGS -o output.md
