@@ -32,9 +32,12 @@ jobs:
         shell: powershell
         run: |
           mkdir results
+          mkdir results/docs
+          mkdir results/docs/
           Copy-Item -Path README.md -Destination results
           Copy-Item -Path README-en.md -Destination results
-          dir
+          Copy-Item -Path docs/HowToObtainScenarioData.md -Destination results/docs
+          Copy-Item -Path docs/figures -Destination results/docs -Recurse
           pip install -r requirements.txt
           cd src
           pyinstaller scenario.py --onedir --onefile --clean
