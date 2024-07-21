@@ -51,10 +51,11 @@ import modules.consts
 #
 # Table of contents定数定義
 #
-TOC_OFFSET=0 # TOCのシナリオ情報中のオフセット位置
-TOC_NR_SPELLS=50 # 呪文の数
+TOC_OFFSET=0                 # TOCのシナリオ情報中のオフセット位置
+TOC_NR_SPELLS=50             # 呪文の数
 SPELL_GROUP_BITS_PER_LEVEL=3 # 呪文レベルを表現するビット数
 SPELL_TYPE_BITS_PER_LEVEL=2  # 呪文用途を表現するビット数
+TOC_SIZE=504                 # 目次情報(Table of Contents)のサイズ(単位:バイト)
 
 # Table of Contentsのデータレイアウト
 WizardrySCNTOCDef:dict[str,Any]={
@@ -194,7 +195,6 @@ WizardrySCNTOCDef:dict[str,Any]={
     'SPELL012_4':   {'offset':498, 'type': '<H'},
     'SPELL012_5':   {'offset':500, 'type': '<H'},
     'SPELL012_6':   {'offset':502, 'type': '<H'},
-    'SPELL012_7':   {'offset':504, 'type': '<H'},
 }
 
 class TOCDecoder(scnDecoder):
