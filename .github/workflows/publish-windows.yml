@@ -13,10 +13,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Setup python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
@@ -31,13 +31,17 @@ jobs:
       - name: Build binary
         shell: powershell
         run: |
+          mkdir results
+          Copy-Item -Path README.md -Destination results
+          Copy-Item -Path README-en.md -Destination results
           dir
           pip install -r requirements.txt
           cd src
           pyinstaller scenario.py --onedir --onefile --clean
+          Copy-Item -Path dist/scenario.exe ../results
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
-          name: result-artifact
-          path: ./src/dist/scenario.exe
+          name: wizardry-data-analyzer
+          path: ./results
