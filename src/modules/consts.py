@@ -119,7 +119,7 @@ TWIZLONG_PARAMS=('LOW','MID','HIGH')
 #
 # シナリオ情報の目次
 #
-ZZERO="シナリオ情報"
+ZZERO="目次情報"
 ZMAZE="迷宮フロア情報"
 ZENEMY="モンスター情報"
 ZREWARD="報酬情報"

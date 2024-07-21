@@ -64,7 +64,3 @@ AppleIIでは, 1バイトのデータをビデオメモリに書き込むこと�
      a. ビデオメモリ上のピクセルのX座標が奇数の場合, かつ, カラー選択ビットが立っていたら橙色を発光する。
 
      b. ビデオメモリ上のピクセルのX座標が奇数の場合, かつ, カラー選択ビットが立っていたら緑色を発光する。
-
-## 参考文献
-
-- [Memory Addressing the Apple Graphics Screen](https://drs.nio.res.in/drs/bitstream/handle/2264/6214/Comput_Sci_Inf_15_23.pdf?sequence=1&isAllowed=y)
