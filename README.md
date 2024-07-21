@@ -76,3 +76,13 @@ $ cd output/
 $ ../src/scenario.py ../SCENARIO.DATA ../SCENARIO.MESGS -o output.md
 $
 ```
+
+## 謝辞
+
+本ツールの作成にあたり, youtube(TM)にて, 以下のWizardry実況動画を配信者, ならびに, その関係者の方々のご協力を頂けましたことに感謝の意を表します。
+
+- 千秋様
+- やまたけ様
+- Parts様
+- yCyclone1046様
+- シンシア様
