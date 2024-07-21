@@ -47,7 +47,7 @@
 |UNUSEDXX[4]|82|2|ZOBJECT(アイテム情報)未使用情報|
 |UNUSEDXX[5]|84|2|ZCHAR(キャラクタ情報)未使用情報|
 |UNUSEDXX[6]|86|2|ZSPCCHRS(モンスターグラフィック情報)未使用情報|
-|UNUSEDXX[7]|88|2|ZEXP(経験値表)|
+|UNUSEDXX[7]|88|2|ZEXP(経験値表)未使用情報|
 |BLOFF[0]|90|2|ZZERO(目次情報)ブロックオフセット|
 |BLOFF[1]|92|2|ZMAZE(迷宮フロア情報)ブロックオフセット|
 |BLOFF[2]|94|2|ZENEMY(モンスター情報)ブロックオフセット|
