@@ -53,7 +53,9 @@
 |6|□|■|■|■|■|□|□|
 |7|□|□|□|■|□|□|□|
 
-なお, 以下の図に示すように, AppleII版Wizardryの場合, 冒険中の文字の垂直線が白一色ではなく, 緑や紫が混ざった色で表示される。
+### AppleII版Wizardryにおける迷宮探索時の文字表示色についての補足
+
+以下の図に示すように, AppleII版Wizardryの場合, 冒険中の文字の垂直線が白一色ではなく, 緑や紫が混ざった色で表示される。
 
 ![apple2-wizardry-char-color](figures/fig-apple2-wiz-battle1.png)
 
