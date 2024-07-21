@@ -31,7 +31,7 @@ jobs:
       - name: Build binary
         shell: powershell
         run: |
-          Remove-Item -Recurse -Force wiz-scenario-data-analyzer
+          dir
           git clone https://github.com/takeharukato/wiz-scenario-data-analyzer
           cd wiz-scenario-data-analyzer
           pip install -r requirements.txt
