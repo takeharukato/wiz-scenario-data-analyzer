@@ -1,0 +1,28 @@
+name: Build for Windows
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-run:
+    runs-on: windows-2019
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Build Docker image
+        run: docker build  -f ./pyinstaller/windows/Dockerfile -t pyinstaller-windows .
+      
+      - name: Run Docker container
+        run: docker run --rm  -v ${{ github.workspace }}\windows\dist\:C:\dist\ pyinstaller-windows powershell -Command "pyinstaller scenario.p\
+y --onedir --onefile --clean --distpath /dist --workpath /windows/build --specpath /windows"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: result-artifact
+          path: ./windows/dist/scenario.exe
+          
