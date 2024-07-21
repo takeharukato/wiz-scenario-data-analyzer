@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/windows/servercore:ltsc2022
+FROM mcr.microsoft.com/windows/servercore:ltsc2019
 ENV chocolateyVersion=1.4.0
 
 # Chocolateyのインストール
