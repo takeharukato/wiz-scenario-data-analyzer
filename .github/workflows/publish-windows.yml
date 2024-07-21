@@ -33,7 +33,6 @@ jobs:
         run: |
           mkdir results
           mkdir results/docs
-          mkdir results/docs/
           Copy-Item -Path README.md -Destination results
           Copy-Item -Path README-en.md -Destination results
           Copy-Item -Path docs/HowToObtainScenarioData.md -Destination results/docs
@@ -46,5 +45,5 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: wizardry-data-analyzer
+          name: wizardry-data-analyzer-x64win
           path: ./results
