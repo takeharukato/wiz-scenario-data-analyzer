@@ -32,8 +32,6 @@ jobs:
         shell: powershell
         run: |
           dir
-          git clone https://github.com/takeharukato/wiz-scenario-data-analyzer
-          cd wiz-scenario-data-analyzer
           pip install -r requirements.txt
           cd src
           pyinstaller scenario.py --onedir --onefile --clean
@@ -42,4 +40,4 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: result-artifact
-          path: ./wiz-scenario-data-analyzer/src/dist/scenario.exe
+          path: ./src/dist/scenario.exe
