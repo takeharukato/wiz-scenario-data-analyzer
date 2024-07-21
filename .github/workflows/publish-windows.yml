@@ -31,13 +31,16 @@ jobs:
       - name: Build binary
         shell: powershell
         run: |
+          mkdir dist
+          cp README*.md dist
           dir
           pip install -r requirements.txt
           cd src
           pyinstaller scenario.py --onedir --onefile --clean
+          cp scenario.exe ../dist
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: result-artifact
-          path: ./src/dist/scenario.exe
+          name: wizardry-data-analyzer
+          path: ./dist
