@@ -229,7 +229,7 @@ CLASSには, シナリオ中に登場するプレイヤーキャラクタの職�
 
 ```:pascal
         TCLASS = (FIGHTER, MAGE, PRIEST, THIEF,
-                  BISHOP, SAMURAI, LORD, NINJA);  (* 種族の列挙型:FIGHTER(0 戦士), MAGE(1 魔術師), PRIEST(2 僧侶), THIEF(3 盗賊), BISHOP(4 司教), SAMURAI(5 侍), LORD(6 君主), NINJA(7 忍者)  *)
+                  BISHOP, SAMURAI, LORD, NINJA);  (* 職業の列挙型:FIGHTER(0 戦士), MAGE(1 魔術師), PRIEST(2 僧侶), THIEF(3 盗賊), BISHOP(4 司教), SAMURAI(5 侍), LORD(6 君主), NINJA(7 忍者)  *)
 ```
 
 職業の列挙型(TCLASS)の列挙子と列挙値の関係は以下の通り:
@@ -245,4 +245,31 @@ CLASSには, シナリオ中に登場するプレイヤーキャラクタの職�
 |LORD|6|君主|
 |NINJA|7|忍者|
 
-例えば, シナリオ1のSAMURAI(列挙値5)の場合, RACE\[5\]には, \"SAMURAI\"が格納されている。
+例えば, シナリオ1のSAMURAI(列挙値5)の場合, CLASS\[5\]には, \"SAMURAI\"が格納されている。
+
+#### STATUSに格納されている情報
+
+STATUSには, シナリオ中に登場するプレイヤーキャラクタの状態を表すPascal文字列が格納されている。
+配列のインデクスは, 状態の列挙型(TSTATUS)の値である。
+
+状態の列挙型(TSTATUS)は以下のように定義されている。
+
+```:pascal
+        TSTATUS = (OK, AFRAID, ASLEEP, PLYZE,
+                   STONED, DEAD, ASHES, LOST); (* 状態の列挙型: OK(0 正常), AFRAID(1 恐慌), ASLEEP(2 睡眠), PLYZE(3 麻痺), STONED(4 石化), DEAD(5 死), ASHES(6 灰), LOST(7 喪失) *)
+```
+
+職業の列挙型(TSTATUS)の列挙子と列挙値の関係は以下の通り:
+
+|列挙子|列挙値|意味|
+|---|---|---|
+|OK|0|正常|
+|AFRAID|1|恐慌|
+|ASLEEP|2|睡眠|
+|PLYZE|3|麻痺|
+|STONED|4|石化|
+|DEAD|5|死|
+|ASHES|6|灰|
+|LOST|7|喪失|
+
+例えば, シナリオ1のAFRAID(列挙値1)の場合, STATUS\[1\]には, \"AFRAID\"が格納されている。
