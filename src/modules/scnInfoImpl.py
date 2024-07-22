@@ -1690,6 +1690,30 @@ class scnInfoImpl(scnInfo):
 
         return
 
+    def _showRawPicsBitmap(self, pic:WizardryPicDataEntry, fp:TextIO)->None:
+        """モンスター/宝箱画像の出力情報ビットマップを表示する
+
+        Args:
+            bitmap (dict[tuple[int,int],int]): ビットマップ
+            fp (TextIO): 出力先
+        """
+        bitmap=pic.bitmap_info
+        for y in range(modules.consts.PIC_HEIGHT):
+            print(f"|{y:2}", end='', file=fp)
+            for x in range(modules.consts.PIC_WIDTH):
+                pos=(x,y)
+                assert pos in bitmap,f"{pos} not found"
+                color = bitmap[pos]
+                if color == modules.consts.PIC_COLOR_BLACK:
+                    print(f"|  ", end='', file=fp)
+                else:
+                    print(f"|{modules.consts.PIC_COLOR_NAME[color]}", end='', file=fp)
+            string=modules.consts.DELIMITER_COMMA.join([f"{pic.raw_data[idx]:x}" for idx in range(y*10, y*10+10)])
+            print(f"|{string}|",  file=fp)
+
+
+        return
+
     def _drawPics(self)->None:
         """モンスター/宝箱画像を出力する
         """
@@ -1722,10 +1746,24 @@ class scnInfoImpl(scnInfo):
         Args:
             fp (TextIO): 表示先ファイルのTextIO.
         """
-        self._drawPics() # 画像ファイルを出力する
 
         print(f"", file=fp)
-        print(f"## モンスター/宝箱画像", file=fp)
+        print(f"### モンスター/宝箱画像ビットマップ", file=fp)
+
+        for idx in self._pics:
+            print(f"", file=fp)
+            print(f"#### 画像番号:{idx:2}", file=fp)
+            print(f"", file=fp)
+            title="|".join([f"{x:2}" for x in range(modules.consts.PIC_WIDTH)])
+            print(f"|行|{title}|データ|",file=fp)
+            sep="|".join([f"---" for _x in range(modules.consts.PIC_WIDTH)])
+            print(f"|---|{sep}|---|",file=fp)
+
+            self._showRawPicsBitmap(pic=self._pics[idx], fp=fp)
+
+        self._drawPics() # 画像ファイルを出力する
+        print(f"", file=fp)
+        print(f"### モンスター/宝箱画像一覧表", file=fp)
         print(f"", file=fp)
         print(f"|画像ファイルインデクス番号|画像|モンスター名/画像種別(宝箱/報酬)|",file=fp)
         print(f"|---|---|---|", file=fp)
