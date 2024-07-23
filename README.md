@@ -65,6 +65,7 @@ scenario.py [-h] [-v] [-d] [-o 出力先ファイル]
 |--version|-v|バージョン情報を表示する|
 |-debug|-d|デバッグモードで動作させる|
 |--outfile ファイルパス文字列|-o ファイルパス文字列|出力ファイルへのパスを指定する(省略時は標準出力に表示される)|
+|--colormap {simple,standard}|-c {simple,standard}|色選択論理: simple 表示指示に基づくビットマップ生成,standard 標準的な補色処理に基づくビットマップ生成|
 
 ### 実行例
 

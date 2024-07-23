@@ -6,9 +6,9 @@
 # @version 1.0
 # @author Takeharu KATO
 # @date 2024.07.08
-# @brief シナリオ情報実装部
+# @brief シナリオ情報処理
 # @copyright 2024年 Takeharu KATO All Rights Reserved.
-# @details シナリオ情報実装クラス
+# @details シナリオ情報処理
 
 from __future__ import annotations # 型定義のみを参照する
 from typing import TYPE_CHECKING   # 型チェック実施判定
@@ -27,16 +27,18 @@ from abc import ABC, abstractmethod
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from modules.datadef import WizardrySCNTOC
+from modules.cmdLineOptions import cmdLineOptions
 
 class scnInfo(ABC):
 
     @abstractmethod
-    def __init__(self, scenario:Any, message:Any) -> None:
+    def __init__(self, scenario:Any, message:Any, opts:cmdLineOptions) -> None:
         """シナリオ情報を初期化する
 
         Args:
             scenario (Any): シナリオ情報のメモリイメージ
             message  (Any): メッセージ情報のメモリイメージ
+            opts (cmdLineOptions): オプション情報
         """
         return
 

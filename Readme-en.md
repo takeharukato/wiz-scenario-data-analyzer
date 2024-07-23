@@ -66,6 +66,7 @@ The other options are optional and they have the following meanings for each:
 |--version|-v|Display version information|
 |--debug|-d|Enable to run in the debug mode|
 |--outfile file-path-string|-o file-path-string|Specify the path to the output file (if omitted, it will be displayed on the standard output)|
+|--colormap {simple,standard}|-c {simple,standard}|color selection. "simple": output bitmaps in a file in a simple manner. "standard": output bitmaps with the standard color mapping.|
 
 ### Example
 
