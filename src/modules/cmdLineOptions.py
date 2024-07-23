@@ -12,8 +12,6 @@
 
 from __future__ import annotations # 型定義のみを参照する
 from typing import TYPE_CHECKING   # 型チェック実施判定
-from typing import Any
-from typing import TextIO
 
 if TYPE_CHECKING:
     pass

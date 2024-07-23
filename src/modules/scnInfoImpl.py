@@ -36,7 +36,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from modules.datadef import WizardrySCNTOC, WizardryMazeFloorDataEntry, WizardryMonsterDataEntry
 from modules.datadef import WizardryItemDataEntry, WizardryRewardDataEntry, WizardryRewardInfo, WizardryMazeFloorEventInfo
 from modules.datadef import WizardryMessageData, WizardryCharImgData, WizardryPicDataEntry, WizardryExpTblDataEntry
-from modules.datadef import WizardrySpellTblDataEntry
+from modules.datadef import WizardrySpellTblDataEntry,WizardryCharImgDataEntry
 from modules.scnInfo import scnInfo,cmdLineOptions
 from modules.TOCDecoder import TOCDecoder
 from modules.mazeFloorDecoder import mazeFloorDecoder
@@ -1563,6 +1563,7 @@ class scnInfoImpl(scnInfo):
             print(f"|{idx}|{name}|{self.toc.SPELLHSH[idx]}({hex(self.toc.SPELLHSH[idx])})|{self.toc.SPELLGRP[idx]}|{modules.consts.DBG_WIZ_SPELL_TYPES[self.toc.SPELL012[idx]]}({self.toc.SPELL012[idx]})|", file=fp)
 
         self._dumpCharSet(fp=fp)      # シナリオ情報先頭から1ブロック目(通常文字),2ブロック目(全滅時文字)にある文字情報を出力
+        self._dumpCharSetBitmap(fp=fp)      # シナリオ情報先頭から1ブロック目(通常文字),2ブロック目(全滅時文字)にある文字情報のビットマップを出力
         self._dumpSpellTables(fp=fp)  # シナリオ情報先頭から4ブロック目(魔術師呪文),5ブロック目(僧侶呪文)にある呪文名表を出力
 
         return
@@ -1649,6 +1650,38 @@ class scnInfoImpl(scnInfo):
         print(f"![CEMETARY画像イメージ]({output_file})",file=fp)
         return
 
+    def _showRawCharBitmapOne(self, title_str:str, ch:WizardryCharImgDataEntry, fp:TextIO)->None:
+        """グラフィック文字の出力情報ビットマップを表示する
+
+        Args:
+            bitmap (dict[tuple[int,int],int]): ビットマップ
+            fp (TextIO): 出力先
+        """
+
+        print(f"", file=fp)
+        print(f"#### {title_str}", file=fp)
+        print(f"", file=fp)
+        title="|".join([f"{x:2}" for x in range(modules.consts.CHARIMG_WIDTH)])
+        print(f"|行/列|{title}|",  file=fp)
+        sep="|".join([f"---" for _x in range(modules.consts.CHARIMG_WIDTH)])
+        print(f"|---|{sep}|",  file=fp)
+        bitmap=ch.bitmap
+        for y in range(modules.consts.CHARIMG_HEIGHT):
+            print(f"|{y:2}", end='', file=fp)
+            for x in range(modules.consts.CHARIMG_WIDTH):
+
+                mask = 1 << x
+                is_on = bitmap[y] & mask
+
+                if is_on == 0:
+                    print(f"|□", end='', file=fp)
+                else:
+                    print(f"|■", end='', file=fp)
+            print(f"|",  file=fp)
+
+
+        return
+
     def _dumpCharSet(self, fp:TextIO)->None:
         """文字コード表を表示する
 
@@ -1663,7 +1696,6 @@ class scnInfoImpl(scnInfo):
 
         print(f"", file=fp)
         print(f"## キャラクタセットイメージ", file=fp)
-
 
         for char_set_type in modules.consts.CHARIMG_TYPE_VALID:
 
@@ -1698,6 +1730,38 @@ class scnInfoImpl(scnInfo):
 
         self._drawCemetary(fp=fp)
 
+    def _dumpCharSetBitmap(self, fp:TextIO)->None:
+
+        print(f"", file=fp)
+        print(f"## キャラクタセットビットマップ", file=fp)
+
+        for char_set_type in modules.consts.CHARIMG_TYPE_VALID:
+
+            if char_set_type == modules.consts.CHARIMG_TYPE_NORMAL:
+                print(f"### 通常キャラクタセットビットマップ", file=fp)
+            else:
+                print(f"### 全滅時(CEMETARY)キャラクタセットビットマップ", file=fp)
+
+            if char_set_type not in modules.consts.CHARIMG_FILENAME_PREFIX_DIC:
+                continue
+            if char_set_type == modules.consts.CHARIMG_TYPE_NORMAL:
+                ch_data = self._char_sets.normal_bitmap
+            else:
+                ch_data = self._char_sets.cemetary_bitmap
+            for idx in range(modules.consts.CHARIMG_PER_CHARSET):
+                ch_str = escapeMarkdownChars(self._char_sets.index_to_char(index=idx))
+
+                basename_prefix = modules.consts.CHARIMG_FILENAME_PREFIX_DIC[char_set_type]
+                ext = f"{modules.consts.DEFAULT_RASTER_IMAGE_EXT}" # TODO ファイル形式を選択可能にする
+                file_name=f"{basename_prefix}-{idx}-frame.{ext}"
+
+                if char_set_type == modules.consts.CHARIMG_TYPE_NORMAL:
+                    title=f"通常キャラクタビットマップ '{ch_str}' ( ![通常文字ビットマップ-{idx}]({file_name}) )"
+                else:
+                    title=f"全滅字キャラクタビットマップ '{ch_str}' ( ![全滅時文字ビットマップ-{idx}]({file_name}) )"
+
+                self._showRawCharBitmapOne(title_str=title, ch=ch_data[idx], fp=fp)
+
         return
 
     def _showRawPicsBitmap(self, pic:WizardryPicDataEntry, fp:TextIO)->None:
@@ -1720,7 +1784,6 @@ class scnInfoImpl(scnInfo):
                     print(f"|{modules.consts.PIC_COLOR_NAME[color]}", end='', file=fp)
             raw_data_string=modules.consts.DELIMITER_COMMA.join([f"{pic.raw_data[idx]:x}" for idx in range(y*10, y*10+10)])
             print(f"|{raw_data_string}|",  file=fp)
-
 
         return
 
