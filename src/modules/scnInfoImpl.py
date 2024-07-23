@@ -1758,7 +1758,7 @@ class scnInfoImpl(scnInfo):
                 if char_set_type == modules.consts.CHARIMG_TYPE_NORMAL:
                     title=f"通常キャラクタビットマップ '{ch_str}' ( ![通常文字ビットマップ-{idx}]({file_name}) )"
                 else:
-                    title=f"全滅字キャラクタビットマップ '{ch_str}' ( ![全滅時文字ビットマップ-{idx}]({file_name}) )"
+                    title=f"全滅時キャラクタビットマップ '{ch_str}' ( ![全滅時文字ビットマップ-{idx}]({file_name}) )"
 
                 self._showRawCharBitmapOne(title_str=title, ch=ch_data[idx], fp=fp)
 

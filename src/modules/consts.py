@@ -124,7 +124,7 @@ DELIMITER_COMMA=","
 DELIMITER_SPC=" "
 
 # バックスラッシュ以外のマークダウンエスケープ対象文字
-MARKDOWN_ESCAPE_CHARS=['#','+',"-","*","_","`",".","!","{","}","[","]","(",")"]
+MARKDOWN_ESCAPE_CHARS=['#','+',"-","*","_","`",".","!","{","}","[","]"]
 
 # TWIZLONGの構成要素名
 TWIZLONG_PARAMS=('LOW','MID','HIGH')
