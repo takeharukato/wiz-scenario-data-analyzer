@@ -1708,8 +1708,8 @@ class scnInfoImpl(scnInfo):
                     print(f"|  ", end='', file=fp)
                 else:
                     print(f"|{modules.consts.PIC_COLOR_NAME[color]}", end='', file=fp)
-            string=modules.consts.DELIMITER_COMMA.join([f"{pic.raw_data[idx]:x}" for idx in range(y*10, y*10+10)])
-            print(f"|{string}|",  file=fp)
+            raw_data_string=modules.consts.DELIMITER_COMMA.join([f"{pic.raw_data[idx]:x}" for idx in range(y*10, y*10+10)])
+            print(f"|{raw_data_string}|",  file=fp)
 
 
         return
@@ -1748,14 +1748,14 @@ class scnInfoImpl(scnInfo):
         """
 
         print(f"", file=fp)
-        print(f"### モンスター/宝箱画像ビットマップ", file=fp)
+        print(f"### モンスター/宝箱画像ビデオメモリ出力バイト", file=fp)
 
         for idx in self._pics:
             print(f"", file=fp)
             print(f"#### 画像番号:{idx:2}", file=fp)
             print(f"", file=fp)
             title="|".join([f"{x:2}" for x in range(modules.consts.PIC_WIDTH)])
-            print(f"|行|{title}|データ|",file=fp)
+            print(f"|行/列|{title}|データ|",file=fp)
             sep="|".join([f"---" for _x in range(modules.consts.PIC_WIDTH)])
             print(f"|---|{sep}|---|",file=fp)
 
