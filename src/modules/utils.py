@@ -126,6 +126,17 @@ def getDecodeDict(data:Any, layout:dict[str,dict[str,Any]],offset:int)->dict[str
 
     return decode_dict
 
+def hex_and_bin_string(val:int)->str:
+    """値を表示用の文字列に変換
+
+    Args:
+        val (int): 値
+
+    Returns:
+        str: 文字列
+    """
+    return f"{hex(val)} = {bin(val)}"
+
 def value_to_string(val:int)->str:
     """値を表示用の文字列に変換
 
@@ -135,7 +146,7 @@ def value_to_string(val:int)->str:
     Returns:
         str: 文字列
     """
-    return f"{val} {hex(val)} = {bin(val)}"
+    return f"{val} {hex_and_bin_string(val=val)}"
 
 def property_dic_to_string(dic:dict[int,str])->str:
     """倍打/防御/抵抗辞書を文字列化する
