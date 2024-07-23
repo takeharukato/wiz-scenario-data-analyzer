@@ -183,12 +183,7 @@ class picDecoder(dataEntryDecoder):
                     assert prev_pos in info.bitmap_info,f"{prev_pos} not found"
                     prev_entry = info.bitmap_info[prev_pos]
 
-                    # 連続した2ビットを白色として扱う
-                    if ( bitmap_entry in COLOR_PAIR1 and prev_entry in COLOR_PAIR1 ) or \
-                        ( bitmap_entry in COLOR_PAIR2 and prev_entry in COLOR_PAIR2 ):
-                        info.color_info[pos]=modules.consts.PIC_COLOR_WHITE
-                        info.color_info[prev_pos]=modules.consts.PIC_COLOR_WHITE
-                    elif prev_entry in COLORED_PIXEL and bitmap_entry == modules.consts.PIC_COLOR_BLACK:
+                    if prev_entry in COLORED_PIXEL and bitmap_entry == modules.consts.PIC_COLOR_BLACK:
                         # 前のビットが色のあるビットで, かつ, 次のビットが黒の場合, 前のビットの色にする
                         info.color_info[pos]=prev_entry
                         info.color_info[prev_pos]=prev_entry
@@ -196,9 +191,13 @@ class picDecoder(dataEntryDecoder):
                         # 前のビットが黒で, かつ, 次のビットが色のあるビットの場合, 後ろのビットの色にする
                         info.color_info[pos]=bitmap_entry
                         info.color_info[prev_pos]=bitmap_entry
-                    else:
+                    elif prev_entry == modules.consts.PIC_COLOR_BLACK and bitmap_entry == modules.consts.PIC_COLOR_BLACK:
+                        # 前のビットが黒で, かつ, 次のビットも黒の場合, 黒色にする
                         info.color_info[pos]=modules.consts.PIC_COLOR_BLACK
                         info.color_info[prev_pos]=modules.consts.PIC_COLOR_BLACK
+                    else:
+                        info.color_info[pos]=modules.consts.PIC_COLOR_WHITE
+                        info.color_info[prev_pos]=modules.consts.PIC_COLOR_WHITE
                 else:
                     info.color_info[pos]=bitmap_entry
         return
