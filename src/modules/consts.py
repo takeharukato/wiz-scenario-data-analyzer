@@ -70,6 +70,9 @@ PIC_COLOR_BLUE=3
 PIC_COLOR_ORANGE=4
 PIC_COLOR_WHITE=5
 PIC_COLOR_VALID=(PIC_COLOR_BLACK, PIC_COLOR_PURPLE, PIC_COLOR_GREEN, PIC_COLOR_BLUE, PIC_COLOR_ORANGE, PIC_COLOR_WHITE)
+# ビデオRAM上に書き込む色(白は, 紫と緑(色選択ビット0のとき), 青と橙(色選択ビットが1のとき)の組み合わせで表示)
+COLORED_PIXEL=(PIC_COLOR_BLUE, PIC_COLOR_GREEN, PIC_COLOR_ORANGE, PIC_COLOR_PURPLE)
+# 色名
 PIC_COLOR_NAME:dict[int,str]={
     PIC_COLOR_BLACK:"黒",
     PIC_COLOR_PURPLE:"紫",
@@ -99,6 +102,16 @@ PIC_NUM_GOLD=19
 PIC_NUM_CHEST_DIC:dict[int,str]={
     PIC_NUM_CHEST:"宝箱",
     PIC_NUM_GOLD:"報酬",
+}
+# ビットマップ生成ストラテジ番号
+BITMAP_STRATEGY_SIMPLE=0
+BITMAP_STRATEGY_STANDARD=1
+BITMAP_STRATEGY_DEFAULT=BITMAP_STRATEGY_STANDARD
+# ビットマップ生成ストラテジ辞書
+# ストラテジ番号からオプション名,意味への辞書
+BITMAP_STRATEGY_DIC:dict[int,tuple[str,str]]={
+    BITMAP_STRATEGY_SIMPLE:('simple','表示指示に基づくビットマップ生成'),
+    BITMAP_STRATEGY_STANDARD:('standard','標準的な補色処理に基づくビットマップ生成'),
 }
 # 方角
 DIR_NORTH=0
