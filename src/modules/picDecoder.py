@@ -28,6 +28,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from modules.dataEntryDecoder import dataEntryDecoder
 from modules.datadef import WizardrySCNTOC, WizardryPicDataEntry
+from modules.picColorFactory import picColorFactory,picColorStrategy
 import modules.consts
 
 """画像データのPascal定義
@@ -53,12 +54,20 @@ COLOR_PAIR1=(modules.consts.PIC_COLOR_GREEN,modules.consts.PIC_COLOR_PURPLE)
 # 色選択ビット1のときの表示色 (橙,青)
 COLOR_PAIR2=(modules.consts.PIC_COLOR_ORANGE,modules.consts.PIC_COLOR_BLUE)
 
-# ビデオRAM上に書き込む色(白は, 紫と緑(色選択ビット0のとき), 青と橙(色選択ビットが1のとき)の組み合わせで表示)
-COLORED_PIXEL=(modules.consts.PIC_COLOR_BLUE,modules.consts.PIC_COLOR_GREEN,
-            modules.consts.PIC_COLOR_ORANGE, modules.consts.PIC_COLOR_PURPLE)
-
 class picDecoder(dataEntryDecoder):
     """画像イメージデコーダ"""
+
+    _updateBitmap:picColorStrategy
+    """ビットマップ生成ストラテジ"""
+
+    def __init__(self, strategy:int=modules.consts.BITMAP_STRATEGY_STANDARD) -> None:
+
+        super().__init__()
+
+        # ビットマップ生成ストラテジを割当
+        factory = picColorFactory()
+        self._updateBitmap = factory.create(strategy_num=strategy)
+        return
 
     def _dumpColorInfo(self, bitmap:dict[tuple[int,int],int])->None:
         """解析したピクセルを文字表示する
@@ -171,36 +180,15 @@ class picDecoder(dataEntryDecoder):
 
         return res
 
+
     def _updateColorImage(self, info:WizardryPicDataEntry)->None:
+        """画像ファイルに出力するビットマップを更新する
 
-        for y in range(modules.consts.PIC_HEIGHT):
-            for x in range(modules.consts.PIC_WIDTH):
-                pos=(x,y)
-                assert pos in info.bitmap_info,f"{pos} not found"
-                bitmap_entry = info.bitmap_info[pos]
-                if x > 0:
-                    prev_pos=(x-1, y)
-                    assert prev_pos in info.bitmap_info,f"{prev_pos} not found"
-                    prev_entry = info.bitmap_info[prev_pos]
-
-                    # 連続した2ビットを白色として扱う
-                    if ( bitmap_entry in COLOR_PAIR1 and prev_entry in COLOR_PAIR1 ) or \
-                        ( bitmap_entry in COLOR_PAIR2 and prev_entry in COLOR_PAIR2 ):
-                        info.color_info[pos]=modules.consts.PIC_COLOR_WHITE
-                        info.color_info[prev_pos]=modules.consts.PIC_COLOR_WHITE
-                    elif prev_entry in COLORED_PIXEL and bitmap_entry == modules.consts.PIC_COLOR_BLACK:
-                        # 前のビットが色のあるビットで, かつ, 次のビットが黒の場合, 前のビットの色にする
-                        info.color_info[pos]=prev_entry
-                        info.color_info[prev_pos]=prev_entry
-                    elif prev_entry == modules.consts.PIC_COLOR_BLACK and bitmap_entry in COLORED_PIXEL:
-                        # 前のビットが黒で, かつ, 次のビットが色のあるビットの場合, 後ろのビットの色にする
-                        info.color_info[pos]=bitmap_entry
-                        info.color_info[prev_pos]=bitmap_entry
-                    else:
-                        info.color_info[pos]=modules.consts.PIC_COLOR_BLACK
-                        info.color_info[prev_pos]=modules.consts.PIC_COLOR_BLACK
-                else:
-                    info.color_info[pos]=bitmap_entry
+        Args:
+            info (WizardryPicDataEntry): モンスター/宝箱画像
+        """
+        # ビットマップを更新
+        self._updateBitmap.updateColorImage(info=info)
         return
 
     def _updateBitmapImage(self, info:WizardryPicDataEntry)->None:

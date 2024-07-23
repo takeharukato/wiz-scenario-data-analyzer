@@ -37,7 +37,7 @@ from modules.datadef import WizardrySCNTOC, WizardryMazeFloorDataEntry, Wizardry
 from modules.datadef import WizardryItemDataEntry, WizardryRewardDataEntry, WizardryRewardInfo, WizardryMazeFloorEventInfo
 from modules.datadef import WizardryMessageData, WizardryCharImgData, WizardryPicDataEntry, WizardryExpTblDataEntry
 from modules.datadef import WizardrySpellTblDataEntry
-from modules.scnInfo import scnInfo
+from modules.scnInfo import scnInfo,cmdLineOptions
 from modules.TOCDecoder import TOCDecoder
 from modules.mazeFloorDecoder import mazeFloorDecoder
 from modules.monsterDecoder import monsterDecoder
@@ -60,6 +60,8 @@ class scnInfoImpl(scnInfo):
     """シナリオ情報ファイルのメモリイメージ"""
     _message_data:Any
     """メッセージ情報ファイルのメモリイメージ"""
+    _ops:cmdLineOptions
+    """オプション情報"""
 
     _maze_messages:WizardryMessageData
     """メッセージ情報"""
@@ -88,10 +90,18 @@ class scnInfoImpl(scnInfo):
     _reward2monster:dict[int,set[int]]
     """報酬番号からモンスター番号の集合への辞書"""
 
-    def __init__(self, scenario:Any, message:Any) -> None:
+    def __init__(self, scenario:Any, message:Any, opts:cmdLineOptions) -> None:
+        """シナリオ情報を初期化する
+
+        Args:
+            scenario (Any): シナリオ情報のメモリイメージ
+            message  (Any): メッセージ情報のメモリイメージ
+            opts (cmdLineOptions): オプション情報
+        """
 
         self._scenario_data=scenario
         self._message_data=message
+        self._ops = opts
 
         self._floors={}
         self._monsters={}
@@ -476,9 +486,9 @@ class scnInfoImpl(scnInfo):
 
         return
 
-    def _readPicTable(self, data: Any)->None:
+    def _readPicTable(self, data: Any, strategy_num:int=modules.consts.BITMAP_STRATEGY_DEFAULT)->None:
 
-        decoder=picDecoder()
+        decoder=picDecoder(strategy=strategy_num)
         nr_pics=self.toc.RECPERDK[modules.consts.ZSPCCHRS]
         for idx in range(nr_pics):
             pic=decoder.decodeOneData(toc=self.toc, data=data, index=idx)
@@ -810,7 +820,7 @@ class scnInfoImpl(scnInfo):
         self._readMonsterTable(data=self._scenario_data) # モンスター情報を読み込む
         self._readItemTable(data=self._scenario_data) # アイテム情報を読み込む
         self._readRewardTable(data=self._scenario_data) # 報酬情報を読み込む
-        self._readPicTable(data=self._scenario_data) # 画像情報を読み込む
+        self._readPicTable(data=self._scenario_data, strategy_num=self._ops.strategy_num) # 画像情報を読み込む
         self._readExpTable(data=self._scenario_data) # 経験値表情報を読み込む
 
         self._fixupMonsterInfo() # モンスター情報を埋める

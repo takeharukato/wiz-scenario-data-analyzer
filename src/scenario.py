@@ -44,6 +44,7 @@ if TYPE_CHECKING:
     pass
 
 from modules.scnInfoImpl import scnInfoImpl, scnInfo
+from modules.cmdLineOptions import cmdLineOptions
 import modules.consts
 
 #
@@ -82,6 +83,9 @@ class ReadScenario:
     #
     __args = None
 
+    _opts:cmdLineOptions
+    """コマンドラインオプション情報"""
+
     _scnInfo:Optional[scnInfo]
     """シナリオ情報"""
 
@@ -92,7 +96,7 @@ class ReadScenario:
         #
         # コマンドライン解析に必要なクラス変数を初期化
         #
-
+        self._opts=cmdLineOptions(is_debug=False, strategy_num=modules.consts.BITMAP_STRATEGY_DEFAULT)
         #
         # コマンドラインを解析
         #
@@ -115,6 +119,13 @@ class ReadScenario:
 
         self._scnInfo=None
 
+        #
+        # オプション情報の設定
+        #
+        self._opts.is_debug = self.is_debug
+        for key in modules.consts.BITMAP_STRATEGY_DIC.keys():
+            if modules.consts.BITMAP_STRATEGY_DIC[key][0] == self.__args.bitmap_strategy: # type: ignore
+                self._opts.strategy_num=key
         return
 
     def __parse_cmdline(self):
@@ -138,9 +149,6 @@ class ReadScenario:
         #  第2位置引数にメッセージファイルを指定
         cmdline.add_argument('msg_file', help='メッセージファイル')
 
-        #  第3位置引数に入力ファイルを指定
-        # cmdline.add_argument('outfile', help='出力ファイル')
-
         #
         # オプション引数
         #
@@ -154,6 +162,12 @@ class ReadScenario:
 
         # 出力先ファイル名
         cmdline.add_argument('-o', '--outfile', help=f'出力ファイル名(デフォルト:標準出力)', type=str, action='store', dest='outfile')
+
+        # ビットマップ出力ストラテジ
+        opt_strings=modules.consts.DELIMITER_COMMA.join([f"{modules.consts.BITMAP_STRATEGY_DIC[key][0]} ({modules.consts.BITMAP_STRATEGY_DIC[key][1]})" for key in sorted(modules.consts.BITMAP_STRATEGY_DIC.keys())])
+        choices_lst=[modules.consts.BITMAP_STRATEGY_DIC[key][0] for key in sorted(modules.consts.BITMAP_STRATEGY_DIC.keys())]
+        cmdline.add_argument('-c', '--colormap', help=f'色選択論理: {opt_strings}', choices=choices_lst, action='store', dest='bitmap_strategy', default=modules.consts.BITMAP_STRATEGY_DIC[modules.consts.BITMAP_STRATEGY_DEFAULT][0])
+
         self.__args = cmdline.parse_args() # コマンドラインを解析
 
     ## デバッグモードを有効にしデバッグレベルのログを残す
@@ -161,12 +175,14 @@ class ReadScenario:
     def set_debug(self):
 
         self.is_debug = True # デバッグモードを有効にする
+        self._opts.is_debug = self.is_debug
 
     ## デバッグモードを無効にし情報レベルのログを残す
     #
     def unset_debug(self)->None:
 
         self.is_debug = False # デバッグモードを無効にする
+        self._opts.is_debug = self.is_debug
         return
 
     def doConvert(self, outfile:Optional[str]=None)->None:
@@ -196,7 +212,7 @@ class ReadScenario:
         with open(this_infile, 'rb') as fr:
             scenario=fr.read()
             # TODO: FactoryMethodを適用
-            self._scnInfo=scnInfoImpl(scenario=scenario,message=msg_data)
+            self._scnInfo=scnInfoImpl(scenario=scenario,message=msg_data,opts=self._opts)
             self._scnInfo.readContents()
 
         return
