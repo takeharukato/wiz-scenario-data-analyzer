@@ -472,7 +472,7 @@ class WizardryRewardInfo:
 
             # アイテム番号算出ダイス
             dice=dice_type(0, 0, 0)
-            if self.item_range > 0:
+            if self.item_range > 1:
                 dice=dice_type(1, self.item_range, 1)
 
             if self.item_maxtimes == 0 or self.item_percbigr == 0:
