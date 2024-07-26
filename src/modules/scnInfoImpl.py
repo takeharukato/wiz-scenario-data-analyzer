@@ -219,12 +219,15 @@ class scnInfoImpl(scnInfo):
 
     def _handleScreenMessage(self, name:str, aux0:int, aux1:int, aux2:int, *args:Any)->str:
 
-        _enabled,number,offset=self._maze_messages.numberInMessages(number=aux1)
-        msg_string=self._maze_messages.getOneLineMessage(number=aux1)
-        if offset == 0:
-            common=f"メッセージ番号{number:3}番 ( {escapeMarkdownChars(in_str=msg_string)} )"
+        valid,number,offset=self._maze_messages.numberInMessages(number=aux1)
+        if not valid:
+            common=f"メッセージ番号{number:3}番 ( {modules.consts.UNKNOWN_STRING} )"
         else:
-            common=f"メッセージ番号{number:3}番 {offset+1}行目以降 ( {escapeMarkdownChars(in_str=msg_string)} )"
+            msg_string=self._maze_messages.getOneLineMessage(number=aux1)
+            if offset == 0:
+                common=f"メッセージ番号{number:3}番 ( {escapeMarkdownChars(in_str=msg_string)} )"
+            else:
+                common=f"メッセージ番号{number:3}番 {offset+1}行目以降 ( {escapeMarkdownChars(in_str=msg_string)} )"
 
         if -1000 >= aux0:
             aux0 += 1000
@@ -359,9 +362,13 @@ class scnInfoImpl(scnInfo):
                     pos = (floor_pos[0],floor_pos[1],depth)
                     number=info.params[1]
                     # メッセージ番号を補正する
-                    _valid,fixed_number,_offset=self._maze_messages.numberInMessages(number=number)
-                    self._maze_messages.pos_to_msg[pos] = fixed_number
-                    self._maze_messages.msg_to_pos[fixed_number] = pos
+                    valid,fixed_number,_offset=self._maze_messages.numberInMessages(number=number)
+                    if valid:
+                        self._maze_messages.pos_to_msg[pos] = fixed_number
+                        self._maze_messages.msg_to_pos[fixed_number] = pos
+                    else:
+                        self._maze_messages.pos_to_msg[pos] = number
+                        self._maze_messages.msg_to_pos[number] = pos
         return
 
     def _fixupMonsterInfo(self)->None:
@@ -804,6 +811,9 @@ class scnInfoImpl(scnInfo):
         Args:
             data (Any): メッセージ情報のイメージ
         """
+
+        if not data: # メッセージがない場合
+            return
 
         decoder = messageDecoder()
         self._maze_messages = decoder.decodeMessageFile(data=data)

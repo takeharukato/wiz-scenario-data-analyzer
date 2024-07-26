@@ -65,6 +65,7 @@ The other options are optional and they have the following meanings for each:
 |--help|-h|Display help message|
 |--version|-v|Display version information|
 |--debug|-d|Enable to run in the debug mode|
+|--message file-path-string|-m file-path-string|Specify the path to the message file (Scenario one only)|
 |--outfile file-path-string|-o file-path-string|Specify the path to the output file (if omitted, it will be displayed on the standard output)|
 |--colormap {simple,standard}|-c {simple,standard}|color selection. "simple": output bitmaps in a file in a simple manner. "standard": output bitmaps with the standard color mapping.|
 
@@ -80,6 +81,15 @@ This shows operations of the tool in the situation as follows:
 ```:shell
 $ mkdir output
 $ cd output/
-$ ... /src/scenario.py ... /SCENARIO.DATA ... /SCENARIO.MESGS -o output.md
+$ ... /src/scenario.py ... /SCENARIO.DATA -m .. /SCENARIO.MESGS -o output.md
+$
+```
+
+When you want to analyze a scenario file of the Wizardry scenario 2 ``The Knight of Diamonds'', this tool does not support analyzing the message file of it, so you should run this command as follows:
+
+```:shell
+$ mkdir output
+$ cd output/
+$ ... /src/scenario.py ... /SCENARIO.DATA -o output.md
 $
 ```

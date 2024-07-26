@@ -721,6 +721,8 @@ class WizardryMessageData:
         Returns:
             tuple[bool, int, int]: (メッセージの妥当性の真偽値, メッセージ番号, オフセット行)を返す
         """
+        if len(self.messages) == 0:
+            return True,number,0 # メッセージの存在を仮置きする
 
         if number in self.messages:
             return True,number,0 # メッセージの先頭から表示する場合
