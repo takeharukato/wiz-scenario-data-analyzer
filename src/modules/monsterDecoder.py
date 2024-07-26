@@ -131,7 +131,9 @@ WizardryMonsterDataEntryDef:dict[str,Any]={
     'RECS_7_1': {'offset':122, 'type': '<H'},  # 攻撃ダイス7 ダイス面数
     'RECS_7_2': {'offset':124, 'type': '<h'},  # 攻撃ダイス7 加算値
 
-    'EXPAMT':   {'offset':126, 'type': '<H'},  # 獲得経験値
+    'EXPAMT_0':   {'offset':126, 'type': '<H'},  # 獲得経験値下位4桁
+    'EXPAMT_1':   {'offset':128, 'type': '<H'},  # 獲得経験値中位4桁
+    'EXPAMT_2':   {'offset':130, 'type': '<H'},  # 獲得経験値上位4桁
 
     'DRAINAMT': {'offset':132, 'type': '<H'},  # ドレインレベル数
     'HEALPTS':  {'offset':134, 'type': '<h'},  # リジェネレレーション値
@@ -222,8 +224,6 @@ class monsterDecoder(dataEntryDecoder):
                     res.ac=int(decode_dict[key][0])
                 case 'RECSN': # 最大攻撃回数
                     res.max_swing_count=int(decode_dict[key][0])
-                case 'EXPAMT': # 取得経験値
-                    res.exp_amount=int(decode_dict[key][0])
                 case 'DRAINAMT': # ドレインレベル数
                     res.drain_amount=int(decode_dict[key][0])
                 case 'HEALPTS': # リジェネレーション値
@@ -260,6 +260,19 @@ class monsterDecoder(dataEntryDecoder):
                     res.sppc_value=int(decode_dict[key][0])
                 case _:
                     pass
+
+        #
+        # 経験値
+        #
+        if 'EXPAMT_0' in decode_dict \
+            and 'EXPAMT_1' in decode_dict \
+            and 'EXPAMT_2' in decode_dict:
+
+            res.exp_amount=int(decode_dict['EXPAMT_0'][0]) \
+                + (int(decode_dict['EXPAMT_1'][0]) % 10000) * 10000 \
+                + (int(decode_dict['EXPAMT_2'][0]) % 100000000) * 100000000
+
+
         #
         # 出現数ダイス
         #

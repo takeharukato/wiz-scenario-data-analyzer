@@ -75,6 +75,10 @@ class ReadScenario:
     #
     outfile = None
 
+    ## メッセージファイル名
+    #
+    msgfile = None
+
     ## デバッグモードでの動作
     #
     is_debug = False
@@ -106,7 +110,12 @@ class ReadScenario:
         # 他のクラス変数の初期化
         #
         self.scenario_file = self.__args.scenario_file   # type: ignore 入力ファイル名の設定
-        self.msg_file = self.__args.msg_file # type: ignore メッセージファイル名の設定
+
+        if self.__args.msg_file: # type: ignore メッセージファイル名の設定
+            self.msg_file = self.__args.msg_file # type: ignore メッセージファイル名の設定
+        else:
+            self.msg_file = None
+
         self.outfile = self.__args.outfile # type: ignore 出力ファイル名の設定
 
         #
@@ -147,7 +156,7 @@ class ReadScenario:
         cmdline.add_argument('scenario_file', help='シナリオファイル')
 
         #  第2位置引数にメッセージファイルを指定
-        cmdline.add_argument('msg_file', help='メッセージファイル')
+        #cmdline.add_argument('msg_file', help='メッセージファイル')
 
         #
         # オプション引数
@@ -159,6 +168,9 @@ class ReadScenario:
         # デバッグ表示有効化
         cmdline.add_argument('-d', '--debug', help='デバッグ表示を有効化',
                             action='store_true', dest='debug')
+
+        # メッセージファイル名
+        cmdline.add_argument('-m', '--message', help=f'メッセージファイル名', type=str, action='store', dest='msg_file')
 
         # 出力先ファイル名
         cmdline.add_argument('-o', '--outfile', help=f'出力ファイル名(デフォルト:標準出力)', type=str, action='store', dest='outfile')
@@ -199,14 +211,9 @@ class ReadScenario:
             this_infile=modules.consts.DEFAULT_SCENARIO_DATA_FILE
 
         this_msg_file=self.msg_file
-        if not this_msg_file:
-            this_msg_file=modules.consts.DEFAULT_MSG_FILE
-
-        with open(this_msg_file, 'rb') as fr:
-            msg_data=fr.read()
-
-        if not msg_data: # メッセージデータの読み取りに失敗した
-            return
+        if this_msg_file:
+            with open(this_msg_file, 'rb') as fr:
+                msg_data=fr.read()
 
         # シナリオ情報の解析
         with open(this_infile, 'rb') as fr:

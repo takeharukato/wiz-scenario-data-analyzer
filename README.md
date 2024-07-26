@@ -64,6 +64,7 @@ scenario.py [-h] [-v] [-d] [-o 出力先ファイル]
 |--help|-h|ヘルプメッセージを表示する|
 |--version|-v|バージョン情報を表示する|
 |-debug|-d|デバッグモードで動作させる|
+|---message ファイルパス文字列|-m ファイルパス文字列|メッセージファイルへのパスを指定する|
 |--outfile ファイルパス文字列|-o ファイルパス文字列|出力ファイルへのパスを指定する(省略時は標準出力に表示される)|
 |--colormap {simple,standard}|-c {simple,standard}|色選択論理: simple 表示指示に基づくビットマップ生成,standard 標準的な補色処理に基づくビットマップ生成|
 
@@ -74,9 +75,19 @@ scenario.py [-h] [-v] [-d] [-o 出力先ファイル]
 ```:shell
 $ mkdir output
 $ cd output/
-$ ../src/scenario.py ../SCENARIO.DATA ../SCENARIO.MESGS -o output.md
+$ ../src/scenario.py ../SCENARIO.DATA -m ../SCENARIO.MESGS -o output.md
 $
 ```
+
+シナリオ2 ``The Knight of Diamonds''の場合, メッセージファイルの解析に対応していないため, 以下の手順で実行する。
+
+```:shell
+$ mkdir output
+$ cd output/
+$ ../src/scenario.py ../SCENARIO.DATA -m ../SCENARIO.MESGS -o output.md
+$
+```
+
 
 ## 謝辞
 

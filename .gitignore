@@ -174,7 +174,7 @@ classes_*.png
 packages_*.png
 
 
-output.md
+output*.md
 tools/mazeinfo-layout.py
 docs/memo.md
 *.svg
@@ -187,3 +187,10 @@ output/
 .vscode/
 SCENARIO.DATA
 SCENARIO.MESGS
+SCENARIO2.DATA
+SCENARIO2.MESGS
+SCENARIO3.DATA
+SCENARIO3.MESGS
+LoL/ouput3.md
+LoL/ouput3.md
+KoD/ouput.md
